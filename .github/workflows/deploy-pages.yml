@@ -4,9 +4,7 @@
 name: Deploy to GitHub Pages
 
 on:
-  push:
-    branches: [main]
-  workflow_dispatch:  # Manual deploy from Actions tab (no push required)
+  workflow_dispatch:  # Manual deploy only (no auto-deploy on push)
 
 permissions:
   contents: read
