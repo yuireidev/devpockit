@@ -17,6 +17,7 @@ export const getToolComponent = async (componentName: string) => {
     'IpChecker': () => import('@/components/tools/IpChecker').then(m => m.IpChecker),
     'DiffChecker': () => import('@/components/tools/DiffChecker').then(m => m.DiffChecker),
     'HtmlToMarkdown': () => import('@/components/tools/HtmlToMarkdown').then(m => m.HtmlToMarkdown),
+    'HttpStatusCheatsheet': () => import('@/components/tools/HttpStatusCheatsheet').then(m => m.HttpStatusCheatsheet),
     'TextMinifier': () => import('@/components/tools/TextMinifier').then(m => m.TextMinifier),
     'TimestampConverter': () => import('@/components/tools/TimestampConverter').then(m => m.TimestampConverter),
     'ListComparison': () => import('@/components/tools/ListComparison').then(m => m.ListComparison),

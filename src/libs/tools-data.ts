@@ -10,6 +10,7 @@ import {
   Key,
   Link,
   List,
+  ListOrdered,
   Lock,
   MapPin,
   Minimize2,
@@ -64,6 +65,7 @@ export const toolIcons: Record<string, LucideIcon> = {
   'number-base-converter': Binary,
   'base-encoder': Binary,
   'hash-generator': Hash,
+  'http-status-cheatsheet': ListOrdered,
 };
 
 export const toolCategories: ToolCategory[] = [
@@ -443,6 +445,19 @@ export const toolCategories: ToolCategory[] = [
         isPopular: true,
         path: '/tools/network/ip-checker',
         component: 'IpChecker',
+        supportsDesktop: true,
+        supportsMobile: true,
+      },
+      {
+        id: 'http-status-cheatsheet',
+        name: 'HTTP Status Codes',
+        description:
+          'Searchable reference for common HTTP response status codes, classes, names, and short explanations',
+        category: 'network',
+        icon: '📛',
+        isPopular: false,
+        path: '/tools/network/http-status-cheatsheet',
+        component: 'HttpStatusCheatsheet',
         supportsDesktop: true,
         supportsMobile: true,
       },
