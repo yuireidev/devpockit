@@ -24,6 +24,7 @@ import {
   Info,
   Binary,
   Database,
+  ClipboardPaste,
   type LucideIcon
 } from 'lucide-react';
 
@@ -44,6 +45,7 @@ export const toolIcons: Record<string, LucideIcon> = {
   'ip-to-cidr-converter': Network,
   'ip-checker': MapPin,
   'diff-checker': GitCompare,
+  'html-to-markdown': ClipboardPaste,
   'timestamp-converter': Timer,
   'list-comparison': List,
   'list-converter': ArrowLeftRight,
@@ -103,6 +105,18 @@ export const toolCategories: ToolCategory[] = [
         isPopular: true,
         path: '/tools/text-tools/diff-checker',
         component: 'DiffChecker',
+        supportsDesktop: true,
+        supportsMobile: true,
+      },
+      {
+        id: 'html-to-markdown',
+        name: 'HTML to Markdown',
+        description: 'Convert HTML copied from websites into GitHub-flavored Markdown',
+        category: 'text-tools',
+        icon: '📋',
+        isPopular: false,
+        path: '/tools/text-tools/html-to-markdown',
+        component: 'HtmlToMarkdown',
         supportsDesktop: true,
         supportsMobile: true,
       },
