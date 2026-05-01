@@ -4,6 +4,7 @@ export const getToolComponent = async (componentName: string) => {
     'LoremIpsumGenerator': () => import('@/components/tools/LoremIpsumGenerator').then(m => m.LoremIpsumGenerator),
     'JsonFormatter': () => import('@/components/tools/JsonFormatter').then(m => m.JsonFormatter),
     'XmlFormatter': () => import('@/components/tools/XmlFormatter').then(m => m.XmlFormatter),
+    'SqlFormatter': () => import('@/components/tools/SqlFormatter').then(m => m.SqlFormatter),
     'UuidGenerator': () => import('@/components/tools/UuidGenerator').then(m => m.UuidGenerator),
     'QrCodeGenerator': () => import('@/components/tools/QrCodeGenerator').then(m => m.QrCodeGenerator),
     'QrCodeDecoder': () => import('@/components/tools/QrCodeDecoder').then(m => m.QrCodeDecoder),

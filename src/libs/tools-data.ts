@@ -23,6 +23,7 @@ import {
   Wrench,
   Info,
   Binary,
+  Database,
   type LucideIcon
 } from 'lucide-react';
 
@@ -31,6 +32,7 @@ export const toolIcons: Record<string, LucideIcon> = {
   'lorem-ipsum': FileText,
   'json-formatter': Braces,
   'xml-formatter': Code,
+  'sql-formatter': Database,
   'uuid-generator': Hash,
   'qr-code-generator': QrCode,
   'qr-code-decoder': ScanSearch,
@@ -134,6 +136,18 @@ export const toolCategories: ToolCategory[] = [
         isPopular: false,
         path: '/tools/formatters/xml-formatter',
         component: 'XmlFormatter',
+        supportsDesktop: true,
+        supportsMobile: true,
+      },
+      {
+        id: 'sql-formatter',
+        name: 'SQL Formatter',
+        description: 'Validate, beautify, and minify SQL for many dialects',
+        category: 'formatters',
+        icon: 'SQL',
+        isPopular: false,
+        path: '/tools/formatters/sql-formatter',
+        component: 'SqlFormatter',
         supportsDesktop: true,
         supportsMobile: true,
       },
