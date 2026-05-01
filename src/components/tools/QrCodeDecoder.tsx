@@ -2,6 +2,7 @@
 
 import { useToolState } from '@/components/providers/ToolStateProvider';
 import { Badge } from '@/components/ui/badge';
+import { LocalProcessingNotice } from '@/components/tools/LocalProcessingNotice';
 import { Button } from '@/components/ui/button';
 import { CodePanel } from '@/components/ui/code-panel';
 import { DEFAULT_QR_DECODER_OPTIONS } from '@/config/qr-code-decoder-config';
@@ -303,6 +304,7 @@ export function QrCodeDecoder({ className, instanceId, onResult, onError }: QrCo
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
           Upload an image containing a QR code to decode it with support for multiple formats
         </p>
+        <LocalProcessingNotice detail="Images are processed locally; clear sensitive QR payloads when done." />
       </div>
 
       {/* Body Section */}

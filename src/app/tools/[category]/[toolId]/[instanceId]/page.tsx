@@ -1,4 +1,6 @@
 import { getToolById, getTools } from '@/libs/tools-data';
+import { absoluteAssetUrl, absoluteSiteUrl } from '@/libs/site-url';
+import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 interface ToolPageProps {
@@ -32,6 +34,39 @@ export async function generateStaticParams() {
   }
 
   return params;
+}
+
+export async function generateMetadata({ params }: ToolPageProps): Promise<Metadata> {
+  const { category, toolId, instanceId } = await params;
+  const tool = getToolById(toolId);
+
+  if (!tool || tool.category !== category) {
+    return { title: 'Tool' };
+  }
+
+  const title = `${tool.name} - Free Online Tool`;
+  const description = `${tool.description} Free, fast, and runs locally in your browser. No sign-up required.`;
+  const canonicalPath = `/tools/${category}/${toolId}/${instanceId}/`;
+  const canonical = absoluteSiteUrl(canonicalPath);
+  const ogImage = absoluteAssetUrl('/og-image.png');
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${tool.name} | DevPockit`,
+      description,
+      url: canonical,
+      type: 'website',
+      images: [{ url: ogImage, width: 1200, height: 630, alt: tool.name }],
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title: `${tool.name} | DevPockit`,
+      description,
+    },
+    alternates: { canonical },
+  };
 }
 
 export default async function ToolPage({ params }: ToolPageProps) {

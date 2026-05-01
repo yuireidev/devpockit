@@ -2,6 +2,7 @@
 
 import { useToolState } from '@/components/providers/ToolStateProvider';
 import { Button } from '@/components/ui/button';
+import { LocalProcessingNotice } from '@/components/tools/LocalProcessingNotice';
 import { CodePanel } from '@/components/ui/code-panel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { LabeledInput } from '@/components/ui/labeled-input';
@@ -150,6 +151,7 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
           Generate cryptographic hashes using SHA-1, SHA-256, SHA-512, and SHA-3 algorithms
         </p>
+        <LocalProcessingNotice detail="Passwords and secrets stay in this tab—prefer dedicated tooling for production key handling." />
       </div>
 
       {/* Body Section */}

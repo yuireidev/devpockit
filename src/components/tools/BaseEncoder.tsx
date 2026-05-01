@@ -2,6 +2,7 @@
 
 import { useToolState } from '@/components/providers/ToolStateProvider';
 import { Button } from '@/components/ui/button';
+import { LocalProcessingNotice } from '@/components/tools/LocalProcessingNotice';
 import { CodePanel } from '@/components/ui/code-panel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -169,6 +170,7 @@ export function BaseEncoder({ className, instanceId }: BaseEncoderProps) {
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
           Encode and decode text using Base64, Base32, Base16 (hex), Base85, and other base encodings
         </p>
+        <LocalProcessingNotice />
       </div>
 
       {/* Body Section */}

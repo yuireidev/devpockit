@@ -1,0 +1,17 @@
+{
+  "name": "DevPockit",
+  "short_name": "DevPockit",
+  "description": "Free developer tools that run in your browser.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#ea580c",
+  "icons": [
+    {
+      "src": "/assets/devpockit-logo.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}

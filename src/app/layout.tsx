@@ -1,6 +1,7 @@
 import { AppLayout } from '@/components/layout/AppLayout'
 import { AppToastProvider } from '@/components/providers/AppToastProvider'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
+import { absoluteAssetUrl, absoluteSiteUrl } from '@/libs/site-url'
 import type { Metadata, Viewport } from 'next'
 import { DM_Serif_Text, Geist, Geist_Mono } from 'next/font/google'
 import './globals.css'
@@ -24,8 +25,12 @@ const dmSerifText = DM_Serif_Text({
 
 const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.hypkey.com';
 
+const canonicalHome = absoluteSiteUrl('/')
+const ogImageUrl = absoluteAssetUrl('/og-image.png')
+
 export const metadata: Metadata = {
   metadataBase: new URL(baseUrl),
+  manifest: absoluteAssetUrl('/manifest.webmanifest'),
   title: {
     default: 'DevPockit - Free Online Developer Tools',
     template: '%s | DevPockit',
@@ -79,14 +84,14 @@ export const metadata: Metadata = {
   openGraph: {
     type: 'website',
     locale: 'en_US',
-    url: `${baseUrl}/`,
+    url: canonicalHome,
     siteName: 'DevPockit',
     title: 'DevPockit - Free Online Developer Tools',
     description:
       'Free online developer tools that run locally in your browser. JSON formatter, UUID generator, JWT decoder, and 25+ more tools. Fast, private, no sign-up.',
     images: [
       {
-        url: '/og-image.png',
+        url: ogImageUrl,
         width: 1200,
         height: 630,
         alt: 'DevPockit - Developer Tools',
@@ -98,10 +103,10 @@ export const metadata: Metadata = {
     title: 'DevPockit - Free Online Developer Tools',
     description:
       'Free developer tools in your browser. JSON formatter, UUID generator, JWT decoder & more. Private, fast, no sign-up.',
-    images: ['/og-image.png'],
+    images: [ogImageUrl],
   },
   alternates: {
-    canonical: `${baseUrl}/`,
+    canonical: canonicalHome,
   },
   category: 'technology',
 }
@@ -109,6 +114,10 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
+  themeColor: [
+    { media: '(prefers-color-scheme: light)', color: '#ffffff' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a0a0a' },
+  ],
 }
 
 export default function RootLayout({

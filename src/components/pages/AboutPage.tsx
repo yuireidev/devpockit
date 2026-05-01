@@ -1,7 +1,40 @@
 'use client';
 
-import { Coffee, Github, Lightbulb } from 'lucide-react';
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
+import { Coffee, Github, Keyboard, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
+
+function KeyboardShortcutsPanel() {
+  const paletteShortcut = useKeyboardShortcut();
+  const openPalette = paletteShortcut ?? '⌘K / Ctrl+K';
+
+  return (
+    <div className="mt-10 w-full max-w-[560px] rounded-lg border border-border bg-muted/30 p-5">
+      <div className="mb-4 flex items-center gap-2 font-semibold text-foreground">
+        <Keyboard className="h-5 w-5 shrink-0" aria-hidden />
+        Keyboard shortcuts
+      </div>
+      <dl className="grid gap-3 text-sm">
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+          <dt className="text-muted-foreground">Open command palette</dt>
+          <dd className="font-mono text-foreground">{openPalette}</dd>
+        </div>
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+          <dt className="text-muted-foreground">Close palette</dt>
+          <dd className="font-mono text-foreground">Esc</dd>
+        </div>
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+          <dt className="text-muted-foreground">Back to welcome (with a tool open)</dt>
+          <dd className="font-mono text-foreground">Esc</dd>
+        </div>
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+          <dt className="text-muted-foreground">Navigate palette results</dt>
+          <dd className="font-mono text-foreground">↑ ↓ Enter</dd>
+        </div>
+      </dl>
+    </div>
+  );
+}
 
 export function AboutPage() {
   return (
@@ -30,6 +63,7 @@ export function AboutPage() {
             and ideas for what we should build next.
             <br /><br />Happy Coding!
           </p>
+          <KeyboardShortcutsPanel />
         </div>
 
         {/* Cards */}

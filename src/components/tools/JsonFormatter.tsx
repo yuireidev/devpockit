@@ -1,7 +1,9 @@
 'use client';
 
+import { useAppToast } from '@/components/providers/AppToastProvider';
 import { useToolState } from '@/components/providers/ToolStateProvider';
 import { Button } from '@/components/ui/button';
+import { LocalProcessingNotice } from '@/components/tools/LocalProcessingNotice';
 import { CodePanel } from '@/components/ui/code-panel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { LoadFileButton } from '@/components/ui/load-file-button';
@@ -9,9 +11,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { DEFAULT_JSON_OPTIONS, JSON_EXAMPLES, JSON_FORMAT_OPTIONS } from '@/config/json-formatter-config';
 import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
 import { formatJson, getJsonStats, type JsonFormatOptions, type JsonFormatResult } from '@/libs/json-formatter';
+import { decodeJsonFormatterShareFragment, encodeJsonFormatterShareFragment } from '@/libs/json-formatter-share-url';
 import { cn } from '@/libs/utils';
 import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+import { Link2 } from 'lucide-react';
+import { useEffect, useRef, useState } from 'react';
 
 interface JsonFormatterProps {
   className?: string;
@@ -19,6 +23,8 @@ interface JsonFormatterProps {
 }
 
 export function JsonFormatter({ className, instanceId }: JsonFormatterProps) {
+  const appToast = useAppToast();
+  const shareAppliedRef = useRef(false);
   const { toolState, updateToolState } = useToolState('json-formatter', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
@@ -73,6 +79,21 @@ export function JsonFormatter({ className, instanceId }: JsonFormatterProps) {
     }
   }, [toolState, isHydrated]);
 
+  useEffect(() => {
+    if (typeof window === 'undefined' || shareAppliedRef.current) return;
+    const decoded = decodeJsonFormatterShareFragment(window.location.hash);
+    if (!decoded) return;
+    shareAppliedRef.current = true;
+    setInput(decoded.input);
+    setOptions({
+      format: decoded.format,
+      indentSize: decoded.indentSize,
+      sortKeys: decoded.sortKeys,
+    });
+    setError('');
+    window.history.replaceState(null, '', window.location.pathname + window.location.search);
+  }, []);
+
   const handleFormat = async () => {
     if (!input.trim()) {
       setError('Please enter JSON to format');
@@ -110,6 +131,26 @@ export function JsonFormatter({ className, instanceId }: JsonFormatterProps) {
     setError('');
   };
 
+  const handleCopyShareLink = async () => {
+    const encoded = encodeJsonFormatterShareFragment({
+      input,
+      format: options.format,
+      indentSize: options.indentSize,
+      sortKeys: options.sortKeys,
+    });
+    if ('error' in encoded) {
+      appToast?.showToast(encoded.error);
+      return;
+    }
+    try {
+      const url = `${window.location.origin}${window.location.pathname}${window.location.search}#${encoded.fragment}`;
+      await navigator.clipboard.writeText(url);
+      appToast?.showToast('Share link copied');
+    } catch {
+      appToast?.showToast('Could not copy link');
+    }
+  };
+
   const getCharacterCount = (text: string): number => {
     return text.length;
   };
@@ -129,6 +170,7 @@ export function JsonFormatter({ className, instanceId }: JsonFormatterProps) {
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
           Format, minify, and validate JSON with syntax highlighting and statistics
         </p>
+        <LocalProcessingNotice detail="Optional share links put your JSON in the URL—never share secrets or production data that way." />
       </div>
 
       {/* Body Section */}
@@ -247,6 +289,18 @@ export function JsonFormatter({ className, instanceId }: JsonFormatterProps) {
                       </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    className="h-8 px-3 text-xs"
+                    onClick={() => void handleCopyShareLink()}
+                    disabled={!input.trim()}
+                    title="Copies a link that includes your input in the URL fragment"
+                  >
+                    <Link2 className="mr-1 h-3 w-3" aria-hidden />
+                    Copy share link
+                  </Button>
                 </>
               }
               footerLeftContent={
