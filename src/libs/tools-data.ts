@@ -27,6 +27,7 @@ import {
   Binary,
   Database,
   ClipboardPaste,
+  Cookie,
   type LucideIcon
 } from 'lucide-react';
 
@@ -66,6 +67,7 @@ export const toolIcons: Record<string, LucideIcon> = {
   'base-encoder': Binary,
   'hash-generator': Hash,
   'http-status-cheatsheet': ListOrdered,
+  'headers-cookies-explainer': Cookie,
 };
 
 export const toolCategories: ToolCategory[] = [
@@ -458,6 +460,19 @@ export const toolCategories: ToolCategory[] = [
         isPopular: false,
         path: '/tools/network/http-status-cheatsheet',
         component: 'HttpStatusCheatsheet',
+        supportsDesktop: true,
+        supportsMobile: true,
+      },
+      {
+        id: 'headers-cookies-explainer',
+        name: 'Headers / Cookies explainer',
+        description:
+          'Paste HTTP headers or cookie strings to see a structured breakdown with glossary explanations',
+        category: 'network',
+        icon: '🍪',
+        isPopular: false,
+        path: '/tools/network/headers-cookies-explainer',
+        component: 'HeadersCookiesExplainer',
         supportsDesktop: true,
         supportsMobile: true,
       },
