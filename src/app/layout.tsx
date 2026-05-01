@@ -1,4 +1,5 @@
 import { AppLayout } from '@/components/layout/AppLayout'
+import { AppToastProvider } from '@/components/providers/AppToastProvider'
 import { ThemeProvider } from '@/components/providers/ThemeProvider'
 import type { Metadata, Viewport } from 'next'
 import { DM_Serif_Text, Geist, Geist_Mono } from 'next/font/google'
@@ -124,7 +125,9 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <AppLayout>{children}</AppLayout>
+          <AppToastProvider>
+            <AppLayout>{children}</AppLayout>
+          </AppToastProvider>
         </ThemeProvider>
       </body>
     </html>

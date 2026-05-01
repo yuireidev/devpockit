@@ -1,5 +1,6 @@
 'use client';
 
+import { ToolActivityProvider, useToolActivity } from '@/components/providers/ToolActivityProvider';
 import { ToolStateProvider, useToolStateContext } from '@/components/providers/ToolStateProvider';
 import { AlertDialog } from '@/components/ui/alert-dialog';
 import { SidebarInset, SidebarProvider, useSidebar } from '@/components/ui/sidebar';
@@ -13,6 +14,7 @@ import { AppSidebar } from '../AppSidebar';
 import { AboutPage } from '../pages/AboutPage';
 import { WelcomePage } from '../pages/WelcomePage';
 import { CommandPalette } from './CommandPalette';
+import { DesktopRecommendedBanner } from './DesktopRecommendedBanner';
 import { MobileTopBar } from './MobileTopBar';
 import { TopNavTabs, type ActiveTab } from './TopNavTabs';
 
@@ -56,7 +58,7 @@ function DynamicToolRenderer({ toolId, instanceId }: { toolId: string; instanceI
     return (
       <div className="flex items-center justify-center h-full">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+          <div className="mx-auto mb-4 h-8 w-8 animate-spin rounded-full border-b-2 border-primary motion-reduce:animate-none" />
           <p className="text-muted-foreground">Loading tool...</p>
         </div>
       </div>
@@ -98,6 +100,7 @@ function isAboutPage(pathname: string): boolean {
 // Inner component that has access to ToolStateContext
 function AppLayoutInner({ children }: AppLayoutProps) {
   const { clearToolState, clearAllToolStates } = useToolStateContext();
+  const { recordToolOpen } = useToolActivity();
   const { isMobile } = useSidebar();
   const [activeTabs, setActiveTabs] = useState<ActiveTab[]>([]);
   const [selectedTool, setSelectedTool] = useState<string | undefined>();
@@ -244,6 +247,14 @@ function AppLayoutInner({ children }: AppLayoutProps) {
     }
     // Note: activeTabs removed from deps - using ref instead to prevent recreating tabs during close
   }, [pathname, router, isMobile, clearToolSelection]);
+
+  useEffect(() => {
+    if (!isValidToolUrl(pathname)) return;
+    const parsed = parseToolUrl(pathname);
+    if (parsed?.toolId && parsed.toolId !== ABOUT_TOOL_ID) {
+      recordToolOpen(parsed.toolId);
+    }
+  }, [pathname, recordToolOpen]);
 
   // Handle keyboard shortcuts
   useEffect(() => {
@@ -438,7 +449,23 @@ function AppLayoutInner({ children }: AppLayoutProps) {
                       <AboutPage />
                     </div>
                   ) : selectedTool && selectedInstanceId ? (
-                    <DynamicToolRenderer key={`${selectedTool}:${selectedInstanceId}`} toolId={selectedTool} instanceId={selectedInstanceId} />
+                    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+                      {(() => {
+                        const activeTool = getToolById(selectedTool);
+                        return activeTool?.desktopRecommended && isMobile ? (
+                          <DesktopRecommendedBanner
+                            key={activeTool.id}
+                            toolId={activeTool.id}
+                            toolName={activeTool.name}
+                          />
+                        ) : null;
+                      })()}
+                      <DynamicToolRenderer
+                        key={`${selectedTool}:${selectedInstanceId}`}
+                        toolId={selectedTool}
+                        instanceId={selectedInstanceId}
+                      />
+                    </div>
                   ) : null}
                 </>
               ) : (
@@ -473,10 +500,12 @@ function AppLayoutInner({ children }: AppLayoutProps) {
 
 export function AppLayout({ children }: AppLayoutProps) {
   return (
-    <ToolStateProvider>
-      <SidebarProvider>
-        <AppLayoutInner>{children}</AppLayoutInner>
-      </SidebarProvider>
-    </ToolStateProvider>
+    <ToolActivityProvider>
+      <ToolStateProvider>
+        <SidebarProvider>
+          <AppLayoutInner>{children}</AppLayoutInner>
+        </SidebarProvider>
+      </ToolStateProvider>
+    </ToolActivityProvider>
   );
 }

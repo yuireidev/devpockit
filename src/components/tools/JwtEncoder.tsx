@@ -15,6 +15,7 @@ import {
   type JwtEncoderOptions
 } from '@/config/jwt-encoder-config';
 import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
+import { LocalProcessingNotice } from '@/components/tools/LocalProcessingNotice';
 import { encodeJwt, formatJson, getDefaultHeader, validateJson, type JwtEncodeResult } from '@/libs/jwt-encoder';
 import { cn } from '@/libs/utils';
 import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
@@ -215,6 +216,7 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
           Create and encode JWT tokens with custom headers and payloads.
         </p>
+        <LocalProcessingNotice detail="Treat minted tokens as sensitive and do not use them as proof of server identity." />
       </div>
 
       {/* Body Section */}

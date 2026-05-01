@@ -107,6 +107,7 @@ export const toolCategories: ToolCategory[] = [
         component: 'DiffChecker',
         supportsDesktop: true,
         supportsMobile: true,
+        desktopRecommended: true,
       },
       {
         id: 'html-to-markdown',
@@ -371,6 +372,7 @@ export const toolCategories: ToolCategory[] = [
         component: 'SchemaConverter',
         supportsDesktop: true,
         supportsMobile: true,
+        desktopRecommended: true,
       },
       {
         id: 'number-base-converter',
@@ -461,6 +463,7 @@ export const toolCategories: ToolCategory[] = [
         component: 'ListComparison',
         supportsDesktop: true,
         supportsMobile: true,
+        desktopRecommended: true,
       },
       {
         id: 'json-path-finder',
