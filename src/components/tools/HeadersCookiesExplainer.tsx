@@ -12,10 +12,9 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import { CodePanel, type CodePanelTab } from '@/components/ui/code-panel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Label } from '@/components/ui/label';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Textarea } from '@/components/ui/textarea';
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
 import {
   HEADERS_COOKIE_EXAMPLES,
   type HeaderCookieGlossaryCategory,
@@ -30,7 +29,7 @@ import {
 } from '@/libs/headers-cookies-explainer';
 import { cn } from '@/libs/utils';
 import { ChevronDownIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 const TOOL_ID = 'headers-cookies-explainer' as const;
 
@@ -73,6 +72,8 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
   const [cookieRequestText, setCookieRequestText] = useState('');
   const [setCookieText, setSetCookieText] = useState('');
   const [isHydrated, setIsHydrated] = useState(false);
+  const [theme] = useCodeEditorTheme('basicDark');
+  const [inputWrapText, setInputWrapText] = useState(true);
 
   const [detailEntry, setDetailEntry] = useState<{ title: string; entry: GlossaryEntry } | null>(
     null
@@ -135,6 +136,116 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
     setDetailEntry({ title, entry });
   };
 
+  const inputTabs = useMemo<CodePanelTab[]>(
+    () => [
+      { id: 'headers', label: 'HTTP headers', value: headersText, language: 'plaintext' },
+      { id: 'cookie-request', label: 'Cookie (request)', value: cookieRequestText, language: 'plaintext' },
+      { id: 'set-cookie', label: 'Set-Cookie', value: setCookieText, language: 'plaintext' },
+    ],
+    [headersText, cookieRequestText, setCookieText]
+  );
+
+  const handleEditorChange = useCallback(
+    (value: string) => {
+      switch (mainTab) {
+        case 'headers':
+          setHeadersText(value);
+          break;
+        case 'cookie-request':
+          setCookieRequestText(value);
+          break;
+        case 'set-cookie':
+          setSetCookieText(value);
+          break;
+        default:
+          break;
+      }
+    },
+    [mainTab]
+  );
+
+  const editorPlaceholder = useMemo(() => {
+    switch (mainTab) {
+      case 'headers':
+        return 'Host: api.example.com\nAccept: application/json';
+      case 'cookie-request':
+        return 'session=abc123; locale=en';
+      case 'set-cookie':
+        return 'Set-Cookie: id=u1; Path=/; HttpOnly\nSet-Cookie: prefs=compact; Secure; SameSite=None';
+      default:
+        return '';
+    }
+  }, [mainTab]);
+
+  const editorHeaderActions = useMemo(() => {
+    if (mainTab === 'headers') {
+      return (
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button type="button" variant="outline" size="sm" className="h-8 px-3 text-xs">
+              Load example
+              <ChevronDownIcon className="h-3 w-3 ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={() => setHeadersText(HEADERS_COOKIE_EXAMPLES.headRequest)}>
+              Sample GET request
+            </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setHeadersText(HEADERS_COOKIE_EXAMPLES.responseWithSetCookie)}
+            >
+              Sample response (+ Set-Cookie)
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      );
+    }
+    if (mainTab === 'cookie-request') {
+      return (
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="h-8 px-3 text-xs"
+          onClick={() => setCookieRequestText(HEADERS_COOKIE_EXAMPLES.requestCookies)}
+        >
+          Load example
+        </Button>
+      );
+    }
+    return (
+      <Button
+        type="button"
+        variant="outline"
+        size="sm"
+        className="h-8 px-3 text-xs"
+        onClick={() => setSetCookieText(HEADERS_COOKIE_EXAMPLES.setCookiesMultiline)}
+      >
+        Load example
+      </Button>
+    );
+  }, [mainTab]);
+
+  const editorFooterHint = useMemo(() => {
+    if (mainTab === 'cookie-request') {
+      return (
+        <span className="text-xs text-neutral-600 dark:text-neutral-400 max-w-[min(100%,42rem)]">
+          Paste the value only (omit <span className="font-mono text-[11px]">Cookie:</span> prefix). Semicolon-separated{' '}
+          <span className="font-mono text-[11px]">name=value</span> pairs.
+        </span>
+      );
+    }
+    if (mainTab === 'set-cookie') {
+      return (
+        <span className="text-xs text-neutral-600 dark:text-neutral-400 max-w-[min(100%,42rem)]">
+          One cookie per line. Optional <span className="font-mono text-[11px]">Set-Cookie:</span> prefix. Avoid merging
+          lines when <span className="font-mono text-[11px]">Expires=</span> dates include commas.
+        </span>
+      );
+    }
+    return null;
+  }, [mainTab]);
+
   return (
     <div className={cn('flex flex-col h-full', className)}>
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
@@ -148,116 +259,23 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
       </div>
 
       <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-hidden">
-        <Tabs
-          value={mainTab}
-          onValueChange={(v) => setMainTab(v as MainTab)}
-          className="flex flex-col gap-4 min-h-0 flex-1"
-        >
-          <TabsList className="w-full sm:w-auto flex-shrink-0">
-            <TabsTrigger value="headers">HTTP headers</TabsTrigger>
-            <TabsTrigger value="cookie-request">Cookie (request)</TabsTrigger>
-            <TabsTrigger value="set-cookie">Set-Cookie</TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="headers" className="flex flex-col gap-4 min-h-0 flex-1 mt-0 outline-none">
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4 flex-shrink-0">
-              <div className="flex-1 min-w-0">
-                <Label htmlFor="hcd-headers-input" className="text-sm font-medium mb-2 block">
-                  Header block
-                </Label>
-                <Textarea
-                  id="hcd-headers-input"
-                  value={headersText}
-                  onChange={(e) => setHeadersText(e.target.value)}
-                  spellCheck={false}
-                  placeholder="Host: api.example.com&#10;Accept: application/json"
-                  rows={10}
-                  className="font-mono text-xs min-h-[220px]"
-                />
-              </div>
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button type="button" variant="outline" className="gap-2 sm:self-auto self-start shrink-0">
-                    Load example
-                    <ChevronDownIcon className="h-4 w-4 opacity-70" />
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent align="end">
-                  <DropdownMenuItem
-                    onClick={() => setHeadersText(HEADERS_COOKIE_EXAMPLES.headRequest)}
-                  >
-                    Sample GET request
-                  </DropdownMenuItem>
-                  <DropdownMenuItem
-                    onClick={() => setHeadersText(HEADERS_COOKIE_EXAMPLES.responseWithSetCookie)}
-                  >
-                    Sample response (+ Set-Cookie)
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-          </TabsContent>
-
-          <TabsContent
-            value="cookie-request"
-            className="flex flex-col gap-4 min-h-0 flex-1 mt-0 outline-none"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4 flex-shrink-0">
-              <div className="flex-1 min-w-0">
-                <Label htmlFor="hcd-cookie-req-input" className="text-sm font-medium mb-2 block">
-                  Cookie header value (omit <span className="font-mono">Cookie:</span> prefix)
-                </Label>
-                <Textarea
-                  id="hcd-cookie-req-input"
-                  value={cookieRequestText}
-                  onChange={(e) => setCookieRequestText(e.target.value)}
-                  spellCheck={false}
-                  placeholder={"session=abc123; locale=en"}
-                  rows={8}
-                  className="font-mono text-xs min-h-[160px]"
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="shrink-0 self-start sm:self-auto"
-                onClick={() => setCookieRequestText(HEADERS_COOKIE_EXAMPLES.requestCookies)}
-              >
-                Load example
-              </Button>
-            </div>
-          </TabsContent>
-
-          <TabsContent
-            value="set-cookie"
-            className="flex flex-col gap-4 min-h-0 flex-1 mt-0 outline-none"
-          >
-            <div className="flex flex-col sm:flex-row sm:items-end gap-4 flex-shrink-0">
-              <div className="flex-1 min-w-0">
-                <Label htmlFor="hcd-set-cookie-input" className="text-sm font-medium mb-2 block">
-                  One Set-Cookie per line (optional <span className="font-mono">Set-Cookie:</span>{' '}
-                  prefix)
-                </Label>
-                <Textarea
-                  id="hcd-set-cookie-input"
-                  value={setCookieText}
-                  onChange={(e) => setSetCookieText(e.target.value)}
-                  spellCheck={false}
-                  placeholder={`Set-Cookie: id=u1; Path=/; HttpOnly\nSet-Cookie: prefs=compact; Secure; SameSite=None`}
-                  rows={10}
-                  className="font-mono text-xs min-h-[220px]"
-                />
-              </div>
-              <Button
-                type="button"
-                variant="outline"
-                className="shrink-0 self-start sm:self-auto"
-                onClick={() => setSetCookieText(HEADERS_COOKIE_EXAMPLES.setCookiesMultiline)}
-              >
-                Load example
-              </Button>
-            </div>
-          </TabsContent>
+        <div className="flex flex-col gap-4 min-h-0 flex-1">
+          <CodePanel fillHeight={true}
+            tabs={inputTabs}
+            activeTab={mainTab}
+            onTabChange={(id) => setMainTab(id as MainTab)}
+            language="plaintext"
+            height="280px"
+            theme={theme}
+            wrapText={inputWrapText}
+            onWrapTextChange={setInputWrapText}
+            placeholder={editorPlaceholder}
+            showClearButton={true}
+            className="w-full shrink-0"
+            headerActions={editorHeaderActions}
+            footerLeftContent={editorFooterHint ?? undefined}
+            onChange={handleEditorChange}
+          />
 
           {(allWarnings.length > 0 || (mainTab === 'headers' && parsedHeaders.malformedLines.length > 0)) && (
             <div className="rounded-lg border border-amber-200 bg-amber-50/90 dark:border-amber-900/50 dark:bg-amber-950/25 px-3 py-2 text-sm text-amber-950 dark:text-amber-100 flex-shrink-0 space-y-1">
@@ -421,7 +439,7 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
                 </div>
               ))}
           </div>
-        </Tabs>
+        </div>
       </div>
 
       <Dialog open={detailEntry !== null} onOpenChange={(open) => !open && setDetailEntry(null)}>
