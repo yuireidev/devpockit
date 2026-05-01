@@ -7,7 +7,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 import { SecretInput } from '@/components/ui/secret-input';
 import { JWT_EXAMPLE_TOKENS } from '@/config/jwt-decoder-config';
 import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import { LocalProcessingNotice } from '@/components/tools/LocalProcessingNotice';
 import { decodeJwt, formatTimeRemaining, verifyJwtSignature, type JwtDecodeResult } from '@/libs/jwt-decoder';
 import { cn } from '@/libs/utils';
 import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
@@ -224,7 +223,6 @@ export function JwtDecoder({ className, instanceId }: JwtDecoderProps) {
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
           Decode and analyze JWT tokens. View header, payload, and signature.
         </p>
-        <LocalProcessingNotice detail="Do not paste production secrets if others can see your screen." />
       </div>
 
       {/* Body Section */}

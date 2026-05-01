@@ -8,12 +8,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from '@/components/ui/tooltip';
 import { useToolActivity } from '@/components/providers/ToolActivityProvider';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 import { getCategoryById, searchTools, toolIcons } from '@/libs/tools-data';
@@ -136,36 +130,31 @@ const CommandPaletteResult = ({
       </div>
 
       {showPin && onTogglePin ? (
-        <Tooltip>
-          <TooltipTrigger asChild>
-            <button
-              type="button"
-              tabIndex={0}
-              className={cn(
-                'flex w-10 shrink-0 items-center justify-center rounded-lg border transition-colors',
-                pinned
-                  ? 'border-orange-300 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/40'
-                  : 'border-transparent bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-800/80 dark:hover:bg-neutral-800'
-              )}
-              aria-label={pinned ? `Unpin ${tool.name}` : `Pin ${tool.name}`}
-              aria-pressed={pinned}
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                onTogglePin(tool.id);
-              }}
-            >
-              <Star
-                className={cn(
-                  'h-4 w-4 text-neutral-500 dark:text-neutral-400',
-                  pinned && 'fill-orange-500 text-orange-600 dark:fill-orange-500 dark:text-orange-400'
-                )}
-                strokeWidth={1.5}
-              />
-            </button>
-          </TooltipTrigger>
-          <TooltipContent side="left">Pin or unpin — shown first in Jump back in and home</TooltipContent>
-        </Tooltip>
+        <button
+          type="button"
+          tabIndex={0}
+          className={cn(
+            'flex w-10 shrink-0 items-center justify-center rounded-lg border transition-colors',
+            pinned
+              ? 'border-orange-300 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/40'
+              : 'border-transparent bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-800/80 dark:hover:bg-neutral-800'
+          )}
+          aria-label={pinned ? `Unpin ${tool.name}` : `Pin ${tool.name}`}
+          aria-pressed={pinned}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onTogglePin(tool.id);
+          }}
+        >
+          <Star
+            className={cn(
+              'h-4 w-4 text-neutral-500 dark:text-neutral-400',
+              pinned && 'fill-orange-500 text-orange-600 dark:fill-orange-500 dark:text-orange-400'
+            )}
+            strokeWidth={1.5}
+          />
+        </button>
       ) : null}
     </div>
   );
@@ -317,8 +306,7 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
   const listboxActive = hasQuery ? hasResults : showShortcuts;
 
   return (
-    <TooltipProvider delayDuration={300}>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         className="flex h-[600px] max-w-2xl flex-col border-neutral-200 bg-white p-0 dark:border-neutral-700 dark:bg-neutral-900 [&>button]:hidden"
         aria-label="Command palette for searching tools"
@@ -368,10 +356,6 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
           </div>
 
           <Separator className="my-3" />
-
-          <p className="mb-2 shrink-0 px-1 text-xs leading-relaxed text-neutral-500 dark:text-neutral-400">
-            Tip: use the star on each row to pin tools—pinned items appear first below and on the home page.
-          </p>
 
           <div className="min-h-0 flex-1 overflow-hidden pb-5">
             {!hasQuery && !showShortcuts ? (
@@ -481,6 +465,5 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
         </div>
       </DialogContent>
     </Dialog>
-    </TooltipProvider>
   );
 }
