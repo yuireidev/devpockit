@@ -87,7 +87,7 @@
     "turndown": "^7.2.4",
     "turndown-plugin-gfm": "^1.0.2",
     "uuid": "^13.0.0",
-    "yaml": "^2.8.2"
+    "yaml": "^2.8.3"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.5",
