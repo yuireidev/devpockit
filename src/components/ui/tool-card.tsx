@@ -1,5 +1,5 @@
 import * as React from 'react';
-import { Laptop, Smartphone } from 'lucide-react';
+import { Laptop, Smartphone, Star } from 'lucide-react';
 import { cn } from '@/libs/utils';
 
 export interface ToolCardProps {
@@ -11,6 +11,11 @@ export interface ToolCardProps {
   supportsMobile?: boolean;
   onClick?: () => void;
   className?: string;
+  /** When set (e.g. after localStorage hydrate), shows a pin control on the card */
+  pinButton?: {
+    pinned: boolean;
+    onToggle: () => void;
+  };
 }
 
 export function ToolCard({
@@ -22,6 +27,7 @@ export function ToolCard({
   supportsMobile = true,
   onClick,
   className,
+  pinButton,
 }: ToolCardProps) {
   const [isHovered, setIsHovered] = React.useState(false);
   const isSelected = isActive || isHovered;
@@ -29,7 +35,8 @@ export function ToolCard({
   return (
     <div
       className={cn(
-        'group bg-white dark:bg-neutral-800 border rounded-xl h-[165px] cursor-pointer transition-all duration-200',
+        'group relative bg-white dark:bg-neutral-800 border rounded-xl h-[165px] cursor-pointer transition-all duration-200',
+        pinButton?.pinned && 'ring-1 ring-orange-400 dark:ring-orange-600',
         isSelected
           ? 'border-orange-600 hover:shadow-md'
           : 'border-neutral-200 dark:border-neutral-700 hover:shadow-md',
@@ -39,6 +46,33 @@ export function ToolCard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
+      {pinButton ? (
+        <button
+          type="button"
+          className={cn(
+            'absolute left-1.5 top-1.5 z-20 flex h-8 w-8 items-center justify-center rounded-md border bg-white/95 shadow-sm backdrop-blur-sm transition-colors dark:bg-neutral-900/95',
+            pinButton.pinned
+              ? 'border-orange-300 dark:border-orange-800'
+              : 'border-neutral-200 hover:bg-orange-50 dark:border-neutral-600 dark:hover:bg-orange-950/50'
+          )}
+          aria-label={pinButton.pinned ? `Unpin ${name}` : `Pin ${name}`}
+          aria-pressed={pinButton.pinned}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            pinButton.onToggle();
+          }}
+        >
+          <Star
+            className={cn(
+              'h-4 w-4 text-neutral-500 dark:text-neutral-400',
+              pinButton.pinned &&
+                'fill-orange-500 text-orange-600 dark:fill-orange-500 dark:text-orange-400'
+            )}
+            strokeWidth={1.5}
+          />
+        </button>
+      ) : null}
       <div className="flex flex-col gap-2 h-[165px] overflow-hidden rounded-[inherit]">
         {/* Icon Section */}
         <div

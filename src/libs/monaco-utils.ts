@@ -217,8 +217,7 @@ export function createMonacoOptions(
     suggestOnTriggerCharacters: false, // Disable suggestions on trigger characters by default
     acceptSuggestionOnCommitCharacter: false, // Disable auto-accept suggestions by default
     tabCompletion: 'off', // Disable tab completion by default
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore — valid Monaco runtime option not yet reflected in the bundled type definitions
+    // @ts-expect-error — valid Monaco runtime option not yet reflected in bundled type definitions
     renderValidationDecorations: 'off', // No error/warning squiggles needed in developer tools
     scrollbar: {
       alwaysConsumeMouseWheel: false, // Allow page scrolling when editor reaches end

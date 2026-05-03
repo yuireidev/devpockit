@@ -8,12 +8,13 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Separator } from '@/components/ui/separator';
+import { useToolActivity } from '@/components/providers/ToolActivityProvider';
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
 import { getCategoryById, searchTools, toolIcons } from '@/libs/tools-data';
 import { cn } from '@/libs/utils';
 import { type Tool } from '@/types/tools';
-import { Search } from 'lucide-react';
-import { startTransition, useEffect, useRef, useState } from 'react';
+import { Search, Star } from 'lucide-react';
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react';
 
 interface CommandPaletteProps {
   open: boolean;
@@ -27,9 +28,21 @@ interface CommandPaletteResultProps {
   isSelected?: boolean;
   index: number;
   onHover?: (index: number) => void;
+  showPin?: boolean;
+  pinned?: boolean;
+  onTogglePin?: (toolId: string) => void;
 }
 
-const CommandPaletteResult = ({ tool, onSelect, isSelected = false, index, onHover }: CommandPaletteResultProps) => {
+const CommandPaletteResult = ({
+  tool,
+  onSelect,
+  isSelected = false,
+  index,
+  onHover,
+  showPin = false,
+  pinned = false,
+  onTogglePin,
+}: CommandPaletteResultProps) => {
   const category = getCategoryById(tool.category);
   const IconComponent = toolIcons[tool.id];
   const [isHovered, setIsHovered] = useState(false);
@@ -44,79 +57,111 @@ const CommandPaletteResult = ({ tool, onSelect, isSelected = false, index, onHov
   };
 
   return (
-    <div
-      role="option"
-      aria-selected={isSelected}
-      tabIndex={isSelected ? 0 : -1}
-      className={cn(
-        'group flex items-center gap-2.5 px-3 py-2 rounded-lg cursor-pointer transition-all duration-200',
-        'hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2',
-        isHovered || isSelected
-          ? 'bg-orange-50 dark:bg-orange-950/50 border border-orange-200 dark:border-orange-900 shadow-sm'
-          : 'bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800/50 border border-transparent'
-      )}
-      onClick={handleSelect}
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={() => setIsHovered(false)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          handleSelect();
-        }
-      }}
-    >
-      {/* Icon Section */}
+    <div className="flex items-stretch gap-1">
       <div
+        role="option"
+        aria-selected={isSelected}
+        tabIndex={isSelected ? 0 : -1}
+        id={`palette-option-${index}`}
         className={cn(
-          'flex items-center justify-center w-8 h-8 rounded-lg transition-all duration-200 shrink-0',
+          'group flex min-w-0 flex-1 items-center gap-2.5 rounded-lg border px-3 py-2 transition-all duration-200',
+          'cursor-pointer hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2',
           isHovered || isSelected
-            ? 'bg-orange-100 dark:bg-orange-900 scale-105'
-            : 'bg-neutral-100 dark:bg-neutral-800'
+            ? 'border-orange-200 bg-orange-50 shadow-sm dark:border-orange-900 dark:bg-orange-950/50'
+            : 'border-transparent bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
         )}
+        onClick={handleSelect}
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={() => setIsHovered(false)}
+        onKeyDown={(e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            handleSelect();
+          }
+        }}
       >
-        {IconComponent ? (
-          <IconComponent
+        <div
+          className={cn(
+            'flex h-8 w-8 shrink-0 items-center justify-center rounded-lg transition-all duration-200',
+            isHovered || isSelected
+              ? 'scale-105 bg-orange-100 dark:bg-orange-900'
+              : 'bg-neutral-100 dark:bg-neutral-800'
+          )}
+        >
+          {IconComponent ? (
+            <IconComponent
+              className={cn(
+                'h-4 w-4 transition-all duration-200',
+                isHovered || isSelected
+                  ? 'scale-110 text-orange-600 dark:text-orange-500'
+                  : 'text-neutral-600 dark:text-neutral-400'
+              )}
+              strokeWidth={1.5}
+            />
+          ) : (
+            <span className="text-xs">{tool.icon}</span>
+          )}
+        </div>
+
+        <div className="min-w-0 flex-1">
+          <div
             className={cn(
-              'w-4 h-4 transition-all duration-200',
+              'text-sm font-medium transition-colors duration-200',
               isHovered || isSelected
-                ? 'text-orange-600 dark:text-orange-500 scale-110'
-                : 'text-neutral-600 dark:text-neutral-400'
+                ? 'text-orange-900 dark:text-orange-100'
+                : 'text-neutral-900 dark:text-neutral-100'
+            )}
+          >
+            {tool.name}
+          </div>
+          <div className="mt-0.5 line-clamp-1 text-xs text-neutral-600 dark:text-neutral-400">
+            {tool.description}
+          </div>
+          {category && (
+            <div className="mt-1">
+              <div className="inline-block rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 dark:border-neutral-700 dark:bg-neutral-800">
+                <p className="whitespace-nowrap text-[9px] font-normal leading-3 text-neutral-700 dark:text-neutral-300">
+                  {category.name}
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {showPin && onTogglePin ? (
+        <button
+          type="button"
+          tabIndex={0}
+          className={cn(
+            'flex w-10 shrink-0 items-center justify-center rounded-lg border transition-colors',
+            pinned
+              ? 'border-orange-300 bg-orange-50 dark:border-orange-800 dark:bg-orange-950/40'
+              : 'border-transparent bg-neutral-50 hover:bg-neutral-100 dark:bg-neutral-800/80 dark:hover:bg-neutral-800'
+          )}
+          aria-label={pinned ? `Unpin ${tool.name}` : `Pin ${tool.name}`}
+          aria-pressed={pinned}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onTogglePin(tool.id);
+          }}
+        >
+          <Star
+            className={cn(
+              'h-4 w-4 text-neutral-500 dark:text-neutral-400',
+              pinned && 'fill-orange-500 text-orange-600 dark:fill-orange-500 dark:text-orange-400'
             )}
             strokeWidth={1.5}
           />
-        ) : (
-          <span className="text-xs">{tool.icon}</span>
-        )}
-      </div>
-
-      {/* Content Section */}
-      <div className="flex-1 min-w-0">
-        <div className={cn(
-          'font-medium text-sm transition-colors duration-200',
-          isHovered || isSelected
-            ? 'text-orange-900 dark:text-orange-100'
-            : 'text-neutral-900 dark:text-neutral-100'
-        )}>
-          {tool.name}
-        </div>
-        <div className="mt-0.5 text-xs text-neutral-600 dark:text-neutral-400 line-clamp-1">
-          {tool.description}
-        </div>
-        {category && (
-          <div className="mt-1">
-            <div className="bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded px-1.5 py-0.5 inline-block">
-              <p className="font-normal text-[9px] leading-3 text-neutral-700 dark:text-neutral-300 whitespace-nowrap">
-                {category.name}
-              </p>
-            </div>
-          </div>
-        )}
-      </div>
+        </button>
+      ) : null}
     </div>
   );
 };
 
 export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPaletteProps) {
+  const { pinnedTools, recentTools, togglePinnedTool, isPinned } = useToolActivity();
   const [query, setQuery] = useState('');
   const [results, setResults] = useState<Tool[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(0);
@@ -124,17 +169,35 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
 
-  // Auto-focus input when dialog opens
+  const shortcutRows = useMemo(() => {
+    const pinnedSet = new Set(pinnedTools.map(t => t.id));
+    const out: { tool: Tool; index: number }[] = [];
+    let i = 0;
+    for (const tool of pinnedTools) {
+      out.push({ tool, index: i++ });
+    }
+    for (const tool of recentTools) {
+      if (!pinnedSet.has(tool.id)) {
+        out.push({ tool, index: i++ });
+      }
+    }
+    return out;
+  }, [pinnedTools, recentTools]);
+
+  const hasQuery = query.trim().length > 0;
+  const hasResults = results.length > 0;
+  const showShortcuts = !hasQuery && shortcutRows.length > 0;
+  const activeCount = hasQuery ? results.length : shortcutRows.length;
+
   useEffect(() => {
     if (open && inputRef.current) {
-      // Small delay to ensure dialog is fully rendered
-      setTimeout(() => {
+      const t = window.setTimeout(() => {
         inputRef.current?.focus();
       }, 100);
+      return () => clearTimeout(t);
     }
   }, [open]);
 
-  // Clear query when dialog closes
   useEffect(() => {
     if (!open) {
       startTransition(() => {
@@ -145,13 +208,11 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
     }
   }, [open]);
 
-  // Search logic
   useEffect(() => {
     if (query.trim().length > 0) {
       const searchResults = searchTools(query);
       startTransition(() => {
         setResults(searchResults);
-        // Reset to first result when query changes, but ensure it's within bounds
         setSelectedIndex(0);
       });
     } else {
@@ -162,33 +223,39 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
     }
   }, [query]);
 
-  // Ensure selectedIndex is within bounds when results change
   useEffect(() => {
-    if (results.length > 0 && selectedIndex >= results.length) {
+    if (activeCount > 0 && selectedIndex >= activeCount) {
       startTransition(() => {
         setSelectedIndex(0);
       });
     }
-  }, [results.length, selectedIndex]);
+  }, [activeCount, selectedIndex]);
 
-  // Scroll selected item into view
   useEffect(() => {
-    if (resultsRef.current && results.length > 0 && selectedIndex >= 0) {
-      // Find the actual result element (it's wrapped in a div with id)
-      const resultsContainer = resultsRef.current.querySelector('[role="group"]');
-      if (resultsContainer) {
-        const selectedElement = resultsContainer.children[selectedIndex]?.querySelector('[role="option"]') as HTMLElement;
-        if (selectedElement) {
-          selectedElement.scrollIntoView({
-            behavior: 'smooth',
-            block: 'nearest',
-          });
-        }
-      }
-    }
-  }, [selectedIndex, results.length]);
+    if (!resultsRef.current || activeCount <= 0 || selectedIndex < 0) return;
 
-  // Keyboard navigation handler
+    const container = resultsRef.current.querySelector('[role="group"]');
+    if (!container) return;
+
+    const selectedWrap = container.children[selectedIndex] as HTMLElement | undefined;
+    const selectedElement = selectedWrap?.querySelector('[role="option"]') as HTMLElement | undefined;
+    if (selectedElement) {
+      selectedElement.scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest',
+      });
+    }
+  }, [selectedIndex, activeCount, hasQuery, showShortcuts]);
+
+  const handleClose = () => {
+    onOpenChange(false);
+  };
+
+  const handlePaletteToolSelect = (toolId: string) => {
+    onToolSelect(toolId);
+    handleClose();
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
       e.preventDefault();
@@ -196,84 +263,70 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
       return;
     }
 
-    if (e.key === 'Enter' && results.length > 0 && selectedIndex >= 0 && selectedIndex < results.length) {
+    const list = hasQuery ? results : shortcutRows.map(r => r.tool);
+    if (
+      e.key === 'Enter' &&
+      list.length > 0 &&
+      selectedIndex >= 0 &&
+      selectedIndex < list.length
+    ) {
       e.preventDefault();
-      const toolToSelect = results[selectedIndex];
+      const toolToSelect = list[selectedIndex];
       if (toolToSelect) {
-        handleToolSelect(toolToSelect.id);
+        handlePaletteToolSelect(toolToSelect.id);
       }
       return;
     }
 
-    if (e.key === 'ArrowDown' && results.length > 0) {
+    if (e.key === 'ArrowDown' && list.length > 0) {
       e.preventDefault();
-      setSelectedIndex((prev) => {
-        const nextIndex = (prev + 1) % results.length;
-        return nextIndex;
-      });
+      setSelectedIndex(prev => (prev + 1) % list.length);
       return;
     }
 
-    if (e.key === 'ArrowUp' && results.length > 0) {
+    if (e.key === 'ArrowUp' && list.length > 0) {
       e.preventDefault();
-      setSelectedIndex((prev) => {
-        const prevIndex = (prev - 1 + results.length) % results.length;
-        return prevIndex;
-      });
+      setSelectedIndex(prev => (prev - 1 + list.length) % list.length);
       return;
     }
 
-    // Home key - go to first result
-    if (e.key === 'Home' && results.length > 0) {
+    if (e.key === 'Home' && list.length > 0) {
       e.preventDefault();
       setSelectedIndex(0);
       return;
     }
 
-    // End key - go to last result
-    if (e.key === 'End' && results.length > 0) {
+    if (e.key === 'End' && list.length > 0) {
       e.preventDefault();
-      setSelectedIndex(results.length - 1);
-      return;
-    }
-
-    // Tab key should work normally for accessibility
-    if (e.key === 'Tab') {
-      // Allow default Tab behavior
+      setSelectedIndex(list.length - 1);
       return;
     }
   };
 
-  const handleClose = () => {
-    onOpenChange(false);
-  };
-
-  const handleToolSelect = (toolId: string) => {
-    onToolSelect(toolId);
-    handleClose();
-  };
-
-  const hasQuery = query.trim().length > 0;
-  const hasResults = results.length > 0;
+  const listboxActive = hasQuery ? hasResults : showShortcuts;
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
-        className="max-w-2xl p-0 h-[600px] flex flex-col bg-white dark:bg-neutral-900 border-neutral-200 dark:border-neutral-700 [&>button]:hidden"
+        className="flex h-[600px] max-w-2xl flex-col border-neutral-200 bg-white p-0 dark:border-neutral-700 dark:bg-neutral-900 [&>button]:hidden"
         aria-label="Command palette for searching tools"
+        onCloseAutoFocus={(e) => e.preventDefault()}
       >
         <DialogTitle className="sr-only">Search Tools</DialogTitle>
         <DialogDescription className="sr-only">
-          Search for developer tools by name or description. Use arrow keys to navigate and Enter to select.
+          Search for developer tools by name or description. Use arrow keys to navigate and Enter to
+          select.
         </DialogDescription>
-        <div className="px-6 pt-6 pb-0 flex flex-col flex-1 min-h-0">
-          {/* Search Input */}
+        <div className="flex min-h-0 flex-1 flex-col px-6 pb-0 pt-6">
           <div className="relative shrink-0">
             <label htmlFor="command-palette-search" className="sr-only">
               Search for tools
             </label>
-            <div className="relative bg-white dark:bg-[#0a0a0a] border border-[#e5e5e5] dark:border-[#262626] rounded-lg flex items-center">
-              <Search className="absolute left-3 h-4 w-4 text-[#0a0a0a] dark:text-[#e5e5e5] pointer-events-none" aria-hidden="true" />
+            <div className="relative flex items-center rounded-lg border border-[#e5e5e5] bg-white dark:border-[#262626] dark:bg-[#0a0a0a]">
+              <Search
+                className="pointer-events-none absolute left-3 h-4 w-4 text-[#0a0a0a] dark:text-[#e5e5e5]"
+                aria-hidden="true"
+              />
               <Input
                 id="command-palette-search"
                 ref={inputRef}
@@ -282,50 +335,88 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="h-12 pl-9 pr-20 text-base border-0 bg-transparent text-[#0a0a0a] dark:text-[#e5e5e5] placeholder:text-neutral-500 dark:placeholder:text-neutral-400 focus-visible:ring-0 focus-visible:ring-offset-0"
+                className="h-12 border-0 bg-transparent pl-9 pr-20 text-base text-[#0a0a0a] placeholder:text-neutral-500 focus-visible:ring-0 focus-visible:ring-offset-0 dark:text-[#e5e5e5] dark:placeholder:text-neutral-400"
                 aria-label="Search tools"
                 aria-autocomplete="list"
                 aria-controls="command-palette-results"
-                aria-expanded={hasResults}
-                aria-activedescendant={hasResults ? `result-${selectedIndex}` : undefined}
+                aria-expanded={listboxActive}
+                aria-activedescendant={
+                  listboxActive ? `palette-option-${selectedIndex}` : undefined
+                }
               />
-              {keyboardShortcut && (
-                <div className="absolute right-3 text-xs font-medium text-[#111827] dark:text-[#e5e5e5] leading-[20px] tracking-normal pointer-events-none" aria-hidden="true">
+              {keyboardShortcut ? (
+                <div
+                  className="pointer-events-none absolute right-3 text-xs font-medium leading-[20px] tracking-normal text-[#111827] dark:text-[#e5e5e5]"
+                  aria-hidden="true"
+                >
                   {keyboardShortcut}
                 </div>
-              )}
+              ) : null}
             </div>
           </div>
 
-          {/* Divider */}
           <Separator className="my-3" />
 
-          {/* Results Container */}
-          <div className="flex-1 min-h-0 overflow-hidden pb-5">
-            {!hasQuery && (
-              <div className="flex flex-col items-center justify-center h-full py-12">
-                <Search className="h-10 w-10 text-neutral-400 dark:text-neutral-500 mb-3 opacity-50" />
-                <p className="text-sm text-neutral-600 dark:text-neutral-400 text-center">
-                  Start typing to search for tools...
+          <div className="min-h-0 flex-1 overflow-hidden pb-5">
+            {!hasQuery && !showShortcuts ? (
+              <div className="flex h-full flex-col items-center justify-center py-12">
+                <Search className="mb-3 h-10 w-10 text-neutral-400 opacity-50 dark:text-neutral-500" />
+                <p className="text-center text-sm text-neutral-600 dark:text-neutral-400">
+                  Start typing to search, or open a tool to build your recent list.
                 </p>
-                {keyboardShortcut && (
-                  <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-1 text-center">
+                {keyboardShortcut ? (
+                  <p className="mt-1 text-center text-xs text-neutral-500 dark:text-neutral-500">
                     Press {keyboardShortcut} to open this palette anytime
                   </p>
-                )}
+                ) : null}
               </div>
-            )}
+            ) : null}
 
-            {hasQuery && hasResults && (
+            {showShortcuts ? (
+              <div
+                id="command-palette-results"
+                role="listbox"
+                aria-label="Pinned and recent tools"
+                className="scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent dark:scrollbar-thumb-neutral-600 max-h-full space-y-1 overflow-y-auto"
+                ref={resultsRef}
+              >
+                <div
+                  className="sticky top-0 z-10 mb-1 border-b border-neutral-200 bg-white px-2 py-2.5 text-xs font-medium text-neutral-600 backdrop-blur-sm dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-400"
+                  role="status"
+                  aria-live="polite"
+                  aria-atomic="true"
+                >
+                  Jump back in
+                </div>
+                <div className="space-y-0.5" role="group">
+                  {shortcutRows.map(({ tool, index }) => (
+                    <div key={`${tool.id}-shortcut-${index}`}>
+                      <CommandPaletteResult
+                        tool={tool}
+                        onSelect={handlePaletteToolSelect}
+                        isSelected={index === selectedIndex}
+                        index={index}
+                        onHover={setSelectedIndex}
+                        showPin
+                        pinned={isPinned(tool.id)}
+                        onTogglePin={togglePinnedTool}
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+
+            {hasQuery && hasResults ? (
               <div
                 id="command-palette-results"
                 role="listbox"
                 aria-label="Search results"
-                className="space-y-1 overflow-y-auto max-h-full scrollbar-thin scrollbar-thumb-neutral-300 dark:scrollbar-thumb-neutral-600 scrollbar-track-transparent"
+                className="scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent dark:scrollbar-thumb-neutral-600 max-h-full space-y-1 overflow-y-auto"
                 ref={resultsRef}
               >
                 <div
-                  className="px-2 py-2.5 text-xs font-medium text-neutral-600 dark:text-neutral-400 sticky top-0 bg-white dark:bg-neutral-900 z-10 border-b border-neutral-200 dark:border-neutral-700 mb-1 backdrop-blur-sm bg-opacity-95 dark:bg-opacity-95"
+                  className="sticky top-0 z-10 mb-1 border-b border-neutral-200 bg-white px-2 py-2.5 text-xs font-medium text-neutral-600 backdrop-blur-sm dark:border-neutral-900 dark:bg-neutral-900 dark:text-neutral-400"
                   role="status"
                   aria-live="polite"
                   aria-atomic="true"
@@ -334,36 +425,42 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
                 </div>
                 <div className="space-y-0.5" role="group">
                   {results.map((tool, index) => (
-                    <div key={tool.id} id={`result-${index}`}>
+                    <div key={tool.id}>
                       <CommandPaletteResult
                         tool={tool}
-                        onSelect={handleToolSelect}
+                        onSelect={handlePaletteToolSelect}
                         isSelected={index === selectedIndex}
                         index={index}
                         onHover={setSelectedIndex}
+                        showPin
+                        pinned={isPinned(tool.id)}
+                        onTogglePin={togglePinnedTool}
                       />
                     </div>
                   ))}
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {hasQuery && !hasResults && (
+            {hasQuery && !hasResults ? (
               <div
-                className="flex flex-col items-center justify-center h-full py-12"
+                className="flex h-full flex-col items-center justify-center py-12"
                 role="status"
                 aria-live="polite"
                 aria-atomic="true"
               >
-                <Search className="h-12 w-12 mx-auto mb-4 text-neutral-400 dark:text-neutral-500 opacity-50" aria-hidden="true" />
-                <p className="text-sm font-medium text-neutral-900 dark:text-neutral-100 mb-1">
+                <Search
+                  className="mx-auto mb-4 h-12 w-12 text-neutral-400 opacity-50 dark:text-neutral-500"
+                  aria-hidden="true"
+                />
+                <p className="mb-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
                   No tools found for &ldquo;{query}&rdquo;
                 </p>
                 <p className="text-xs text-neutral-600 dark:text-neutral-400">
                   Try a different search term
                 </p>
               </div>
-            )}
+            ) : null}
           </div>
         </div>
       </DialogContent>

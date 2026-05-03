@@ -12,6 +12,8 @@ export interface Tool {
   component: string;
   supportsDesktop?: boolean;
   supportsMobile?: boolean;
+  /** Wide or dual-pane tools that work best on a larger screen */
+  desktopRecommended?: boolean;
 }
 
 export interface ToolCategory {

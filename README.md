@@ -5,7 +5,7 @@
 ![Test Coverage](https://img.shields.io/codecov/c/github/hypkey/devpockit)
 ![Version](https://img.shields.io/github/package-json/v/hypkey/devpockit)
 
-A modern web application providing essential developer tools with a clean, responsive interface. Built with Next.js 15, featuring 30+ powerful tools that run entirely client-side for optimal performance and privacy.
+A modern web application providing essential developer tools with a clean, responsive interface. Built with Next.js (App Router, static export), featuring 30+ powerful tools that run entirely client-side for optimal performance and privacy.
 
 🌐 **[Production](https://devpockit.hypkey.com/)** | 📖 **[Documentation](#-documentation)** | 🤝 **[Contributing](CONTRIBUTING.md)** | 📝 **[Changelog](CHANGELOG.md)**
 
@@ -14,7 +14,7 @@ A modern web application providing essential developer tools with a clean, respo
 - **30+ Developer Tools** - JSON formatter, UUID generator, JWT decoder, regex tester, and more
 - **Client-Side Processing** - All tools run in your browser, no data sent to servers
 - **Modern UI** - Clean, responsive design with dark/light theme support
-- **Fast & Reliable** - Built with Next.js 15 and TypeScript
+- **Fast & Reliable** - Built with Next.js and TypeScript
 - **Mobile Friendly** - Works seamlessly on desktop, tablet, and mobile devices
 - **Open Source** - MIT licensed, free to use and contribute
 

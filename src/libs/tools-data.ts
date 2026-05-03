@@ -10,8 +10,10 @@ import {
   Key,
   Link,
   List,
+  ListOrdered,
   Lock,
   MapPin,
+  Minimize2,
   Network,
   QrCode,
   RefreshCw,
@@ -25,6 +27,7 @@ import {
   Binary,
   Database,
   ClipboardPaste,
+  Cookie,
   type LucideIcon
 } from 'lucide-react';
 
@@ -46,6 +49,7 @@ export const toolIcons: Record<string, LucideIcon> = {
   'ip-checker': MapPin,
   'diff-checker': GitCompare,
   'html-to-markdown': ClipboardPaste,
+  'text-minifier': Minimize2,
   'timestamp-converter': Timer,
   'list-comparison': List,
   'list-converter': ArrowLeftRight,
@@ -62,6 +66,8 @@ export const toolIcons: Record<string, LucideIcon> = {
   'number-base-converter': Binary,
   'base-encoder': Binary,
   'hash-generator': Hash,
+  'http-status-cheatsheet': ListOrdered,
+  'headers-cookies-explainer': Cookie,
 };
 
 export const toolCategories: ToolCategory[] = [
@@ -107,6 +113,7 @@ export const toolCategories: ToolCategory[] = [
         component: 'DiffChecker',
         supportsDesktop: true,
         supportsMobile: true,
+        desktopRecommended: true,
       },
       {
         id: 'html-to-markdown',
@@ -117,6 +124,19 @@ export const toolCategories: ToolCategory[] = [
         isPopular: false,
         path: '/tools/text-tools/html-to-markdown',
         component: 'HtmlToMarkdown',
+        supportsDesktop: true,
+        supportsMobile: true,
+      },
+      {
+        id: 'text-minifier',
+        name: 'Text Minifier',
+        description:
+          'Collapse redundant whitespace in plain text—single-line or per-line—with optional CRLF normalization and empty-line removal',
+        category: 'text-tools',
+        icon: '⏬',
+        isPopular: false,
+        path: '/tools/text-tools/text-minifier',
+        component: 'TextMinifier',
         supportsDesktop: true,
         supportsMobile: true,
       },
@@ -371,6 +391,7 @@ export const toolCategories: ToolCategory[] = [
         component: 'SchemaConverter',
         supportsDesktop: true,
         supportsMobile: true,
+        desktopRecommended: true,
       },
       {
         id: 'number-base-converter',
@@ -430,6 +451,32 @@ export const toolCategories: ToolCategory[] = [
         supportsMobile: true,
       },
       {
+        id: 'http-status-cheatsheet',
+        name: 'HTTP Status Codes',
+        description:
+          'Searchable reference for common HTTP response status codes, classes, names, and short explanations',
+        category: 'network',
+        icon: '📛',
+        isPopular: false,
+        path: '/tools/network/http-status-cheatsheet',
+        component: 'HttpStatusCheatsheet',
+        supportsDesktop: true,
+        supportsMobile: true,
+      },
+      {
+        id: 'headers-cookies-explainer',
+        name: 'Headers / Cookies explainer',
+        description:
+          'Paste HTTP headers or cookie strings to see a structured breakdown with glossary explanations',
+        category: 'network',
+        icon: '🍪',
+        isPopular: false,
+        path: '/tools/network/headers-cookies-explainer',
+        component: 'HeadersCookiesExplainer',
+        supportsDesktop: true,
+        supportsMobile: true,
+      },
+      {
         id: 'system-info',
         name: 'System Information',
         description: 'View detailed information about your browser, device, display, network, and system capabilities',
@@ -461,6 +508,7 @@ export const toolCategories: ToolCategory[] = [
         component: 'ListComparison',
         supportsDesktop: true,
         supportsMobile: true,
+        desktopRecommended: true,
       },
       {
         id: 'json-path-finder',

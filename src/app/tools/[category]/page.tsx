@@ -1,4 +1,6 @@
 import { getCategories, getCategoryById } from '@/libs/tools-data';
+import { absoluteSiteUrl } from '@/libs/site-url';
+import type { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
 interface CategoryPageProps {
@@ -18,6 +20,30 @@ export async function generateStaticParams() {
   return categories.map((category) => ({
     category: category.id,
   }));
+}
+
+export async function generateMetadata({ params }: CategoryPageProps): Promise<Metadata> {
+  const { category: categoryId } = await params;
+  const category = getCategoryById(categoryId);
+  if (!category) {
+    return { title: 'Tools' };
+  }
+
+  const title = `${category.name} — Developer Tools`;
+  const description = `${category.description}. Free browser-based tools on DevPockit.`;
+  const canonical = absoluteSiteUrl(`/tools/${category.id}/`);
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: `${category.name} | DevPockit`,
+      description,
+      url: canonical,
+      type: 'website',
+    },
+    alternates: { canonical },
+  };
 }
 
 export default async function CategoryPage({ params }: CategoryPageProps) {

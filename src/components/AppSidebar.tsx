@@ -1,6 +1,7 @@
 "use client"
 
 import { SearchTools } from "@/components/layout/SearchTools"
+import { useToolActivity } from "@/components/providers/ToolActivityProvider"
 import {
   Collapsible,
   CollapsibleContent,
@@ -49,6 +50,7 @@ import {
   RefreshCw,
   Search,
   Settings,
+  Star,
   Sun,
   type LucideIcon,
 } from "lucide-react"
@@ -95,6 +97,7 @@ export function AppSidebar({
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const { state, toggleSidebar } = useSidebar()
+  const { hydrated: pinsHydrated, isPinned, togglePinnedTool } = useToolActivity()
   const [codeEditorTheme, setCodeEditorTheme] = useCodeEditorTheme('basicDark')
   const [mounted, setMounted] = React.useState(false)
   const [openCategories, setOpenCategories] = React.useState<Set<string>>(new Set())
@@ -292,18 +295,46 @@ export function AppSidebar({
                               {category.tools.map((tool) => (
                                 <div
                                   key={tool.id}
-                                  className="text-xs cursor-pointer hover:bg-neutral-100 hover:text-neutral-900 dark:hover:bg-neutral-700 dark:hover:text-neutral-100 dark:text-neutral-100 py-1 px-2 rounded-md -mx-2"
-                                  onClick={(e) => {
-                                    e.stopPropagation()
-                                    handleToolSelect(tool.id)
-                                  }}
+                                  className="flex items-center gap-1 -mx-2 rounded-md px-2 py-1 text-xs"
                                 >
-                                  {tool.name}
+                                  <div
+                                    className="min-w-0 flex-1 cursor-pointer rounded-md py-1 px-2 -mx-1 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+                                    onClick={(e) => {
+                                      e.stopPropagation()
+                                      handleToolSelect(tool.id)
+                                    }}
+                                  >
+                                    <span className="block truncate">{tool.name}</span>
+                                  </div>
+                                  {mounted && pinsHydrated ? (
+                                    <button
+                                      type="button"
+                                      className={cn(
+                                        'flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-neutral-500 hover:bg-neutral-200 hover:text-neutral-900 dark:text-neutral-400 dark:hover:bg-neutral-600 dark:hover:text-neutral-100',
+                                        isPinned(tool.id) && 'text-orange-600 dark:text-orange-400'
+                                      )}
+                                      aria-label={isPinned(tool.id) ? `Unpin ${tool.name}` : `Pin ${tool.name}`}
+                                      aria-pressed={isPinned(tool.id)}
+                                      onClick={(e) => {
+                                        e.stopPropagation()
+                                        togglePinnedTool(tool.id)
+                                      }}
+                                    >
+                                      <Star
+                                        className={cn(
+                                          'h-3.5 w-3.5',
+                                          isPinned(tool.id) &&
+                                            'fill-orange-500 text-orange-600 dark:fill-orange-500 dark:text-orange-400'
+                                        )}
+                                        strokeWidth={1.5}
+                                      />
+                                    </button>
+                                  ) : null}
                                 </div>
                               ))}
                             </div>
                           ),
-                          className: "w-48",
+                          className: "w-56",
                         }}
                       >
                         <IconComponent className="h-4 w-4" />
@@ -315,12 +346,42 @@ export function AppSidebar({
                       <SidebarMenuSub>
                         {category.tools.map((tool) => (
                           <SidebarMenuSubItem key={tool.id}>
-                            <SidebarMenuSubButton
-                              isActive={tool.id === selectedTool}
-                              onClick={() => handleToolSelect(tool.id)}
-                            >
-                              <span>{tool.name}</span>
-                            </SidebarMenuSubButton>
+                            <div className="flex w-full min-w-0 items-center gap-0.5">
+                              <SidebarMenuSubButton
+                                className="min-w-0 flex-1 pr-0"
+                                isActive={tool.id === selectedTool}
+                                onClick={() => handleToolSelect(tool.id)}
+                              >
+                                <span>{tool.name}</span>
+                              </SidebarMenuSubButton>
+                              {pinsHydrated ? (
+                                <button
+                                  type="button"
+                                  className={cn(
+                                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                                    isPinned(tool.id) && 'text-orange-600 dark:text-orange-400'
+                                  )}
+                                  aria-label={
+                                    isPinned(tool.id) ? `Unpin ${tool.name}` : `Pin ${tool.name}`
+                                  }
+                                  aria-pressed={isPinned(tool.id)}
+                                  onClick={(e) => {
+                                    e.preventDefault()
+                                    e.stopPropagation()
+                                    togglePinnedTool(tool.id)
+                                  }}
+                                >
+                                  <Star
+                                    className={cn(
+                                      'h-3.5 w-3.5',
+                                      isPinned(tool.id) &&
+                                        'fill-orange-500 text-orange-600 dark:fill-orange-500 dark:text-orange-400'
+                                    )}
+                                    strokeWidth={1.5}
+                                  />
+                                </button>
+                              ) : null}
+                            </div>
                           </SidebarMenuSubItem>
                         ))}
                       </SidebarMenuSub>

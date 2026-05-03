@@ -1,4 +1,5 @@
 import { getCategoryById, getToolById, getTools } from '@/libs/tools-data';
+import { absoluteAssetUrl, absoluteSiteUrl } from '@/libs/site-url';
 import { Metadata } from 'next';
 import { notFound } from 'next/navigation';
 
@@ -51,9 +52,9 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
   const title = `${tool.name} - Free Online Tool`;
   const description = `${tool.description} Free, fast, and runs locally in your browser. No sign-up required.`;
 
-  // Ensure trailing slash for GitHub Pages compatibility
   const toolUrl = tool.path.endsWith('/') ? tool.path : `${tool.path}/`;
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.hypkey.com';
+  const canonical = absoluteSiteUrl(toolUrl);
+  const ogImage = absoluteAssetUrl('/og-image.png');
 
   return {
     title,
@@ -62,11 +63,11 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
     openGraph: {
       title: `${tool.name} | DevPockit`,
       description,
-      url: `${baseUrl}${toolUrl}`,
+      url: canonical,
       type: 'website',
       images: [
         {
-          url: '/og-image.png',
+          url: ogImage,
           width: 1200,
           height: 630,
           alt: tool.name,
@@ -79,7 +80,7 @@ export async function generateMetadata({ params }: ToolPageProps): Promise<Metad
       description,
     },
     alternates: {
-      canonical: `${baseUrl}${toolUrl}`,
+      canonical,
     },
   };
 }

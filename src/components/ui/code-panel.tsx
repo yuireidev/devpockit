@@ -10,6 +10,7 @@ import { CodeEditorCore } from '@/components/ui/code-editor-core';
 import { EditorSettingsMenu } from '@/components/ui/editor-settings-menu';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import { type CodeEditorTheme } from '@/config/code-editor-themes';
+import { useAppToast } from '@/components/providers/AppToastProvider';
 import { cn } from '@/libs/utils';
 import { Check, Copy, Trash2 } from 'lucide-react';
 import type * as Monaco from 'monaco-editor';
@@ -108,6 +109,8 @@ export function CodePanel({
   fillHeight = false,
   minFillHeight = '160px',
 }: CodePanelProps) {
+  const appToast = useAppToast();
+
   // Detect fill-height mode: the panel is a flex/grid child that should grow and shrink
   // with its container rather than enforce a hard minHeight floor.
   const isFillMode = fillHeight || (className?.split(/\s+/).some(c => c === 'flex-1' || c === 'h-full') ?? false);
@@ -175,6 +178,7 @@ export function CodePanel({
 
       await navigator.clipboard.writeText(textToCopy);
       setCopySuccess(true);
+      appToast?.showToast('Copied to clipboard');
       setTimeout(() => setCopySuccess(false), 2000);
     } catch (err) {
       console.error('Failed to copy:', err);
@@ -370,9 +374,9 @@ export function CodePanel({
                     type="button"
                   >
                     {copySuccess ? (
-                      <Check className="h-4 w-4 text-orange-600" />
+                      <Check className="h-4 w-4 text-orange-600" aria-hidden />
                     ) : (
-                      <Copy className="h-4 w-4 text-neutral-900 dark:text-neutral-300" />
+                      <Copy className="h-4 w-4 text-neutral-900 dark:text-neutral-300" aria-hidden />
                     )}
                   </button>
                 </TooltipTrigger>
