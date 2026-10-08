@@ -1,5 +1,8 @@
 'use client';
 
+import type { CodeEditorTheme } from '@/config/code-editor-themes';
+import { getMonacoTheme } from '@/config/monaco-themes';
+import { getShikiHighlighter, getThemeColors, type EditorThemeColors } from '@/libs/shiki-init';
 import { cn } from '@/libs/utils';
 import {
   ChevronDownIcon,
@@ -28,6 +31,7 @@ export interface JsonTreeViewProps {
   onGetExpandedJson?: (getExpandedJson: () => string) => void; // Callback to expose function to get expanded JSON
   maxDepth?: number;
   className?: string;
+  theme?: CodeEditorTheme; // Active code editor theme for color sync
   // Search props (controlled)
   searchTerm?: string;
   onSearchChange?: (term: string) => void;
@@ -197,6 +201,7 @@ interface TreeNodeItemProps {
   searchTerm: string;
   itemHeight: number;
   isCopied: boolean;
+  themeColors: EditorThemeColors;
 }
 
 function TreeNodeItem({
@@ -208,6 +213,7 @@ function TreeNodeItem({
   searchTerm,
   itemHeight,
   isCopied,
+  themeColors,
 }: TreeNodeItemProps) {
   const hasChildren = node.children && node.children.length > 0;
   const indent = node.level * 20;
@@ -236,30 +242,38 @@ function TreeNodeItem({
     node.path.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const typeBadgeBg = getTypeBg(node.type);
+  const typeBadgeColor = getTypeColor(node.type);
+
   return (
     <div
       className={cn(
-        'flex items-start gap-2 px-2 py-1.5 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 transition-colors',
-        isHighlighted && 'bg-orange-50 dark:bg-orange-950/30 border-l-2 border-orange-600',
-        isSearchMatch && !isHighlighted && 'bg-yellow-50 dark:bg-yellow-950/20'
+        'flex items-start gap-2 px-2 py-1.5 hover:opacity-80 transition-colors',
+        isHighlighted && 'border-l-2',
+        isSearchMatch && !isHighlighted && ''
       )}
-      style={{ paddingLeft: `${indent + 8}px` }}
+      style={{
+        paddingLeft: `${indent + 8}px`,
+        backgroundColor: isHighlighted ? themeColors.findMatchBackground : 'transparent',
+        color: themeColors.foreground,
+      }}
     >
       {/* Expand/Collapse Button */}
       <button
         onClick={handleToggle}
         disabled={!hasChildren}
         className={cn(
-          'shrink-0 w-4 h-4 flex items-center justify-center rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors',
+          'shrink-0 w-4 h-4 flex items-center justify-center rounded hover:opacity-70 transition-colors',
           !hasChildren && 'opacity-0 cursor-default'
         )}
+        style={{ color: themeColors.foreground }}
         aria-label={isExpanded ? 'Collapse' : 'Expand'}
       >
         {hasChildren && (
           isExpanded ? (
-            <ChevronDownIcon className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
+            <ChevronDownIcon className="h-3 w-3" style={{ color: themeColors.foreground }} />
           ) : (
-            <ChevronRightIcon className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
+            <ChevronRightIcon className="h-3 w-3" style={{ color: themeColors.foreground }} />
           )
         )}
       </button>
@@ -268,8 +282,8 @@ function TreeNodeItem({
       <span
         className={cn(
           'shrink-0 px-1.5 py-0.5 text-xs font-mono rounded',
-          getTypeBg(node.type),
-          getTypeColor(node.type)
+          typeBadgeBg,
+          typeBadgeColor
         )}
       >
         {node.type === 'object' ? '{}' : node.type === 'array' ? '[]' : node.type[0].toUpperCase()}
@@ -277,31 +291,35 @@ function TreeNodeItem({
 
       {/* Key */}
       {!isRoot && (
-        <span className="font-mono text-sm text-neutral-700 dark:text-neutral-300">
+        <span className="font-mono text-sm" style={{ color: themeColors.foreground }}>
           {displayKey}:
         </span>
       )}
 
       {/* Value */}
-      <span className={cn('text-sm flex-1', getTypeColor(node.type))}>
+      <span className={cn('text-sm flex-1', typeBadgeColor)}>
         {displayValue}
       </span>
 
       {/* Path (on hover tooltip would go here) */}
-      <span className="text-xs text-neutral-500 dark:text-neutral-500 font-mono hidden group-hover:inline">
+      <span
+        className="text-xs font-mono hidden group-hover:inline"
+        style={{ color: themeColors.foreground, opacity: 0.7 }}
+      >
         {node.path}
       </span>
 
       {/* Copy Button */}
       <button
         onClick={handleCopy}
-        className="shrink-0 p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors opacity-0 group-hover:opacity-100"
+        className="shrink-0 p-1 rounded hover:opacity-70 transition-colors opacity-0 group-hover:opacity-100"
+        style={{ color: themeColors.foreground }}
         aria-label="Copy JSON path"
       >
         {isCopied ? (
-          <CheckIcon className="h-3.5 w-3.5 text-orange-600 dark:text-orange-400" />
+          <CheckIcon className="h-3.5 w-3.5" style={{ color: themeColors.foreground }} />
         ) : (
-          <DocumentDuplicateIcon className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" />
+          <DocumentDuplicateIcon className="h-3.5 w-3.5" style={{ color: themeColors.foreground }} />
         )}
       </button>
     </div>
@@ -315,6 +333,7 @@ export function JsonTreeView({
   onGetExpandedJson,
   maxDepth = 3,
   className,
+  theme = 'basicDark',
   searchTerm = '',
   onSearchChange,
   onExpandAll,
@@ -322,9 +341,40 @@ export function JsonTreeView({
 }: JsonTreeViewProps) {
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
+  const [themeColors, setThemeColors] = useState<EditorThemeColors | null>(null);
   const listRef = useListRef(null);
   const highlightedPathSet = useMemo(() => new Set(highlightedPaths), [highlightedPaths]);
   const lastSearchTermRef = useRef<string>('');
+
+  // Fetch theme colors from Shiki when theme changes
+  useEffect(() => {
+    const highlighter = getShikiHighlighter();
+    if (!highlighter) return;
+
+    const shikiThemeName = getMonacoTheme(theme);
+    highlighter.loadTheme(shikiThemeName as any)
+      .then(() => {
+        const colors = getThemeColors(shikiThemeName);
+        if (colors) setThemeColors(colors);
+      })
+      .catch(() => {
+        // Theme may already be loaded; try fetching directly
+        const colors = getThemeColors(shikiThemeName);
+        if (colors) setThemeColors(colors);
+      });
+  }, [theme]);
+
+  // Fallback colors for initial render / SSR
+  const colors = useMemo<EditorThemeColors>(() => {
+    return themeColors || {
+      background: '#1e1e1e',
+      foreground: '#d4d4d4',
+      lineNumber: '#858585',
+      findMatchBackground: '#ffd700',
+      findMatchHighlightBackground: '#ffff00',
+      selectionBackground: '#264f78',
+    };
+  }, [themeColors]);
 
   // Transform data to tree nodes
   const rootNodes = useMemo(() => {
@@ -534,7 +584,7 @@ export function JsonTreeView({
     }
 
     return (
-      <div style={style} className="group" {...ariaAttributes}>
+      <div style={{ ...style, backgroundColor: colors.background }} className="group" {...ariaAttributes}>
         <TreeNodeItem
           node={node}
           isHighlighted={highlightedPathSet.has(node.path)}
@@ -544,24 +594,25 @@ export function JsonTreeView({
           searchTerm={searchTerm}
           itemHeight={itemHeight}
           isCopied={copiedPath === node.path}
+          themeColors={colors}
         />
       </div>
     );
-  }, [filteredNodes, highlightedPathSet, expandedPaths, handleToggle, handleCopy, searchTerm, copiedPath, itemHeight]);
+  }, [filteredNodes, highlightedPathSet, expandedPaths, handleToggle, handleCopy, searchTerm, copiedPath, itemHeight, colors]);
 
 return (
-    <div className={cn('flex flex-col h-full relative', className)}>
+    <div className={cn('flex flex-col h-full relative rounded-[10px]', className)} style={{ backgroundColor: colors.background, color: colors.foreground }}>
       {/* Tree View */}
-      <div className="flex-1 overflow-hidden relative">
+      <div className="flex-1 overflow-hidden relative rounded-[10px]" style={{ backgroundColor: colors.background }}>
         {filteredNodes.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center justify-center h-full" style={{ color: colors.foreground }}>
             No nodes to display
           </div>
         ) : (
-          <div className="h-full w-full">
+          <div className="h-full w-full" style={{ backgroundColor: colors.background }}>
             <List<Record<string, never>>
               listRef={listRef}
-              style={{ height: '100%', width: '100%' }}
+              style={{ height: '100%', width: '100%', backgroundColor: colors.background }}
               rowCount={filteredNodes.length}
               rowHeight={itemHeight}
               rowComponent={RowComponent}

@@ -254,6 +254,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               }}
               onGetExpandedJson={(fn: () => string) => setGetExpandedJson(() => fn)}
               maxDepth={3}
+              theme={theme}
               searchTerm={treeSearchTerm}
               onSearchChange={setTreeSearchTerm}
               onExpandAll={handleTreeExpandAll}

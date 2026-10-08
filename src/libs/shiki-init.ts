@@ -248,3 +248,38 @@ export function getLoadedLanguages(): string[] {
   return highlighterInstance.getLoadedLanguages() as string[];
 }
 
+/**
+ * Semantic editor theme colors extracted from a Shiki theme
+ */
+export interface EditorThemeColors {
+  background: string;
+  foreground: string;
+  lineNumber: string;
+  findMatchBackground: string;
+  findMatchHighlightBackground: string;
+  selectionBackground: string;
+}
+
+/**
+ * Extract semantic editor colors from a loaded Shiki theme
+ * @param themeName - Shiki theme name (e.g. 'github-dark', 'dark-plus')
+ * @returns EditorThemeColors or null if highlighter/theme not available
+ */
+export function getThemeColors(themeName: string): EditorThemeColors | null {
+  const highlighter = getShikiHighlighter();
+  if (!highlighter) return null;
+
+  const shikiTheme = (highlighter as any).getTheme(themeName);
+  if (!shikiTheme) return null;
+
+  const colors = shikiTheme.colors || {};
+  return {
+    background: colors['editor.background'] || '#ffffff',
+    foreground: colors['editor.foreground'] || '#000000',
+    lineNumber: colors['editorLineNumber.foreground'] || '#999999',
+    findMatchBackground: colors['editor.findMatchBackground'] || '#ffff00',
+    findMatchHighlightBackground: colors['editor.findMatchHighlightBackground'] || '#ffd700',
+    selectionBackground: colors['editor.selectionBackground'] || '#add6ff',
+  };
+}
+
