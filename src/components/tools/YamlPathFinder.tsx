@@ -468,26 +468,28 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
               wrapText={outputWrapText}
               onWrapTextChange={setOutputWrapText}
               showWrapToggle={activeTab === 'results'}
+              headerActions={
+                activeTab === 'tree' && result ? (
+                  <span
+                    className={cn(
+                      'px-2.5 py-1 rounded-full text-xs font-semibold',
+                      result.success && result.count > 0
+                        ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
+                        : result.success && result.count === 0
+                        ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
+                        : ''
+                    )}
+                  >
+                    {result.success && result.count > 0
+                      ? `Found ${result.count} match${result.count !== 1 ? 'es' : ''}`
+                      : result.success && result.count === 0
+                      ? 'No matches found'
+                      : ''}
+                  </span>
+                ) : null
+              }
               footerLeftContent={
                 <>
-                  {activeTab === 'tree' && result && (
-                    <span
-                      className={cn(
-                        'px-2.5 py-1 rounded-full text-xs font-semibold',
-                        result.success && result.count > 0
-                          ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
-                          : result.success && result.count === 0
-                          ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
-                          : ''
-                      )}
-                    >
-                      {result.success && result.count > 0
-                        ? `Found ${result.count} match${result.count !== 1 ? 'es' : ''}`
-                        : result.success && result.count === 0
-                        ? 'No matches found'
-                        : ''}
-                    </span>
-                  )}
                   {activeTab === 'results' && output && result && (
                     <>
                       <span>{result.count} match{result.count !== 1 ? 'es' : ''}</span>
