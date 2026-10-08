@@ -267,7 +267,6 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
               }}
               onGetExpandedJson={(fn: () => string) => setGetExpandedJson(() => fn)}
               maxDepth={3}
-              height="500px"
             />
           </div>
         );

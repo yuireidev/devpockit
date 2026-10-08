@@ -168,6 +168,7 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
   const keyboardShortcut = useKeyboardShortcut();
   const inputRef = useRef<HTMLInputElement>(null);
   const resultsRef = useRef<HTMLDivElement>(null);
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPod|iPad/i.test(navigator.platform);
 
   const shortcutRows = useMemo(() => {
     const pinnedSet = new Set(pinnedTools.map(t => t.id));
@@ -369,6 +370,9 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
                     Press {keyboardShortcut} to open this palette anytime
                   </p>
                 ) : null}
+                <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-1 text-center">
+                  Press {isMac ? '⌘B' : 'Ctrl+B'} to toggle sidebar
+                </p>
               </div>
             ) : null}
 

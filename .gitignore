@@ -323,5 +323,8 @@ certificates/*.p12
 certificates/*.pfx
 !certificates/.gitkeep
 
+# Kilo
+.kilo/
+
 # Claude
 CLAUDE.md
