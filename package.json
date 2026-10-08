@@ -43,7 +43,17 @@
     "build:test": "pnpm type-check && pnpm lint && pnpm test:ci && pnpm build",
     "build:verify": "pnpm build && node scripts/verify-build.js",
     "serve:build": "python3 -m http.server 8080 --directory out",
-    "test:build": "bash scripts/test-build.sh"
+    "test:build": "bash scripts/test-build.sh",
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,mjs,cjs}": [
+      "eslint --fix",
+      "prettier --write"
+    ],
+    "*.{json,md,yml,yaml,css}": [
+      "prettier --write"
+    ]
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -90,6 +100,8 @@
     "yaml": "^2.8.2"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.3",
+    "@commitlint/config-conventional": "^21.2.3",
     "@eslint/eslintrc": "^3.3.5",
     "@tailwindcss/postcss": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",
@@ -105,8 +117,10 @@
     "baseline-browser-mapping": "^2.10.8",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.1.6",
+    "husky": "^9.1.7",
     "jest": "^30.3.0",
     "jest-environment-jsdom": "^30.3.0",
+    "lint-staged": "^17.6.0",
     "postcss": "^8.5.8",
     "prettier": "^3.8.1",
     "prettier-plugin-tailwindcss": "^0.7.2",
