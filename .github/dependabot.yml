@@ -16,7 +16,8 @@ updates:
     commit-message:
       prefix: "chore"
       include: "scope"
-    # Group updates for minor and patch versions
+    # Group minor/patch updates; major updates intentionally left ungrouped
+    # so they arrive as individual PRs for careful review.
     groups:
       production-dependencies:
         dependency-type: "production"
@@ -28,9 +29,8 @@ updates:
         update-types:
           - "minor"
           - "patch"
-    # Ignore major version updates (review manually)
+    # Ignore major version updates for critical dependencies (review manually)
     ignore:
-      # Ignore major updates for critical dependencies
       - dependency-name: "react"
         update-types: ["version-update:semver-major"]
       - dependency-name: "react-dom"
@@ -40,3 +40,25 @@ updates:
       - dependency-name: "typescript"
         update-types: ["version-update:semver-major"]
 
+  # Enable version updates for GitHub Actions
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "hypkey"
+    labels:
+      - "dependencies"
+      - "automated"
+    commit-message:
+      prefix: "chore"
+      include: "scope"
+    # Group minor/patch action updates; major updates arrive as separate PRs.
+    groups:
+      github-actions:
+        update-types:
+          - "minor"
+          - "patch"
