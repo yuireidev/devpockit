@@ -1,0 +1,21 @@
+# Default owners for everything in the repository.
+* @hypkey
+
+# Source code
+/src/ @hypkey
+
+# Documentation
+/docs/ @hypkey
+README.md @hypkey
+CONTRIBUTING.md @hypkey
+CHANGELOG.md @hypkey
+
+# CI/CD workflows
+/.github/workflows/ @hypkey
+
+# Package manifests and lockfiles
+package.json @hypkey
+pnpm-lock.yaml @hypkey
+
+# Configuration files
+*.config.* @hypkey
