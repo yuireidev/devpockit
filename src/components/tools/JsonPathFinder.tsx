@@ -22,7 +22,7 @@ import {
   type JsonPathResult
 } from '@/libs/json-path-finder';
 import { cn } from '@/libs/utils';
-import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
+import { ArrowPathIcon, ChevronDownIcon, MagnifyingGlassIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface JsonPathFinderProps {
@@ -44,6 +44,8 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('tree');
   const [getExpandedJson, setGetExpandedJson] = useState<(() => string) | null>(null);
+  // Tree View search state
+  const [treeSearchTerm, setTreeSearchTerm] = useState<string>('');
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
@@ -229,6 +231,14 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
   }, [outputTabs, activeTab]);
 
   // Custom tab content renderer
+  const handleTreeExpandAll = useCallback(() => {
+    // This will be handled by JsonTreeView internally via the passed handler
+  }, []);
+
+  const handleTreeCollapseAll = useCallback(() => {
+    // This will be handled by JsonTreeView internally via the passed handler
+  }, []);
+
   const renderCustomTabContent = (tabId: string): React.ReactNode => {
     if (tabId === 'tree') {
       // Show tree view if JSON is valid, otherwise show empty state message
@@ -244,7 +254,10 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               }}
               onGetExpandedJson={(fn: () => string) => setGetExpandedJson(() => fn)}
               maxDepth={3}
-              height="500px"
+              searchTerm={treeSearchTerm}
+              onSearchChange={setTreeSearchTerm}
+              onExpandAll={handleTreeExpandAll}
+              onCollapseAll={handleTreeCollapseAll}
             />
           </div>
         );
@@ -422,24 +435,56 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               onWrapTextChange={setOutputWrapText}
               showWrapToggle={activeTab === 'results'}
               footerLeftContent={
-                <>
-                  {activeTab === 'tree' && result && (
-                    <span
-                      className={cn(
-                        'px-2.5 py-1 rounded-full text-xs font-semibold',
-                        result.success && result.count > 0
-                          ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
-                          : result.success && result.count === 0
-                          ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
-                          : ''
+                <div className="flex-1 flex items-center gap-2">
+                  {activeTab === 'tree' && (
+                    <>
+                      {result && (
+                        <span
+                          className={cn(
+                            'px-2.5 py-1 rounded-full text-xs font-semibold shrink-0',
+                            result.success && result.count > 0
+                              ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
+                              : result.success && result.count === 0
+                              ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
+                              : ''
+                          )}
+                        >
+                          {result.success && result.count > 0
+                            ? `Found ${result.count} match${result.count !== 1 ? 'es' : ''}`
+                            : result.success && result.count === 0
+                            ? 'No matches found'
+                            : ''}
+                        </span>
                       )}
-                    >
-                      {result.success && result.count > 0
-                        ? `Found ${result.count} match${result.count !== 1 ? 'es' : ''}`
-                        : result.success && result.count === 0
-                        ? 'No matches found'
-                        : ''}
-                    </span>
+                      <div className="flex-1 relative min-w-0">
+                        <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" aria-hidden="true" />
+                        <Input
+                          type="text"
+                          placeholder="Search keys, values, or paths..."
+                          value={treeSearchTerm}
+                          onChange={(e) => setTreeSearchTerm(e.target.value)}
+                          className="pl-8 h-8 text-sm w-full"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTreeExpandAll}
+                        className="h-8 px-2 text-xs shrink-0"
+                      >
+                        <ArrowsPointingOutIcon className="h-3 w-3 mr-1" />
+                        Expand All
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTreeCollapseAll}
+                        className="h-8 px-2 text-xs shrink-0"
+                      >
+                        <ArrowsPointingInIcon className="h-3 w-3 mr-1" />
+                        Collapse All
+                      </Button>
+                    </>
                   )}
                   {activeTab === 'results' && output && result && (
                     <>
@@ -448,7 +493,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                       <span>{getLineCount(output)} lines</span>
                     </>
                   )}
-                </>
+                </div>
               }
             />
           </div>

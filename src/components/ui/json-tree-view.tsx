@@ -1,15 +1,10 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { cn } from '@/libs/utils';
 import {
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   DocumentDuplicateIcon,
-  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { CheckIcon } from '@heroicons/react/24/solid';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
@@ -33,7 +28,12 @@ export interface JsonTreeViewProps {
   onGetExpandedJson?: (getExpandedJson: () => string) => void; // Callback to expose function to get expanded JSON
   maxDepth?: number;
   className?: string;
-  height?: string;
+  // Search props (controlled)
+  searchTerm?: string;
+  onSearchChange?: (term: string) => void;
+  // Expand/Collapse props (controlled)
+  onExpandAll?: () => void;
+  onCollapseAll?: () => void;
 }
 
 // Transform JSON data into tree nodes
@@ -315,10 +315,12 @@ export function JsonTreeView({
   onGetExpandedJson,
   maxDepth = 3,
   className,
-  height = '500px',
+  searchTerm = '',
+  onSearchChange,
+  onExpandAll,
+  onCollapseAll,
 }: JsonTreeViewProps) {
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
-  const [searchTerm, setSearchTerm] = useState('');
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
   const listRef = useListRef(null);
   const highlightedPathSet = useMemo(() => new Set(highlightedPaths), [highlightedPaths]);
@@ -523,13 +525,6 @@ export function JsonTreeView({
   }, [highlightedPaths, filteredNodes, highlightedPathSet]);
 
   const itemHeight = 36;
-  // Calculate height - if height prop is provided, use it; otherwise use container height
-  const containerHeight = typeof height === 'string'
-    ? parseInt(height.replace('px', '')) || 500
-    : typeof height === 'number'
-    ? height
-    : 500;
-  const listHeight = Math.max(containerHeight - 60, 100); // Subtract toolbar height, min 100px
 
   // Row component for react-window v2
   const RowComponent = useCallback(({ index, style, ariaAttributes }: { index: number; style: React.CSSProperties; ariaAttributes: any }) => {
@@ -554,43 +549,8 @@ export function JsonTreeView({
     );
   }, [filteredNodes, highlightedPathSet, expandedPaths, handleToggle, handleCopy, searchTerm, copiedPath, itemHeight]);
 
-  return (
+return (
     <div className={cn('flex flex-col h-full relative', className)}>
-      {/* Toolbar */}
-      <div className="flex items-center gap-2 p-2 border-b border-neutral-200 dark:border-neutral-700">
-        {/* Search */}
-        <div className="flex-1 relative">
-          <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-          <Input
-            type="text"
-            placeholder="Search keys, values, or paths..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 h-8 text-sm"
-          />
-        </div>
-
-        {/* Expand/Collapse All */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExpandAll}
-          className="h-8 px-2 text-xs"
-        >
-          <ArrowsPointingOutIcon className="h-3 w-3 mr-1" />
-          Expand All
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCollapseAll}
-          className="h-8 px-2 text-xs"
-        >
-          <ArrowsPointingInIcon className="h-3 w-3 mr-1" />
-          Collapse All
-        </Button>
-      </div>
-
       {/* Tree View */}
       <div className="flex-1 overflow-hidden relative">
         {filteredNodes.length === 0 ? (
@@ -598,18 +558,20 @@ export function JsonTreeView({
             No nodes to display
           </div>
         ) : (
-          <List<Record<string, never>>
-            listRef={listRef}
-            style={{ height: `${listHeight}px`, width: '100%' }}
-            rowCount={filteredNodes.length}
-            rowHeight={itemHeight}
-            rowComponent={RowComponent}
-            rowProps={{} as Record<string, never>}
-            className="scrollbar-thin"
-          />
-          )}
-        </div>
+          <div className="h-full w-full">
+            <List<Record<string, never>>
+              listRef={listRef}
+              style={{ height: '100%', width: '100%' }}
+              rowCount={filteredNodes.length}
+              rowHeight={itemHeight}
+              rowComponent={RowComponent}
+              rowProps={{} as Record<string, never>}
+              className="scrollbar-thin"
+            />
+          </div>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
+}
 

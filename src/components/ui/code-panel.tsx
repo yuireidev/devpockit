@@ -423,7 +423,7 @@ export function CodePanel({
       {/* Footer */}
       {(alwaysShowFooter || footerLeftContent || footerRightContent || showStats || (showWrapToggle && onWrapTextChange)) && (
         <div className="flex items-center justify-between px-3 py-2 min-h-[52px] text-sm text-neutral-600 dark:text-neutral-400">
-          <div className="flex items-center gap-4">
+          <div className="flex-1 flex items-center gap-4">
             {/* Editor Settings Menu */}
             {showWrapToggle && onWrapTextChange && (
               <EditorSettingsMenu
