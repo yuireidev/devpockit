@@ -435,28 +435,30 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               wrapText={outputWrapText}
               onWrapTextChange={setOutputWrapText}
               showWrapToggle={activeTab === 'results'}
+              headerActions={
+                activeTab === 'tree' && result ? (
+                  <span
+                    className={cn(
+                      'px-2.5 py-1 rounded-full text-xs font-semibold shrink-0',
+                      result.success && result.count > 0
+                        ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
+                        : result.success && result.count === 0
+                        ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
+                        : ''
+                    )}
+                  >
+                    {result.success && result.count > 0
+                      ? `Found ${result.count} match${result.count !== 1 ? 'es' : ''}`
+                      : result.success && result.count === 0
+                      ? 'No matches found'
+                      : ''}
+                  </span>
+                ) : null
+              }
               footerLeftContent={
                 <div className="flex-1 flex items-center gap-2">
                   {activeTab === 'tree' && (
                     <>
-                      {result && (
-                        <span
-                          className={cn(
-                            'px-2.5 py-1 rounded-full text-xs font-semibold shrink-0',
-                            result.success && result.count > 0
-                              ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
-                              : result.success && result.count === 0
-                              ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
-                              : ''
-                          )}
-                        >
-                          {result.success && result.count > 0
-                            ? `Found ${result.count} match${result.count !== 1 ? 'es' : ''}`
-                            : result.success && result.count === 0
-                            ? 'No matches found'
-                            : ''}
-                        </span>
-                      )}
                       <div className="flex-1 relative min-w-0">
                         <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" aria-hidden="true" />
                         <Input
