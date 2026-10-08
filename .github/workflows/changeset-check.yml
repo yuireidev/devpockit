@@ -1,0 +1,62 @@
+name: Changeset Check
+
+on:
+  pull_request:
+    branches: [develop]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+jobs:
+  check-changeset:
+    name: Check for changeset
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Check PR includes a changeset
+        env:
+          BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        run: |
+          # Get all changed files in the PR
+          CHANGED_FILES=$(git diff --name-only "$BASE_SHA" "$HEAD_SHA")
+
+          echo "Changed files:"
+          echo "$CHANGED_FILES"
+
+          # If no files changed, pass
+          if [ -z "$CHANGED_FILES" ]; then
+            echo "✅ No files changed"
+            exit 0
+          fi
+
+          # Check if a changeset file is included
+          CHANGESET_FILES=$(echo "$CHANGED_FILES" | grep -E '^\.changeset/.*\.md$' | grep -v '\.changeset/README\.md$' || true)
+
+          if [ -n "$CHANGESET_FILES" ]; then
+            echo "✅ Changeset found:"
+            echo "$CHANGESET_FILES"
+            exit 0
+          fi
+
+          # If all changed files are docs/chore/ci-only, skip changeset requirement
+          NON_DOCS_FILES=$(echo "$CHANGED_FILES" | grep -v -E '^(docs/|\.github/|\.changeset/|.*\.md$|CHANGELOG\.md$|CODE_OF_CONDUCT\.md$|CONTRIBUTING\.md$|README\.md$|SECURITY\.md$)' || true)
+
+          if [ -z "$NON_DOCS_FILES" ]; then
+            echo "✅ Docs/chore/ci-only changes, no changeset required"
+            exit 0
+          fi
+
+          echo "❌ Changeset required for user-facing changes"
+          echo ""
+          echo "Changed files requiring a changeset:"
+          echo "$NON_DOCS_FILES"
+          echo ""
+          echo "Please run 'pnpm changeset' and commit the generated file."
+          echo "See CONTRIBUTING.md for more information."
+          exit 1

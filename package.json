@@ -43,7 +43,10 @@
     "build:test": "pnpm type-check && pnpm lint && pnpm test:ci && pnpm build",
     "build:verify": "pnpm build && node scripts/verify-build.js",
     "serve:build": "python3 -m http.server 8080 --directory out",
-    "test:build": "bash scripts/test-build.sh"
+    "test:build": "bash scripts/test-build.sh",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:status": "changeset status"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -90,6 +93,7 @@
     "yaml": "^2.8.2"
   },
   "devDependencies": {
+    "@changesets/cli": "^3.0.3",
     "@eslint/eslintrc": "^3.3.5",
     "@tailwindcss/postcss": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",

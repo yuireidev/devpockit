@@ -237,6 +237,16 @@ Fork users who sync `main` will always get released, stable code.
    - Make requested changes
    - Update the PR as needed
 
+### Changesets (User-Facing Changes)
+
+For user-facing changes (features, bug fixes, breaking changes), add a [changeset](https://github.com/changesets/changesets) to document the change for the changelog:
+
+```bash
+pnpm changeset
+```
+
+Follow the prompts to describe your change. This creates a file in `.changeset/` that will be used to generate the release notes. Docs, chore, and CI-only changes don't require a changeset.
+
 ## 📝 Coding Standards
 
 ### TypeScript
@@ -499,7 +509,7 @@ pnpm test json-formatter.test.ts
 
 When adding features:
 - Update README.md if adding new tools or features
-- Update CHANGELOG.md with your changes
+- Add a changeset (`pnpm changeset`) for user-facing changes
 - Add JSDoc comments to new functions
 - Update relevant documentation files
 
@@ -517,7 +527,7 @@ Ensure your code:
 - [ ] Includes tests for new features
 - [ ] Updates documentation as needed
 - [ ] Follows commit message conventions
-- [ ] Updates CHANGELOG.md (if applicable)
+- [ ] Includes a changeset for user-facing changes (`pnpm changeset`)
 
 ### Pull Request Checklist
 
