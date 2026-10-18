@@ -2,7 +2,7 @@
 
 import { Tool } from '@/types/tools';
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.hypkey.com';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.yuirei.com';
 
 interface WebsiteJsonLdProps {
   type: 'website';

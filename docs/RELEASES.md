@@ -109,7 +109,7 @@ Or create the tag via GitHub:
 1. Go to **Actions** tab in GitHub
 2. Watch the **Deploy DevPockit to GitHub Pages** workflow
 3. Watch the **Create Release** workflow
-4. Verify deployment at https://devpockit.hypkey.com/
+4. Verify deployment at https://devpockit.yuirei.com/
 
 ## Version Numbering
 

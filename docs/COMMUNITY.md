@@ -21,14 +21,14 @@ Welcome to the DevPockit community! This document outlines our community values,
 
 ### Reporting Bugs
 
-- Use the [bug report template](https://github.com/hypkey/devpockit/issues/new?template=bug_report.yml)
+- Use the [bug report template](https://github.com/yuireidev/devpockit/issues/new?template=bug_report.yml)
 - Provide detailed information (browser, OS, steps to reproduce)
 - Include screenshots if applicable
 - Be patient while we investigate
 
 ### Suggesting Features
 
-- Use the [feature request template](https://github.com/hypkey/devpockit/issues/new?template=feature_request.yml)
+- Use the [feature request template](https://github.com/yuireidev/devpockit/issues/new?template=feature_request.yml)
 - Explain the use case and problem it solves
 - Consider if it fits the project's scope
 - Be open to feedback and alternatives
@@ -103,7 +103,7 @@ All community members must follow our [Code of Conduct](../CODE_OF_CONDUCT.md). 
 
 - **Questions**: GitHub Discussions (Q&A category)
 - **Bugs**: GitHub Issues (bug report template)
-- **Security**: [GitHub Security Advisories](https://github.com/hypkey/devpockit/security/advisories/new)
+- **Security**: [GitHub Security Advisories](https://github.com/yuireidev/devpockit/security/advisories/new)
 
 ## Recognition
 

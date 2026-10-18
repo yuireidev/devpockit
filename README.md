@@ -1,13 +1,13 @@
 # DevPockit
 
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Build Status](https://img.shields.io/github/workflow/status/hypkey/devpockit/CI)
-![Test Coverage](https://img.shields.io/codecov/c/github/hypkey/devpockit)
-![Version](https://img.shields.io/github/package-json/v/hypkey/devpockit)
+![Build Status](https://img.shields.io/github/workflow/status/yuireidev/devpockit/CI)
+![Test Coverage](https://img.shields.io/codecov/c/github/yuireidev/devpockit)
+![Version](https://img.shields.io/github/package-json/v/yuireidev/devpockit)
 
 A modern web application providing essential developer tools with a clean, responsive interface. Built with Next.js (App Router, static export), featuring 30+ powerful tools that run entirely client-side for optimal performance and privacy.
 
-🌐 **[Production](https://devpockit.hypkey.com/)** | 📖 **[Documentation](#-documentation)** | 🤝 **[Contributing](CONTRIBUTING.md)** | 📝 **[Changelog](CHANGELOG.md)**
+🌐 **[Production](https://devpockit.yuirei.com/)** | 📖 **[Documentation](#-documentation)** | 🤝 **[Contributing](CONTRIBUTING.md)** | 📝 **[Changelog](CHANGELOG.md)**
 
 ## ✨ Features
 
@@ -29,7 +29,7 @@ A modern web application providing essential developer tools with a clean, respo
 
 ```bash
 # Clone the repository
-git clone https://github.com/hypkey/devpockit.git
+git clone https://github.com/yuireidev/devpockit.git
 cd devpockit
 
 # Install dependencies

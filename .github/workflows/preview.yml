@@ -1,20 +1,14 @@
 name: Preview
+# Builds PRs and uploads artifact only (no Pages deploy — single site).
+# Download artifact from Actions tab to preview locally: npx serve out/
 on:
   pull_request:
     branches: [main, develop]
 permissions:
   contents: read
-  pages: write
-  id-token: write
-  pull-requests: write
-concurrency:
-  group: preview-${{ github.ref }}
-  cancel-in-progress: true
 jobs:
   preview:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
     steps:
       - uses: actions/checkout@v4
       - uses: pnpm/action-setup@v4
@@ -25,8 +19,6 @@ jobs:
       - run: pnpm build
         env:
           NEXT_PUBLIC_APP_VERSION: pr-${{ github.event.pull_request.number }}
-          NEXT_PUBLIC_BASE_URL: https://devpockit.hypkey.com
-      - uses: actions/upload-pages-artifact@v3
-        with: { path: ./out }
-      - id: deployment
-        uses: actions/deploy-pages@v4
+          NEXT_PUBLIC_BASE_URL: https://devpockit.yuirei.com
+      - uses: actions/upload-artifact@v4
+        with: { name: preview-pr-${{ github.event.pull_request.number }}, path: ./out, retention-days: 7 }

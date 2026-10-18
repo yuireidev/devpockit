@@ -1,9 +1,9 @@
 blank_issues_enabled: false
 contact_links:
   - name: Question or Discussion
-    url: https://github.com/hypkey/devpockit/discussions
+    url: https://github.com/yuireidev/devpockit/discussions
     about: Ask questions or start discussions about the project
   - name: Security Issue
-    url: https://github.com/hypkey/devpockit/security/advisories/new
+    url: https://github.com/yuireidev/devpockit/security/advisories/new
     about: Report a security vulnerability (please do not create a public issue)
 

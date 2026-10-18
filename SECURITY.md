@@ -16,7 +16,7 @@ We release patches for security vulnerabilities. Which versions are eligible for
 Instead, please report them via one of the following methods:
 
 1. **GitHub Security Advisories** (Preferred):
-   - Go to [Security Advisories](https://github.com/hypkey/devpockit/security/advisories/new)
+   - Go to [Security Advisories](https://github.com/yuireidev/devpockit/security/advisories/new)
    - Click "Report a vulnerability"
    - Fill out the form with details
 
@@ -132,7 +132,7 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' '
 If you discover a security vulnerability:
 
 1. **Do NOT** create a public GitHub issue
-2. **Do** report it via [GitHub Security Advisories](https://github.com/hypkey/devpockit/security/advisories/new)
+2. **Do** report it via [GitHub Security Advisories](https://github.com/yuireidev/devpockit/security/advisories/new)
 3. **Do** provide detailed information about the vulnerability
 4. **Do** allow time for the maintainers to address the issue before public disclosure
 
@@ -148,7 +148,7 @@ If you discover a security vulnerability:
 
 For security-related issues:
 
-- **Preferred**: [GitHub Security Advisories](https://github.com/hypkey/devpockit/security/advisories/new)
+- **Preferred**: [GitHub Security Advisories](https://github.com/yuireidev/devpockit/security/advisories/new)
 - **Alternative**: Contact maintainers directly (see repository maintainers)
 
 Please follow responsible disclosure practices:

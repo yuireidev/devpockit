@@ -69,7 +69,7 @@ export function AboutPage() {
         {/* Cards */}
         <div className="flex flex-col gap-4 w-full self-start">
             <Link
-              href="https://github.com/hypkey/devpockit"
+              href="https://github.com/yuireidev/devpockit"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-accent transition-colors"
@@ -84,7 +84,7 @@ export function AboutPage() {
             </Link>
 
             <Link
-              href="https://github.com/hypkey/devpockit/issues/new"
+              href="https://github.com/yuireidev/devpockit/issues/new"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-accent transition-colors"

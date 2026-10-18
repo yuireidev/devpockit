@@ -3,7 +3,7 @@ import { MetadataRoute } from 'next';
 // Required for static export (GitHub Pages)
 export const dynamic = 'force-static';
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.hypkey.com';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.yuirei.com';
 
 export default function robots(): MetadataRoute.Robots {
   return {
