@@ -1,237 +1,61 @@
-# Release workflow — triggers on version tags pushed to main.
-#
-# Branching model:
-#   develop  → active development, feature branches merge here
-#   main     → production only, updated only by release PRs from develop
-#
-# Release flow:
-#   1. Open PR: develop → main (bump package.json version + CHANGELOG)
-#   2. Merge the PR
-#   3. Pull main locally, tag it: git tag v0.1.7 && git push origin v0.1.7
-#   4. This workflow runs, builds, deploys to GitHub Pages, creates GitHub release
-#
-# Fork users who sync main will always get released code with the matching tag.
+# Release: tag v* (or manual dispatch) -> build -> github-release -> deploy Pages.
+# Tag is source of truth; version-check.yml enforces package.json match.
 name: Create Release and Deploy
-
-on:
+'on':
   push:
-    tags:
-      - 'v*'  # Triggers on version tags like v0.1.0, v1.0.0, etc.
+    tags: ['v*']
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to release (e.g., 0.1.0)'
-        required: true
-        type: string
-      tag:
-        description: 'Tag name (e.g., v0.1.0). If empty, will use v{version}'
-        required: false
-        type: string
-
+      version: { description: 'Version (e.g., 0.2.3)', required: true, type: string }
+      tag: { description: 'Tag (default v{version})', required: false, type: string }
 permissions:
   contents: write
   pages: write
   id-token: write
-
 jobs:
-  release:
+  build:
     runs-on: ubuntu-latest
-    environment:
-      name: github-pages
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0  # Fetch all history for changelog generation
-
-      - name: Extract version from tag
-        id: tag_version
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - id: tag_version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            # Manual trigger - use inputs
-            VERSION="${{ inputs.version }}"
-            TAG_NAME="${{ inputs.tag }}"
-            if [ -z "$TAG_NAME" ]; then
-              TAG_NAME="v$VERSION"
-            fi
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-            echo "📦 Creating release for version: $VERSION (tag: $TAG_NAME) [Manual Trigger]"
+            VERSION="${{ inputs.version }}"; TAG="${{ inputs.tag }}"; [ -z "$TAG" ] && TAG="v$VERSION"
           else
-            # Automatic trigger from tag push
-            VERSION=${GITHUB_REF#refs/tags/v}
-            TAG_NAME=${GITHUB_REF#refs/tags/}
-            echo "version=$VERSION" >> $GITHUB_OUTPUT
-            echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
-            echo "📦 Creating release for version: $VERSION (tag: $TAG_NAME) [Tag Push]"
+            VERSION=${GITHUB_REF#refs/tags/v}; TAG=${GITHUB_REF#refs/tags/}
           fi
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v4
-        with:
-          version: 10.17.0
-
-      - name: Get pnpm store directory
-        shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-
-      - name: Setup pnpm cache
-        uses: actions/cache@v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - name: Install dependencies
-        run: pnpm install --frozen-lockfile
-
-      - name: Run type check
-        run: pnpm type-check
-
-      - name: Run linting
-        run: pnpm lint
-
-      - name: Run tests
-        run: pnpm test:ci
-
-      - name: Build application
-        run: pnpm build
-        env:
-          NEXT_PUBLIC_APP_VERSION: ${{ steps.tag_version.outputs.version }}
-
-      - name: Verify build output
-        run: |
-          if [ ! -d "out" ]; then
-            echo "❌ Build output directory 'out' not found!"
-            exit 1
-          fi
-          if [ ! -f "out/index.html" ]; then
-            echo "❌ Main index.html not found in build output!"
-            exit 1
-          fi
-          if [ ! -d "out/tools" ]; then
-            echo "❌ Tools directory not found in build output!"
-            exit 1
-          fi
-          echo "✅ Build output verification passed"
-
-      - name: Test static file serving
-        run: |
-          python3 -m http.server 8080 --directory out &
-          SERVER_PID=$!
-          sleep 3
-          if curl -s -o /dev/null -w "%{http_code}" http://localhost:8080 | grep -q "200"; then
-            echo "✅ Static file serving test passed"
-          else
-            echo "❌ Static file serving test failed"
-            exit 1
-          fi
-          kill $SERVER_PID 2>/dev/null || true
-
-      - name: Generate release notes from CHANGELOG
-        id: release_notes
-        run: |
-          VERSION="${{ steps.tag_version.outputs.version }}"
-
-          if [ -f "CHANGELOG.md" ]; then
-            # Extract content between [version] and next version or end of file
-            awk "/^## \[$VERSION\]/,/^## \[/ {if (!/^## \[$VERSION\]/ && !/^## \[/) print}" CHANGELOG.md > /tmp/release_notes.md || true
-
-            # If no content found, use a default message
-            if [ ! -s /tmp/release_notes.md ]; then
-              echo "## Release $VERSION" > /tmp/release_notes.md
-              echo "" >> /tmp/release_notes.md
-              echo "See [CHANGELOG.md](https://github.com/${{ github.repository }}/blob/main/CHANGELOG.md) for details." >> /tmp/release_notes.md
-            fi
-
-            # Build release body
-            {
-              echo "## 🎉 Release $VERSION"
-              echo ""
-              cat /tmp/release_notes.md
-              echo ""
-              echo "---"
-              echo ""
-              # Get the previous tag for comparison
-              PREV_TAG=$(git describe --tags --abbrev=0 "${{ steps.tag_version.outputs.tag_name }}^" 2>/dev/null || echo "")
-              if [ -n "$PREV_TAG" ]; then
-                echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREV_TAG...${{ steps.tag_version.outputs.tag_name }}"
-              else
-                echo "**Full Changelog**: https://github.com/${{ github.repository }}/releases/tag/${{ steps.tag_version.outputs.tag_name }}"
-              fi
-            } > /tmp/release_body.md
-          else
-            {
-              echo "## 🎉 Release $VERSION"
-              echo ""
-              echo "**Full Changelog**: https://github.com/${{ github.repository }}/commits/${{ steps.tag_version.outputs.tag_name }}"
-            } > /tmp/release_body.md
-          fi
-
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
-        with:
-          name: Release ${{ steps.tag_version.outputs.version }}
-          tag_name: ${{ steps.tag_version.outputs.tag_name }}
-          body_path: /tmp/release_body.md
-          draft: false
-          prerelease: ${{ contains(steps.tag_version.outputs.version, '-') }}
-          generate_release_notes: false
-          make_latest: true
-          fail_on_unmatched_files: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Upload Pages artifact
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./out
-
-      - name: Deploy to GitHub Pages
-        id: deployment
+          echo "version=$VERSION" >> $GITHUB_OUTPUT; echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+      - uses: pnpm/action-setup@v4
+        with: { version: 10.17.0 }
+      - uses: actions/setup-node@v4
+        with: { node-version: '20', cache: pnpm }
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm type-check
+      - run: pnpm lint
+      - run: pnpm test:ci
+      - run: pnpm build
+        env: { NEXT_PUBLIC_APP_VERSION: ${{ steps.tag_version.outputs.version }} }
+      - uses: anchore/sbom-action@v0
+        with: { path: ./, format: spdx-json, output-file: sbom.spdx.json }
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: ./out }
+      - uses: actions/upload-artifact@v4
+        with: { name: build-${{ steps.tag_version.outputs.version }}, path: out/, retention-days: 30 }
+  github-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - uses: release-drafter/release-drafter@v6
+        env: { GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: { name: github-pages }
+    permissions: { pages: write, id-token: write }
+    steps:
+      - id: deployment
         uses: actions/deploy-pages@v4
-
-      - name: Sync package.json version to tag
-        if: success()
-        run: |
-          VERSION="${{ steps.tag_version.outputs.version }}"
-          CURRENT_VERSION=$(node -p "require('./package.json').version")
-
-          if [ "$CURRENT_VERSION" = "$VERSION" ]; then
-            echo "✅ package.json version ($CURRENT_VERSION) already matches tag"
-            exit 0
-          fi
-
-          echo "📝 Updating package.json from $CURRENT_VERSION to $VERSION"
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Checkout default branch (tag push leaves us in detached HEAD)
-          git fetch origin ${{ github.event.repository.default_branch }}
-          git checkout ${{ github.event.repository.default_branch }}
-
-          # Update package.json
-          node -e "
-            const pkg = require('./package.json');
-            pkg.version = '$VERSION';
-            require('fs').writeFileSync('package.json', JSON.stringify(pkg, null, 2) + '\n');
-          "
-
-          git add package.json
-          git commit -m "chore: bump version to $VERSION"
-          git push origin ${{ github.event.repository.default_branch }}
-
-      - name: Upload build artifacts
-        if: success()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts-${{ steps.tag_version.outputs.version }}
-          path: out/
-          retention-days: 30

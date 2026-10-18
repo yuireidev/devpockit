@@ -1,0 +1,20 @@
+name: _release-drafter
+draft: false
+prerelease: false
+tag-template: v$RESOLVED_VERSION
+name-template: Release $RESOLVED_VERSION
+categories:
+  - title: Added
+    labels: [feature, feat, enhancement]
+  - title: Changed
+    labels: [change, chore, refactor, perf]
+  - title: Fixed
+    labels: [fix, bug, hotfix]
+  - title: Security
+    labels: [security]
+  - title: Dependencies
+    labels: [dependencies]
+change-template: '- $TITLE (#$NUMBER)'
+template: |
+  ## Changes
+  $CHANGES

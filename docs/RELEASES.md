@@ -25,6 +25,16 @@ This ensures fork users who sync `main` always get released, stable code. Tags a
 
 ## Creating a Release
 
+Use the helper (tag `vX.Y.Z` is source of truth, `package.json` mirrors it):
+
+```bash
+pnpm release:patch   # or release:minor / release:major
+# Review CHANGELOG.md (draft with: pnpm changelog:ai), then:
+git push origin HEAD && git push origin vX.Y.Z
+```
+
+This bumps `package.json`, drafts a Keep-a-Changelog entry, commits, and tags.
+
 ### Step 1: Prepare the release PR
 
 On `develop` (or a dedicated `release/x.y.z` branch cut from `develop`):

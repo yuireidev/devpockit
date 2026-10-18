@@ -1,0 +1,22 @@
+name: Version Check
+on:
+  push:
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Tag matches package.json
+        run: |
+          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
+            TAG="${GITHUB_REF#refs/tags/v}"
+            PKG=$(node -p "require('./package.json').version")
+            [ "$TAG" = "$PKG" ] || { echo "❌ tag v$TAG != package.json $PKG"; exit 1; }
+            echo "✅ version $TAG matches"
+          else
+            echo "PR check skipped (tag comparison runs on tag push)"
+          fi
