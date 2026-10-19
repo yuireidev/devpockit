@@ -1,15 +1,15 @@
 #!/usr/bin/env bash
 # pnpm release:patch|minor|major — bump package.json, draft CHANGELOG entry.
-# Tagging is done by CI (auto-tag.yml) after merging develop to main. Never tag by hand.
+# Tagging is done by CI (auto-tag.yml) after merging the release branch to main. Never tag by hand.
 # Usage: scripts/release.sh [patch|minor|major]  (defaults to patch)
-# Run on a clean chore/release-X.Y.Z branch cut from develop.
+# Run on a clean release/X.Y.Z branch cut from main.
 set -euo pipefail
 BUMP="${1:-patch}"
 case "$BUMP" in patch|minor|major) ;; *)
   echo "Usage: scripts/release.sh [patch|minor|major]"; exit 1;; esac
 BRANCH=$(git rev-parse --abbrev-ref HEAD)
 if [ "$BRANCH" = "main" ]; then
-  echo "Refusing to bump on main. Run on a chore/release-* branch cut from develop."; exit 1
+  echo "Refusing to bump on main. Run on a release/X.Y.Z branch cut from main."; exit 1
 fi
 if [ -n "$(git status --porcelain)" ]; then
   echo "Working tree is dirty. Commit or stash first."; exit 1
@@ -44,5 +44,5 @@ git add package.json CHANGELOG.md
 git commit -m "chore: release v$NEXT"
 echo ""
 echo "Bumped $CUR -> $NEXT (no tag; CI tags on merge to main)."
-echo "Next: curate CHANGELOG.md, commit, push branch, open PR into develop,"
-echo "then open PR develop -> main."
+echo "Next: curate CHANGELOG.md, commit, push branch, open PR into main."
+echo "Merge with a merge commit; auto-tag.yml tags it and runs the release."
