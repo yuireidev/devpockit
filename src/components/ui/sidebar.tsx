@@ -23,6 +23,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useIsMobile } from "@/hooks/useMobile"
+import { isEditableKeyboardTarget } from "@/libs/keyboard"
 import { cn } from "@/libs/utils"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
@@ -107,7 +108,10 @@ const SidebarProvider = React.forwardRef<
       const handleKeyDown = (event: KeyboardEvent) => {
         if (
           event.key === SIDEBAR_KEYBOARD_SHORTCUT &&
-          (event.metaKey || event.ctrlKey)
+          (event.metaKey || event.ctrlKey) &&
+          !event.altKey &&
+          !event.shiftKey &&
+          !isEditableKeyboardTarget(event.target)
         ) {
           event.preventDefault()
           toggleSidebar()
