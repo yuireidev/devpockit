@@ -39,13 +39,14 @@ jobs:
           fetch-depth: 0
       - id: tag_version
         run: |
-          if [ "${{ github.event_name }}" = "workflow_call" ]; then
+          # NOTE: github.event_name inside a workflow_call callee is the CALLER's
+          # event (push), not "workflow_call". Decide on input presence instead.
+          if [ -n "${{ inputs.version }}" ]; then
             VERSION="${{ inputs.version }}"
             TAG="${{ inputs.tag }}"
-          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ inputs.version }}"
-            TAG="${{ inputs.tag }}"
-            [ -z "$TAG" ] && TAG="v$VERSION"
+            if [ -z "$TAG" ]; then
+              TAG="v$VERSION"
+            fi
           else
             VERSION=${GITHUB_REF#refs/tags/v}
             TAG=${GITHUB_REF#refs/tags/}
@@ -90,7 +91,11 @@ jobs:
           VERSION="${{ needs.build.outputs.version }}"
           TAG="${{ needs.build.outputs.tag_name }}"
           if [ -f "CHANGELOG.md" ]; then
-            awk "/^## \[$VERSION\]/,/^## \[/ {if (!/^## \[$VERSION\]/ && !/^## \[/) print}" CHANGELOG.md > /tmp/release_notes.md || true
+            awk -v start="## [$VERSION]" '
+              $0 == start {insec=1; next}
+              insec && /^## \[/ {insec=0}
+              insec {print}
+            ' CHANGELOG.md > /tmp/release_notes.md || true
             if [ ! -s /tmp/release_notes.md ]; then
               echo "See CHANGELOG.md for details." > /tmp/release_notes.md
             fi
