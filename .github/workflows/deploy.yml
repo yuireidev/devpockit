@@ -1,0 +1,73 @@
+# Manual Pages deploy. Run from the Actions tab and pick a tag.
+# Release flow never deploys automatically; use this when ready to ship.
+name: Deploy to Pages
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Tag to deploy (e.g., v0.2.4). Empty = latest v* tag.'
+        required: false
+        type: string
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: 'pages'
+  cancel-in-progress: false
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Resolve tag
+        id: resolve
+        run: |
+          TAG="${{ inputs.tag }}"
+          if [ -z "$TAG" ]; then
+            TAG=$(git tag --list 'v*' | sort -V | tail -1)
+            echo "No tag given, using latest: $TAG"
+          fi
+          git checkout "$TAG"
+          echo "tag=$TAG" >> $GITHUB_OUTPUT
+          echo "version=${TAG#v}" >> $GITHUB_OUTPUT
+      - name: Resolve site URLs
+        id: site
+        run: |
+          BASE_URL="${{ vars.NEXT_PUBLIC_BASE_URL }}"
+          BASE_PATH="${{ vars.BASE_PATH }}"
+          if [ -z "$BASE_URL" ]; then
+            if [ "${{ github.repository }}" = "yuireidev/devpockit" ]; then
+              BASE_URL="https://devpockit.yuirei.com"
+            elif [ "${{ github.event.repository.name }}" = "${{ github.repository_owner }}.github.io" ]; then
+              BASE_URL="https://${{ github.repository_owner }}.github.io"
+            else
+              BASE_URL="https://${{ github.repository_owner }}.github.io/${{ github.event.repository.name }}"
+              [ -z "$BASE_PATH" ] && BASE_PATH="/${{ github.event.repository.name }}"
+            fi
+          fi
+          echo "base_url=$BASE_URL" >> $GITHUB_OUTPUT
+          echo "base_path=$BASE_PATH" >> $GITHUB_OUTPUT
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.17.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm build
+        env:
+          NEXT_PUBLIC_BASE_URL: ${{ steps.site.outputs.base_url }}
+          BASE_PATH: ${{ steps.site.outputs.base_path }}
+          NEXT_PUBLIC_APP_VERSION: ${{ steps.resolve.outputs.version }}
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./out
+      - id: deployment
+        uses: actions/deploy-pages@v4
