@@ -325,3 +325,6 @@ certificates/*.pfx
 
 # Claude
 CLAUDE.md
+
+# 1Password local plugins (machine-specific credential pointers)
+.op/

@@ -9,7 +9,7 @@ updates:
       time: "09:00"
     open-pull-requests-limit: 10
     reviewers:
-      - "hypkey"
+      - "yuireidev"
     labels:
       - "dependencies"
       - "automated"

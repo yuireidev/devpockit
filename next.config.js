@@ -16,7 +16,7 @@ const nextConfig = {
     // Version comes from GitHub release tag (v*) during CI/CD builds, shows 'dev' locally
     NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || 'dev',
     // Base URL for metadata, sitemap, canonical URLs. Required for self-hosting.
-    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.hypkey.com',
+    NEXT_PUBLIC_BASE_URL: process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.yuirei.com',
     // Base path for assets when serving from subpath (e.g. /devpockit). Used for logo, etc.
     NEXT_PUBLIC_BASE_PATH: process.env.BASE_PATH || '',
   },

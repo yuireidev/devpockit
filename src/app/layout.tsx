@@ -23,7 +23,7 @@ const dmSerifText = DM_Serif_Text({
   variable: '--font-dm-serif',
 })
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.hypkey.com';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.yuirei.com';
 
 const canonicalHome = absoluteSiteUrl('/')
 const ogImageUrl = absoluteAssetUrl('/og-image.png')

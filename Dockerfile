@@ -12,7 +12,7 @@ RUN pnpm install --frozen-lockfile
 COPY . .
 
 # Optional: override base URL for self-hosting (e.g. --build-arg NEXT_PUBLIC_BASE_URL=https://mytools.example.com)
-ARG NEXT_PUBLIC_BASE_URL=https://devpockit.hypkey.com
+ARG NEXT_PUBLIC_BASE_URL=https://devpockit.yuirei.com
 ENV NEXT_PUBLIC_BASE_URL=$NEXT_PUBLIC_BASE_URL
 
 RUN pnpm build

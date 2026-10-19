@@ -40,7 +40,7 @@ Before you begin, ensure you have the following installed:
    ```
 3. Add the upstream repository:
    ```bash
-   git remote add upstream https://github.com/hypkey/devpockit.git
+   git remote add upstream https://github.com/yuireidev/devpockit.git
    ```
 
 ## 🛠️ Development Setup
