@@ -21,4 +21,7 @@ jobs:
           NEXT_PUBLIC_APP_VERSION: pr-${{ github.event.pull_request.number }}
           NEXT_PUBLIC_BASE_URL: https://devpockit.yuirei.com
       - uses: actions/upload-artifact@v4
-        with: { name: preview-pr-${{ github.event.pull_request.number }}, path: ./out, retention-days: 7 }
+        with:
+          name: preview-pr-${{ github.event.pull_request.number }}
+          path: ./out
+          retention-days: 7

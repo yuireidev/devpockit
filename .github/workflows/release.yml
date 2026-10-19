@@ -1,13 +1,20 @@
 # Release: tag v* (or manual dispatch) -> build -> github-release -> deploy Pages.
 # Tag is source of truth; version-check.yml enforces package.json match.
 name: Create Release and Deploy
-'on':
+on:
   push:
-    tags: ['v*']
+    tags:
+      - 'v*'
   workflow_dispatch:
     inputs:
-      version: { description: 'Version (e.g., 0.2.3)', required: true, type: string }
-      tag: { description: 'Tag (default v{version})', required: false, type: string }
+      version:
+        description: 'Version (e.g., 0.2.3)'
+        required: true
+        type: string
+      tag:
+        description: 'Tag (default v{version})'
+        required: false
+        type: string
 permissions:
   contents: write
   pages: write
@@ -15,47 +22,109 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.tag_version.outputs.version }}
+      tag_name: ${{ steps.tag_version.outputs.tag_name }}
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
       - id: tag_version
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ inputs.version }}"; TAG="${{ inputs.tag }}"; [ -z "$TAG" ] && TAG="v$VERSION"
+            VERSION="${{ inputs.version }}"
+            TAG="${{ inputs.tag }}"
+            [ -z "$TAG" ] && TAG="v$VERSION"
           else
-            VERSION=${GITHUB_REF#refs/tags/v}; TAG=${GITHUB_REF#refs/tags/}
+            VERSION=${GITHUB_REF#refs/tags/v}
+            TAG=${GITHUB_REF#refs/tags/}
           fi
-          echo "version=$VERSION" >> $GITHUB_OUTPUT; echo "tag_name=$TAG" >> $GITHUB_OUTPUT
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG" >> $GITHUB_OUTPUT
       - uses: pnpm/action-setup@v4
-        with: { version: 10.17.0 }
+        with:
+          version: 10.17.0
       - uses: actions/setup-node@v4
-        with: { node-version: '20', cache: pnpm }
+        with:
+          node-version: '20'
+          cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm type-check
       - run: pnpm lint
       - run: pnpm test:ci
       - run: pnpm build
-        env: { NEXT_PUBLIC_APP_VERSION: ${{ steps.tag_version.outputs.version }} }
+        env:
+          NEXT_PUBLIC_APP_VERSION: ${{ steps.tag_version.outputs.version }}
       - uses: anchore/sbom-action@v0
-        with: { path: ./, format: spdx-json, output-file: sbom.spdx.json }
+        with:
+          path: ./
+          format: spdx-json
+          output-file: sbom.spdx.json
       - uses: actions/upload-pages-artifact@v3
-        with: { path: ./out }
+        with:
+          path: ./out
       - uses: actions/upload-artifact@v4
-        with: { name: build-${{ steps.tag_version.outputs.version }}, path: out/, retention-days: 30 }
+        with:
+          name: build-artifacts
+          path: out/
+          retention-days: 30
   github-release:
     needs: build
     runs-on: ubuntu-latest
-    permissions: { contents: write }
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
-      - uses: release-drafter/release-drafter@v6
-        env: { GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }} }
+        with:
+          fetch-depth: 0
+      - name: Build release notes from CHANGELOG
+        run: |
+          VERSION="${{ needs.build.outputs.version }}"
+          TAG="${{ needs.build.outputs.tag_name }}"
+          if [ -f "CHANGELOG.md" ]; then
+            awk "/^## \[$VERSION\]/,/^## \[/ {if (!/^## \[$VERSION\]/ && !/^## \[/) print}" CHANGELOG.md > /tmp/release_notes.md || true
+            if [ ! -s /tmp/release_notes.md ]; then
+              echo "See CHANGELOG.md for details." > /tmp/release_notes.md
+            fi
+            {
+              echo "## Release $VERSION"
+              echo ""
+              cat /tmp/release_notes.md
+              echo ""
+              echo "---"
+              echo ""
+              PREV_TAG=$(git describe --tags --abbrev=0 "$TAG^" 2>/dev/null || echo "")
+              if [ -n "$PREV_TAG" ]; then
+                echo "**Full Changelog**: https://github.com/${{ github.repository }}/compare/$PREV_TAG...$TAG"
+              else
+                echo "**Full Changelog**: https://github.com/${{ github.repository }}/releases/tag/$TAG"
+              fi
+            } > /tmp/release_body.md
+          else
+            {
+              echo "## Release $VERSION"
+              echo ""
+              echo "**Full Changelog**: https://github.com/${{ github.repository }}/commits/$TAG"
+            } > /tmp/release_body.md
+          fi
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ needs.build.outputs.version }}
+          tag_name: ${{ needs.build.outputs.tag_name }}
+          body_path: /tmp/release_body.md
+          draft: false
+          prerelease: false
+          generate_release_notes: true
+          make_latest: true
   deploy:
     needs: build
     runs-on: ubuntu-latest
-    environment: { name: github-pages }
-    permissions: { pages: write, id-token: write }
+    environment:
+      name: github-pages
+    permissions:
+      pages: write
+      id-token: write
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
