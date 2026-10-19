@@ -69,8 +69,7 @@ a patch bump. No special path.
 | `version-check.yml` | Tag push; PR into `main` | Tag matches `package.json`; `release/*` PRs must bump |
 | `auto-tag.yml` | Push to `main` | Tag merge commit when `package.json` is newer, then run release |
 | `release.yml` | Tag push, manual dispatch, `auto-tag.yml` | Build + GitHub Release (no deploy) |
-| `deploy.yml` | Manual dispatch | Build + deploy to Pages for a chosen tag |
-| `deploy-pages.yml` | Manual dispatch (forks) | Build + deploy from default branch |
+| `deploy.yml` | Manual dispatch | Build + deploy to Pages for a chosen tag (works upstream and for forks) |
 | `preview.yml` | PR into `main` | Build + upload artifact (no Pages deploy) |
 
 ## Rollback
