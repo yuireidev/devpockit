@@ -19,7 +19,7 @@ This guide covers day-to-day development workflows, debugging techniques, and pr
 
 1. **Clone and Install**:
    ```bash
-   git clone https://github.com/hypkey/devpockit.git
+   git clone https://github.com/yuireidev/devpockit.git
    cd devpockit
    pnpm install
    ```

@@ -3,7 +3,7 @@
  */
 
 export function getSiteOrigin(): string {
-  return (process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.hypkey.com').replace(/\/$/, '');
+  return (process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.yuirei.com').replace(/\/$/, '');
 }
 
 export function getPublicBasePathPrefix(): string {
