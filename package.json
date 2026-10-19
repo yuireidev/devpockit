@@ -1,6 +1,6 @@
 {
   "name": "devpockit-frontend",
-  "version": "0.2.3",
+  "version": "0.3.0",
   "description": "DevPockit Frontend - Developer Tools Web App",
   "license": "MIT",
   "repository": {
@@ -95,8 +95,8 @@
     "yaml": "^2.8.2"
   },
   "devDependencies": {
-    "@commitlint/cli": "^21.2.4",
-    "@commitlint/config-conventional": "^21.2.4",
+    "@commitlint/cli": "21.2.4",
+    "@commitlint/config-conventional": "21.2.4",
     "@eslint/eslintrc": "^3.3.5",
     "@tailwindcss/postcss": "^4.2.1",
     "@testing-library/jest-dom": "^6.9.1",

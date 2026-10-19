@@ -1,6 +1,6 @@
 # Deploy to GitHub Pages (for forks / self-hosting)
 # For self-hosting: Fork the repo, enable GitHub Pages (Source: GitHub Actions)
-# Skipped for upstream repo (yuireidev/devpockit) which uses release.yml for tag-based deploys
+# Skipped for upstream repo (yuireidev/devpockit) which deploys via deploy.yml (manual)
 #
 # main is always production-ready — development happens on develop.
 # Syncing your fork pulls only released commits, so deploying from main is safe.
