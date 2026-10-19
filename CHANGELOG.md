@@ -13,6 +13,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Enhanced accessibility features
 - Internationalization support
 
+## [0.2.3] - 2026-10-19
+
+### Changed
+- Migrated repository from `hypkey/devpockit` to `yuireidev/devpockit` with production domain `devpockit.yuirei.com`
+- Rewrote release workflow into staged `build → github-release → deploy` jobs with SBOM generation
+- Release notes now combine Keep-a-Changelog entries with auto-generated GitHub diff notes
+
+### Added
+- Tag-truth versioning: `scripts/resolve-version.sh` (`git tag → package.json → dev` fallback) so forks show a version without tags
+- `pnpm release:{patch|minor|major}` helper (`scripts/release.sh`) for atomic version bump + changelog draft + tag
+- `pnpm changelog:ai` helper (`scripts/ai-changelog.sh`) to draft Keep-a-Changelog entries from commits
+- PR preview workflow uploading build artifacts; version-check workflow enforcing tag/package.json match
+- Release Drafter config and commitlint for Conventional Commits
+
+### Fixed
+- Workflow YAML parse errors from flow-style `${{ }}` mappings (rewrote in block style)
+
+### Security
+- Added `.op/` to `.gitignore` so 1Password local plugin credential pointers stay untracked
+
 ## [0.1.0] - 2026-01-05
 
 ### Added
