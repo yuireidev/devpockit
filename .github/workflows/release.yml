@@ -54,7 +54,6 @@ jobs:
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "tag_name=$TAG" >> $GITHUB_OUTPUT
       - uses: pnpm/action-setup@v4
-        with:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'

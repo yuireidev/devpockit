@@ -54,7 +54,6 @@ jobs:
           echo "base_url=$BASE_URL" >> $GITHUB_OUTPUT
           echo "base_path=$BASE_PATH" >> $GITHUB_OUTPUT
       - uses: pnpm/action-setup@v4
-        with:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
