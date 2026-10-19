@@ -1,6 +1,6 @@
-# Release: tag v* (or manual dispatch) -> build -> github-release -> deploy Pages.
-# Tag is source of truth; version-check.yml enforces package.json match.
-name: Create Release and Deploy
+# Release: build + GitHub Release for a version. No Pages deploy (see deploy.yml).
+# Triggered by: tag push (v*), manual dispatch, or auto-tag.yml via workflow_call.
+name: Create Release
 on:
   push:
     tags:
@@ -15,10 +15,18 @@ on:
         description: 'Tag (default v{version})'
         required: false
         type: string
+  workflow_call:
+    inputs:
+      version:
+        description: 'Version (e.g., 0.2.3)'
+        required: true
+        type: string
+      tag:
+        description: 'Tag (e.g., v0.2.3)'
+        required: true
+        type: string
 permissions:
   contents: write
-  pages: write
-  id-token: write
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -31,7 +39,10 @@ jobs:
           fetch-depth: 0
       - id: tag_version
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+          if [ "${{ github.event_name }}" = "workflow_call" ]; then
+            VERSION="${{ inputs.version }}"
+            TAG="${{ inputs.tag }}"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
             VERSION="${{ inputs.version }}"
             TAG="${{ inputs.tag }}"
             [ -z "$TAG" ] && TAG="v$VERSION"
@@ -60,9 +71,6 @@ jobs:
           path: ./
           format: spdx-json
           output-file: sbom.spdx.json
-      - uses: actions/upload-pages-artifact@v3
-        with:
-          path: ./out
       - uses: actions/upload-artifact@v4
         with:
           name: build-artifacts
@@ -117,14 +125,3 @@ jobs:
           prerelease: false
           generate_release_notes: true
           make_latest: true
-  deploy:
-    needs: build
-    runs-on: ubuntu-latest
-    environment:
-      name: github-pages
-    permissions:
-      pages: write
-      id-token: write
-    steps:
-      - id: deployment
-        uses: actions/deploy-pages@v4

@@ -1,22 +1,60 @@
+# Version guard.
+# - Tag push: tag must equal package.json (tag is truth, package.json mirrors it).
+# - PR into main: package.json must be semver-greater than the latest tag,
+#   unless the PR carries the `no-release` label (fail-closed).
 name: Version Check
 on:
   push:
-    tags: ['v*']
+    tags:
+      - 'v*'
   pull_request:
-    branches: [main]
+    branches:
+      - main
+    types:
+      - opened
+      - synchronize
+      - reopened
+      - labeled
+      - unlabeled
 jobs:
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with: { fetch-depth: 0 }
+        with:
+          fetch-depth: 0
       - name: Tag matches package.json
+        if: startsWith(github.ref, 'refs/tags/')
         run: |
-          if [[ "$GITHUB_REF" == refs/tags/* ]]; then
-            TAG="${GITHUB_REF#refs/tags/v}"
-            PKG=$(node -p "require('./package.json').version")
-            [ "$TAG" = "$PKG" ] || { echo "❌ tag v$TAG != package.json $PKG"; exit 1; }
-            echo "✅ version $TAG matches"
-          else
-            echo "PR check skipped (tag comparison runs on tag push)"
+          TAG="${GITHUB_REF#refs/tags/v}"
+          PKG=$(node -p "require('./package.json').version")
+          if [ "$TAG" != "$PKG" ]; then
+            echo "tag v$TAG != package.json $PKG"
+            exit 1
           fi
+          echo "version $TAG matches"
+      - name: PR must bump version
+        if: github.event_name == 'pull_request'
+        env:
+          HAS_NO_RELEASE: ${{ contains(github.event.pull_request.labels.*.name, 'no-release') }}
+        run: |
+          if [ "$HAS_NO_RELEASE" = "true" ]; then
+            echo "no-release label present, skipping version requirement"
+            exit 0
+          fi
+          git fetch origin main --tags
+          LATEST=$(git tag --list 'v*' | sort -V | tail -1 || echo "")
+          LATEST_VER="${LATEST#v}"
+          PKG=$(node -p "require('./package.json').version")
+          echo "PR package.json=$PKG latest_tag=$LATEST"
+          if [ -z "$LATEST" ]; then
+            echo "No tags yet, bump check passes"
+            exit 0
+          fi
+          HIGHER=$(printf '%s\n%s' "$LATEST_VER" "$PKG" | sort -V | tail -1)
+          if [ "$HIGHER" != "$PKG" ] || [ "$PKG" = "$LATEST_VER" ]; then
+            echo "package.json $PKG is not newer than latest tag $LATEST"
+            echo "Bump the version on develop first, or add the no-release label for non-release merges."
+            exit 1
+          fi
+          echo "Version bump $LATEST_VER -> $PKG OK"

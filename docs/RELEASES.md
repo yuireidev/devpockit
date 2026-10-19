@@ -1,115 +1,32 @@
 # Release Process
 
-This document describes how to create and deploy releases for DevPockit.
+`develop` owns the version. Releasing is: bump PR into `develop`, then PR
+`develop` to `main`. CI tags the merge commit and creates the GitHub Release.
+Pages deploy is a separate manual step. Never tag by hand.
 
 ## Branching Model
 
-This project uses a two-branch model:
-
 | Branch | Purpose |
 |--------|---------|
-| `main` | Production only — updated exclusively by release PRs from `develop`. Always stable and tagged. |
-| `develop` | Active development — all feature branches merge here. |
+| `main` | Released code only. Every merge into `main` carries a version bump and gets tagged. |
+| `develop` | Active development — all feature branches merge here. Holds the next version. |
 
-This ensures fork users who sync `main` always get released, stable code. Tags always point to commits that exist in `main`, so they are available immediately after a fork sync.
+Tags always point to merge commits on `main`. The tag is the source of truth;
+`package.json` mirrors it.
 
 ## Release Workflow
 
 1. **Development** happens on feature branches merged into `develop`.
-2. When ready to release, open a **PR: `develop` → `main`**, including:
-   - Updated `package.json` version
-   - Updated `CHANGELOG.md`
-3. **Merge the PR** after review and CI passes.
-4. **Tag the merge commit** on `main` and push the tag — this triggers the release workflow.
-5. **Automated**: GitHub Actions builds, deploys to GitHub Pages, and creates a GitHub release.
-
-## Creating a Release
-
-Use the helper (tag `vX.Y.Z` is source of truth, `package.json` mirrors it):
-
-```bash
-pnpm release:patch   # or release:minor / release:major
-# Review CHANGELOG.md (draft with: pnpm changelog:ai), then:
-git push origin HEAD && git push origin vX.Y.Z
-```
-
-This bumps `package.json`, drafts a Keep-a-Changelog entry, commits, and tags.
-
-### Step 1: Prepare the release PR
-
-On `develop` (or a dedicated `release/x.y.z` branch cut from `develop`):
-
-1. **package.json**: Update the `version` field
-   ```json
-   {
-     "version": "0.1.0"
-   }
-   ```
-
-2. **CHANGELOG.md**: Add release notes for the new version
-   ```markdown
-   ## [0.1.0] - 2026-01-05
-
-   ### Added
-   - New features
-
-   ### Changed
-   - Changes
-
-   ### Fixed
-   - Bug fixes
-   ```
-
-3. **next.config.js**: Update version in environment variables (if needed)
-   ```javascript
-   env: {
-     NEXT_PUBLIC_APP_VERSION: process.env.NEXT_PUBLIC_APP_VERSION || 'dev',
-   }
-   ```
-
-### Step 2: Open and merge the release PR
-
-```bash
-# On develop (or a release/x.y.z branch)
-git add package.json CHANGELOG.md
-git commit -m "chore: bump version to 0.1.0"
-git push origin develop   # or your release branch
-```
-
-Then open a PR on GitHub:
-- **Base**: `main`
-- **Compare**: `develop` (or `release/0.1.0`)
-- Title: `chore: release v0.1.0`
-
-Merge the PR after review and CI passes.
-
-### Step 3: Tag the merge commit on main
-
-```bash
-git checkout main
-git pull origin main
-
-# Create annotated tag
-git tag -a v0.1.0 -m "Release version 0.1.0"
-
-# Push tag to trigger release workflow
-git push origin v0.1.0
-```
-
-Or create the tag via GitHub:
-1. Go to **Releases** → **Draft a new release**
-2. Choose **Create new tag**: `v0.1.0`
-3. **Target**: `main` (important — always tag from main)
-4. Release title: `Release 0.1.0`
-5. Description: Copy from CHANGELOG.md
-6. Click **Publish release**
-
-### Step 4: Monitor Deployment
-
-1. Go to **Actions** tab in GitHub
-2. Watch the **Deploy DevPockit to GitHub Pages** workflow
-3. Watch the **Create Release** workflow
-4. Verify deployment at https://devpockit.yuirei.com/
+2. **Bump**: on a short branch from `develop`, run `pnpm release:patch`
+   (or `release:minor` / `release:major`). Curate `CHANGELOG.md`
+   (`pnpm changelog:ai` drafts it). Open a PR into `develop` and merge.
+3. **Ship**: open a PR `develop` to `main`. The version check fails the PR
+   unless `package.json` is newer than the latest tag
+   (escape hatch: `no-release` label). Merge with a **merge commit**.
+4. **Automated**: `auto-tag.yml` creates tag `vX.Y.Z` on the merge commit,
+   then runs `release.yml` (build + GitHub Release). No Pages deploy.
+5. **Deploy (manual)**: run `Deploy to Pages` from the Actions tab, pick the
+   tag. It builds and deploys to GitHub Pages.
 
 ## Version Numbering
 
@@ -119,171 +36,62 @@ Follow [Semantic Versioning](https://semver.org/):
 - **MINOR** (0.1.0): New features, backward compatible
 - **PATCH** (0.0.1): Bug fixes, backward compatible
 
-### Pre-release Versions
-
-- **Alpha**: `v0.1.0-alpha.1`
-- **Beta**: `v0.1.0-beta.1`
-- **RC**: `v0.1.0-rc.1`
-
-Pre-releases are marked as pre-release in GitHub but still deploy to production.
+Pre-releases (`-alpha.1`, `-beta.1`, `-rc.1`) are supported by the tag format.
 
 ## Release Checklist
 
-Before creating a release:
+- [ ] Bump PR merged into `develop` (`package.json` + `CHANGELOG.md`)
+- [ ] PR `develop` to `main` passes version check + CI
+- [ ] Merged with a merge commit (not squash)
+- [ ] Tag `vX.Y.Z` created by CI
+- [ ] GitHub Release created by CI
+- [ ] Pages deployed manually via `deploy.yml`
 
-- [ ] All tests passing (`pnpm test:ci`)
-- [ ] Type checking passes (`pnpm type-check`)
-- [ ] Linting passes (`pnpm lint`)
-- [ ] Build succeeds (`pnpm build`)
-- [ ] Version updated in `package.json`
-- [ ] CHANGELOG.md updated with release notes
-- [ ] All changes committed and pushed
-- [ ] Tag created and pushed
+## Workflows
 
-## Automated Workflows
+| Workflow | Trigger | Action |
+|----------|---------|--------|
+| `ci.yml` | PR / push to `main`, `develop` | Lint, type-check, test, build |
+| `version-check.yml` | Tag push; PR into `main` | Tag matches `package.json`; PR must bump version |
+| `auto-tag.yml` | Push to `main` | Tag merge commit when `package.json` is newer, then run release |
+| `release.yml` | Tag push, manual dispatch, `auto-tag.yml` | Build + GitHub Release (no deploy) |
+| `deploy.yml` | Manual dispatch | Build + deploy to Pages for a chosen tag |
+| `deploy-pages.yml` | Manual dispatch (forks) | Build + deploy from default branch |
+| `preview.yml` | PR | Build + upload artifact (no Pages deploy) |
 
-### Deploy Workflow (`.github/workflows/deploy.yml`)
+## Hotfix
 
-**Triggers:**
-- Push to `main` branch
-- Push of version tag (`v*`)
-
-**Actions:**
-- Type checking
-- Linting
-- Building application
-- Verifying build output
-- Deploying to GitHub Pages
-
-### Release Workflow (`.github/workflows/release.yml`)
-
-**Triggers:**
-- Push of version tag (`v*`)
-
-**Actions:**
-- Type checking
-- Linting
-- Testing
-- Building application
-- Generating release notes from CHANGELOG.md
-- Creating GitHub release
-- Uploading build artifacts
-
-## Manual Release (If Needed)
-
-If automated workflows fail, you can manually deploy:
+Branch from `main`, bump the version, open a PR into `main`, then open a
+follow-up PR `main` to `develop` so `develop` does not drift.
 
 ```bash
-# Build locally
-pnpm build
-
-# Verify build
-pnpm build:verify
-
-# Deploy manually (depends on your hosting)
-# For GitHub Pages: Push out/ directory
-# For other platforms: Follow their deployment process
+git checkout main && git pull origin main
+git checkout -b hotfix/0.2.4
+pnpm release:patch
+# curate CHANGELOG.md, commit, push, PR into main, merge
+# then: PR main to develop, merge
 ```
 
 ## Rollback
 
-If a release has issues:
-
-1. **Revert the tag** (if needed):
-   ```bash
-   git tag -d v0.1.0
-   git push origin :refs/tags/v0.1.0
-   ```
-
-2. **Redeploy previous version**:
-   - Push the previous tag again, or
-   - Manually deploy from a previous commit
-
-3. **Create hotfix release**:
-   - Fix the issue
-   - Create a patch version (e.g., `v0.1.1`)
-   - Follow normal release process
-
-## Release Notes
-
-Release notes are automatically generated from `CHANGELOG.md`. The workflow:
-
-1. Extracts the section for the version being released
-2. Formats it as release notes
-3. Adds a link to the full changelog
-4. Includes a link to compare changes
-
-### Format in CHANGELOG.md
-
-```markdown
-## [0.1.0] - 2026-01-05
-
-### Added
-- Feature 1
-- Feature 2
-
-### Changed
-- Improvement 1
-
-### Fixed
-- Bug fix 1
-```
-
-## Environment Variables
-
-The build process uses these environment variables (if set):
-
-- `NEXT_PUBLIC_APP_VERSION`: Application version (defaults to package.json version)
-- `NEXT_PUBLIC_APP_NAME`: Application name (defaults to "DevPockit")
-
-These are set automatically during the release build.
+Redeploy a previous tag via `deploy.yml` (pick the older tag), or cut a new
+patch release with the fix. Tags are immutable (creation allowed,
+deletion and force-push blocked by the `protect-tags` ruleset).
 
 ## Troubleshooting
 
-### Deployment Fails
+### PR into `main` fails version check
 
-1. Check GitHub Actions logs
-2. Verify build succeeds locally: `pnpm build`
-3. Check for TypeScript errors: `pnpm type-check`
-4. Check for linting errors: `pnpm lint`
+`package.json` is not newer than the latest tag. Bump on `develop` first
+(step 2), or add the `no-release` label for non-release merges.
 
-### Release Not Created
+### No tag after merging to `main`
 
-1. Verify tag format: Must start with `v` (e.g., `v0.1.0`)
-2. Check workflow permissions
-3. Verify CHANGELOG.md exists and has the version section
+`auto-tag.yml` only tags when `package.json` is semver-greater than the
+latest tag. Check the workflow run logs; re-running on the same commit
+exits without a duplicate tag.
 
-### Version Mismatch Warning
+### Deploy shows the wrong version
 
-If you see a warning that `package.json` version doesn't match the release tag:
-
-1. **This means**: The tag was created before `package.json` was updated
-2. **Solution**: Update `package.json` manually to match the tag:
-   ```bash
-   # Checkout main branch
-   git checkout main
-
-   # Update package.json version to match tag (e.g., 0.1.0)
-   # Edit package.json: "version": "0.1.0"
-
-   # Commit and push (via PR if branch is protected)
-   git add package.json
-   git commit -m "chore: update version to 0.1.0"
-   git push origin main  # or create PR
-   ```
-
-3. **Prevention**: Always follow the workflow:
-   - Update `package.json` first
-   - Commit and merge PR
-   - Then create the release tag
-
-4. **Note**: The workflow will continue successfully even if versions don't match (warning only), since the git tag is the source of truth for versioning.
-
-### Build Artifacts
-
-Build artifacts are uploaded to GitHub Actions and kept for 30 days. You can download them from the workflow run.
-
----
-
-For questions or issues with releases, please open an issue on GitHub.
-
+`deploy.yml` builds the tag you pick with `NEXT_PUBLIC_APP_VERSION` from
+that tag. Verify you selected the right tag in the dispatch inputs.
