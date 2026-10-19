@@ -7,24 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.0] - 2026-10-19
-
-### Added
-- TODO: curate from commits below (AI: rewrite into Keep-a-Changelog entries)
-
-### Fixed
-- 
-
-### Changed
-- 
-
-
-
 ### Planned
 - Additional developer tools
 - Performance optimizations
 - Enhanced accessibility features
 - Internationalization support
+
+## [0.3.0] - 2026-10-19
+
+### Added
+- Auto-tag release flow: `auto-tag.yml` tags merge commits on `main` and runs the release via reusable workflow
+- Manual Pages deploy: `deploy.yml` with tag picker, usable by upstream and forks
+- Version guard: PRs into `main` fail without a semver bump (`no-release` label escapes)
+
+### Changed
+- Release workflow split: `release.yml` builds + creates GitHub Release only, no automatic deploy
+- `scripts/release.sh` no longer tags locally; CI owns tagging
+
+### Fixed
+- Pinned `@commitlint/cli` and `@commitlint/config-conventional` to exact 21.2.4 for Dependabot resolution
+- Removed tracked 1Password plugin pointer (`.op/` stays local-only)
 
 ## [0.2.3] - 2026-10-19
 
