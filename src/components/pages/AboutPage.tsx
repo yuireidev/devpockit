@@ -7,6 +7,8 @@ import Link from 'next/link';
 function KeyboardShortcutsPanel() {
   const paletteShortcut = useKeyboardShortcut();
   const openPalette = paletteShortcut ?? '⌘K / Ctrl+K';
+  const sidebarShortcut = useKeyboardShortcut('sidebar');
+  const toggleSidebarLabel = sidebarShortcut ?? '⌘B / Ctrl+B';
 
   return (
     <div className="mt-10 w-full max-w-[560px] rounded-lg border border-border bg-muted/30 p-5">
@@ -30,6 +32,10 @@ function KeyboardShortcutsPanel() {
         <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
           <dt className="text-muted-foreground">Navigate palette results</dt>
           <dd className="font-mono text-foreground">↑ ↓ Enter</dd>
+        </div>
+        <div className="flex flex-col gap-0.5 sm:flex-row sm:justify-between sm:gap-4">
+          <dt className="text-muted-foreground">Toggle sidebar</dt>
+          <dd className="font-mono text-foreground">{toggleSidebarLabel}</dd>
         </div>
       </dl>
     </div>
