@@ -7,24 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.3.1] - 2026-10-20
-
-### Added
-- TODO: curate from commits below (AI: rewrite into Keep-a-Changelog entries)
-
-### Fixed
-- 
-
-### Changed
-- 
-
-
-
 ### Planned
 - Additional developer tools
 - Performance optimizations
 - Enhanced accessibility features
 - Internationalization support
+
+## [0.3.1] - 2026-10-20
+
+### Added
+- Sidebar toggle keyboard shortcut (`⌘B` / `Ctrl+B`) with platform-correct, hydration-safe labels, guarded against firing while typing in inputs, textareas, or contenteditable elements (including code editors), and documented via key hints on the sidebar tooltip, header trigger, and About panel
+- Pure keyboard helpers (`isEditableKeyboardTarget`, `SIDEBAR_TOGGLE_SHORTCUT_LABELS`) in `src/libs/keyboard.ts` with unit tests, and `useKeyboardShortcut` support for `palette` / `sidebar` kinds
+
+### Changed
+- Branch model: single-branch flow (GitHub Flow) with release-ledger tagging — short-lived `release/X.Y.Z` branches carry the version bump and changelog; CI tags release merges into `main`
+- CI: removed orphaned release-drafter config and `deploy-pages` workflow, trimmed CI artifact retention, pinned pnpm via the `packageManager` field
+
+### Fixed
+- JSON / YAML Path Finder: Tree View footer aligned with the left panel (search and Expand/Collapse controls moved to the CodePanel footer), tree colors synchronized with the code editor's Shiki theme, and match badge moved to the tree header
+- Restored `with:` lines in workflow YAML that a sed cleanup had removed
+- `release.yml` input-based version selection for `workflow_call`
 
 ## [0.3.0] - 2026-10-19
 
