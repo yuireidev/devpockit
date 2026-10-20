@@ -67,6 +67,7 @@ export const toolIcons: Record<string, LucideIcon> = {
   'base-encoder': Binary,
   'hash-generator': Hash,
   'http-status-cheatsheet': ListOrdered,
+  'csv-markdown-converter': RefreshCw,
   'headers-cookies-explainer': Cookie,
 };
 
@@ -402,6 +403,18 @@ export const toolCategories: ToolCategory[] = [
         isPopular: true,
         path: '/tools/converters/number-base-converter',
         component: 'NumberBaseConverter',
+        supportsDesktop: true,
+        supportsMobile: true,
+      },
+      {
+        id: 'csv-markdown-converter',
+        name: 'CSV to Markdown Table',
+        description: 'Convert Excel/Sheets paste or CSV to Markdown tables and back',
+        category: 'converters',
+        icon: '📊',
+        isPopular: true,
+        path: '/tools/converters/csv-markdown-converter',
+        component: 'CsvMarkdownConverter',
         supportsDesktop: true,
         supportsMobile: true,
       },
