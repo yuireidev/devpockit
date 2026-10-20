@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.3.1] - 2026-10-20
+
+### Added
+- TODO: curate from commits below (AI: rewrite into Keep-a-Changelog entries)
+
+### Fixed
+- 
+
+### Changed
+- 
+
+
+
 ### Planned
 - Additional developer tools
 - Performance optimizations
