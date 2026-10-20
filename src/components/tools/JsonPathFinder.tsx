@@ -274,33 +274,44 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
     }
   }, [outputTabs, activeTab]);
 
-  // Custom tab content renderer
+  // Tree View expand/collapse controls registered by JsonTreeView (used by footer buttons)
+  const [treeExpandAll, setTreeExpandAll] = useState<(() => void) | null>(null);
+  const [treeCollapseAll, setTreeCollapseAll] = useState<(() => void) | null>(null);
+  const registerTreeExpandAll = useCallback((fn: () => void) => setTreeExpandAll(() => fn), []);
+  const registerTreeCollapseAll = useCallback((fn: () => void) => setTreeCollapseAll(() => fn), []);
   const handleTreeExpandAll = useCallback(() => {
-    // This will be handled by JsonTreeView internally via the passed handler
-  }, []);
-
+    treeExpandAll?.();
+  }, [treeExpandAll]);
   const handleTreeCollapseAll = useCallback(() => {
-    // This will be handled by JsonTreeView internally via the passed handler
+    treeCollapseAll?.();
+  }, [treeCollapseAll]);
+
+  const treeHighlightedPaths = useMemo(() => result?.paths || [], [result]);
+
+  const handleTreePathClick = useCallback((path: string) => {
+    navigator.clipboard.writeText(path).catch(console.error);
   }, []);
 
-  const renderCustomTabContent = (tabId: string): React.ReactNode => {
+  const handleRegisterGetExpandedJson = useCallback((fn: () => string) => {
+    setGetExpandedJson(() => fn);
+  }, []);
+
+  // Custom tab content renderer
+  const renderCustomTabContent = useCallback((tabId: string): React.ReactNode => {
     if (tabId === 'tree') {
       if (parsedJsonData !== null) {
         return (
           <div className="h-full w-full">
             <JsonTreeView
               data={parsedJsonData}
-              highlightedPaths={result?.paths || []}
-              onPathClick={(path) => {
-                navigator.clipboard.writeText(path).catch(console.error);
-              }}
-              onGetExpandedJson={(fn: () => string) => setGetExpandedJson(() => fn)}
+              highlightedPaths={treeHighlightedPaths}
+              onPathClick={handleTreePathClick}
+              onGetExpandedJson={handleRegisterGetExpandedJson}
               maxDepth={3}
               theme={theme}
               searchTerm={treeSearchTerm}
-              onSearchChange={setTreeSearchTerm}
-              onExpandAll={handleTreeExpandAll}
-              onCollapseAll={handleTreeCollapseAll}
+              onExpandAll={registerTreeExpandAll}
+              onCollapseAll={registerTreeCollapseAll}
             />
           </div>
         );
@@ -314,7 +325,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
       );
     }
     return null;
-  };
+  }, [parsedJsonData, treeHighlightedPaths, handleTreePathClick, handleRegisterGetExpandedJson, theme, treeSearchTerm, registerTreeExpandAll, registerTreeCollapseAll]);
 
   // Custom copy handler for tree view
   const handleTreeViewCopy = useCallback(async (): Promise<string | null> => {

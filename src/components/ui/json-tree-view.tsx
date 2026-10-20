@@ -2,7 +2,7 @@
 
 import type { CodeEditorTheme } from '@/config/code-editor-themes';
 import { getMonacoTheme } from '@/config/monaco-themes';
-import { getShikiHighlighter, getThemeColors, type EditorThemeColors } from '@/libs/shiki-init';
+import { DEFAULT_EDITOR_THEME_COLORS, getThemeColors, loadShikiTheme, type EditorThemeColors } from '@/libs/shiki-init';
 import { cn } from '@/libs/utils';
 import {
   ChevronDownIcon,
@@ -10,7 +10,7 @@ import {
   DocumentDuplicateIcon,
 } from '@heroicons/react/24/outline';
 import { CheckIcon } from '@heroicons/react/24/solid';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { List, useListRef } from 'react-window';
 
 export interface JsonTreeNode {
@@ -34,12 +34,11 @@ export interface JsonTreeViewProps {
   maxDepth?: number;
   className?: string;
   theme?: CodeEditorTheme; // Active code editor theme for color sync
-  // Search props (controlled)
+  // Controlled search term from the parent (parent renders the search input)
   searchTerm?: string;
-  onSearchChange?: (term: string) => void;
-  // Expand/Collapse props (controlled)
-  onExpandAll?: () => void;
-  onCollapseAll?: () => void;
+  // Register expand/collapse-all controls with the parent (parent-owned footer buttons)
+  onExpandAll?: (fn: () => void) => void;
+  onCollapseAll?: (fn: () => void) => void;
 }
 
 // Transform JSON data into tree nodes
@@ -270,7 +269,7 @@ function TreeNodeItem({
         isHighlighted && 'bg-orange-50 dark:bg-orange-950/30 border-l-2 border-orange-600',
         isSearchMatch && !isHighlighted && 'bg-yellow-50 dark:bg-yellow-950/20'
       )}
-      style={{ backgroundColor: isHighlighted ? themeColors.findMatchBackground : 'transparent', color: themeColors.foreground }}
+      style={isHighlighted ? { backgroundColor: themeColors.findMatchBackground, color: themeColors.foreground } : { color: themeColors.foreground }}
     >
       {/* Tree Lines */}
       {node.level === 0 ? (
@@ -363,7 +362,7 @@ function TreeNodeItem({
   );
 }
 
-export function JsonTreeView({
+export const JsonTreeView = memo(function JsonTreeView({
   data,
   highlightedPaths = [],
   onPathClick,
@@ -372,7 +371,6 @@ export function JsonTreeView({
   className,
   theme = 'basicDark',
   searchTerm = '',
-  onSearchChange,
   onExpandAll,
   onCollapseAll,
 }: JsonTreeViewProps) {
@@ -385,32 +383,28 @@ export function JsonTreeView({
 
   // Fetch theme colors from Shiki when theme changes
   useEffect(() => {
-    const highlighter = getShikiHighlighter();
-    if (!highlighter) return;
-
-    const shikiThemeName = getMonacoTheme(theme);
-    highlighter.loadTheme(shikiThemeName as any)
-      .then(() => {
-        const colors = getThemeColors(shikiThemeName);
-        if (colors) setThemeColors(colors);
-      })
-      .catch(() => {
-        // Theme may already be loaded; try fetching directly
-        const colors = getThemeColors(shikiThemeName);
-        if (colors) setThemeColors(colors);
-      });
+    let cancelled = false;
+    const applyThemeColors = async () => {
+      const shikiThemeName = getMonacoTheme(theme);
+      try {
+        // Await highlighter + theme readiness so colors resolve on first mount too
+        await loadShikiTheme(shikiThemeName);
+      } catch {
+        // Theme may be unavailable; fall back to defaults below
+      }
+      if (cancelled) return;
+      const colors = getThemeColors(shikiThemeName);
+      if (colors) setThemeColors(colors);
+    };
+    applyThemeColors();
+    return () => {
+      cancelled = true;
+    };
   }, [theme]);
 
   // Fallback colors for initial render / SSR
   const colors = useMemo<EditorThemeColors>(() => {
-    return themeColors || {
-      background: '#1e1e1e',
-      foreground: '#d4d4d4',
-      lineNumber: '#858585',
-      findMatchBackground: '#ffd700',
-      findMatchHighlightBackground: '#ffff00',
-      selectionBackground: '#264f78',
-    };
+    return themeColors || DEFAULT_EDITOR_THEME_COLORS;
   }, [themeColors]);
 
   // Transform data to tree nodes
@@ -508,6 +502,17 @@ export function JsonTreeView({
   const handleCollapseAll = useCallback(() => {
     setExpandedPaths(new Set());
   }, []);
+
+  // Expose expand/collapse-all controls to the parent's footer buttons
+  useEffect(() => {
+    onExpandAll?.(handleExpandAll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleExpandAll]);
+
+  useEffect(() => {
+    onCollapseAll?.(handleCollapseAll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleCollapseAll]);
 
   const handleCopy = useCallback(async (node: JsonTreeNode) => {
     try {
@@ -661,5 +666,5 @@ export function JsonTreeView({
       </div>
     </div>
   );
-}
+});
 
