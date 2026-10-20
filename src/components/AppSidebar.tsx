@@ -33,6 +33,7 @@ import {
 } from "@/components/ui/tooltip"
 import { CODE_EDITOR_THEMES, type CodeEditorTheme } from '@/config/code-editor-themes'
 import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut'
 import { toolCategories } from "@/libs/tools-data"
 import { cn } from "@/libs/utils"
 import {
@@ -97,6 +98,7 @@ export function AppSidebar({
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const { state, toggleSidebar } = useSidebar()
+  const sidebarShortcut = useKeyboardShortcut('sidebar')
   const { hydrated: pinsHydrated, isPinned, togglePinnedTool } = useToolActivity()
   const [codeEditorTheme, setCodeEditorTheme] = useCodeEditorTheme('basicDark')
   const [mounted, setMounted] = React.useState(false)
@@ -202,7 +204,7 @@ export function AppSidebar({
             </TooltipTrigger>
             {isCollapsed ? (
               <TooltipContent side="right">
-                Expand sidebar
+                Expand sidebar · {sidebarShortcut}
               </TooltipContent>
             ) : (
               <TooltipContent side="right">
@@ -223,7 +225,14 @@ export function AppSidebar({
               </span>
             </div>
           </div>
-          <SidebarTrigger className={cn("ml-auto", isCollapsed && "hidden")} />
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <SidebarTrigger className={cn("ml-auto", isCollapsed && "hidden")} />
+            </TooltipTrigger>
+            <TooltipContent side="right">
+              Toggle sidebar · {sidebarShortcut}
+            </TooltipContent>
+          </Tooltip>
         </div>
         <div className="mt-1 group-data-[collapsible=icon]:hidden">
           <SearchTools onToolSelect={handleToolSelect} onSearchClick={onSearchClick} />

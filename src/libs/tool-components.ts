@@ -36,6 +36,7 @@ export const getToolComponent = async (componentName: string) => {
     'NumberBaseConverter': () => import('@/components/tools/NumberBaseConverter').then(m => m.NumberBaseConverter),
     'BaseEncoder': () => import('@/components/tools/BaseEncoder').then(m => m.BaseEncoder),
     'HashGenerator': () => import('@/components/tools/HashGenerator').then(m => m.HashGenerator),
+    'CsvMarkdownConverter': () => import('@/components/tools/CsvMarkdownConverter').then(m => m.CsvMarkdownConverter),
   };
 
   const loader = componentMap[componentName];

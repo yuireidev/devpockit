@@ -26,7 +26,7 @@ import {
   type JsonPathResult
 } from '@/libs/json-path-finder';
 import { cn } from '@/libs/utils';
-import { ArrowDownTrayIcon, ArrowPathIcon, ChevronDownIcon, LinkIcon, XMarkIcon } from '@heroicons/react/24/outline';
+import { ArrowDownTrayIcon, ArrowPathIcon, ChevronDownIcon, LinkIcon, MagnifyingGlassIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface JsonPathFinderProps {
@@ -48,6 +48,8 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
   const [isHydrated, setIsHydrated] = useState(false);
   const [activeTab, setActiveTab] = useState<string>('tree');
   const [getExpandedJson, setGetExpandedJson] = useState<(() => string) | null>(null);
+  // Tree View search state
+  const [treeSearchTerm, setTreeSearchTerm] = useState<string>('');
 
   // URL loader state
   const [urlInputVisible, setUrlInputVisible] = useState(false);
@@ -272,21 +274,44 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
     }
   }, [outputTabs, activeTab]);
 
+  // Tree View expand/collapse controls registered by JsonTreeView (used by footer buttons)
+  const [treeExpandAll, setTreeExpandAll] = useState<(() => void) | null>(null);
+  const [treeCollapseAll, setTreeCollapseAll] = useState<(() => void) | null>(null);
+  const registerTreeExpandAll = useCallback((fn: () => void) => setTreeExpandAll(() => fn), []);
+  const registerTreeCollapseAll = useCallback((fn: () => void) => setTreeCollapseAll(() => fn), []);
+  const handleTreeExpandAll = useCallback(() => {
+    treeExpandAll?.();
+  }, [treeExpandAll]);
+  const handleTreeCollapseAll = useCallback(() => {
+    treeCollapseAll?.();
+  }, [treeCollapseAll]);
+
+  const treeHighlightedPaths = useMemo(() => result?.paths || [], [result]);
+
+  const handleTreePathClick = useCallback((path: string) => {
+    navigator.clipboard.writeText(path).catch(console.error);
+  }, []);
+
+  const handleRegisterGetExpandedJson = useCallback((fn: () => string) => {
+    setGetExpandedJson(() => fn);
+  }, []);
+
   // Custom tab content renderer
-  const renderCustomTabContent = (tabId: string): React.ReactNode => {
+  const renderCustomTabContent = useCallback((tabId: string): React.ReactNode => {
     if (tabId === 'tree') {
       if (parsedJsonData !== null) {
         return (
           <div className="h-full w-full">
             <JsonTreeView
               data={parsedJsonData}
-              highlightedPaths={result?.paths || []}
-              onPathClick={(path) => {
-                navigator.clipboard.writeText(path).catch(console.error);
-              }}
-              onGetExpandedJson={(fn: () => string) => setGetExpandedJson(() => fn)}
+              highlightedPaths={treeHighlightedPaths}
+              onPathClick={handleTreePathClick}
+              onGetExpandedJson={handleRegisterGetExpandedJson}
               maxDepth={3}
-              height="500px"
+              theme={theme}
+              searchTerm={treeSearchTerm}
+              onExpandAll={registerTreeExpandAll}
+              onCollapseAll={registerTreeCollapseAll}
             />
           </div>
         );
@@ -300,7 +325,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
       );
     }
     return null;
-  };
+  }, [parsedJsonData, treeHighlightedPaths, handleTreePathClick, handleRegisterGetExpandedJson, theme, treeSearchTerm, registerTreeExpandAll, registerTreeCollapseAll]);
 
   // Custom copy handler for tree view
   const handleTreeViewCopy = useCallback(async (): Promise<string | null> => {
@@ -518,45 +543,11 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               onWrapTextChange={setOutputWrapText}
               showWrapToggle={activeTab === 'results'}
               headerActions={
-                activeTab === 'results' && output ? (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                    onClick={handleDownloadResults}
-                  >
-                    <ArrowDownTrayIcon className="h-3.5 w-3.5 mr-1" />
-                    Download
-                  </Button>
-                ) : undefined
-              }
-              footerRightContent={
-                activeTab === 'tree' ? (
-                  <Select
-                    value={options.sortKeys}
-                    onValueChange={(value: 'none' | 'asc' | 'desc') =>
-                      setOptions(prev => ({ ...prev, sortKeys: value }))
-                    }
-                  >
-                    <SelectTrigger className="h-6 text-xs w-[150px]">
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {JSON_PATH_SORT_OPTIONS.map((opt) => (
-                        <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                          {opt.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : undefined
-              }
-              footerLeftContent={
                 <>
-                  {activeTab === 'tree' && result && (
+                  {activeTab === 'tree' && result ? (
                     <span
                       className={cn(
-                        'px-2.5 py-1 rounded-full text-xs font-semibold',
+                        'px-2.5 py-1 rounded-full text-xs font-semibold shrink-0',
                         result.success && result.count > 0
                           ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
                           : result.success && result.count === 0
@@ -570,6 +561,74 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                         ? 'No matches found'
                         : ''}
                     </span>
+                  ) : null}
+                  {activeTab === 'results' && output ? (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="h-8 px-3 text-xs"
+                      onClick={handleDownloadResults}
+                    >
+                      <ArrowDownTrayIcon className="h-3.5 w-3.5 mr-1" />
+                      Download
+                    </Button>
+                  ) : undefined}
+                </>
+              }
+              footerRightContent={
+                activeTab === 'tree' ? (
+                  <Select
+                    value={options.sortKeys}
+                    onValueChange={(value: 'none' | 'asc' | 'desc') =>
+                      setOptions(prev => ({ ...prev, sortKeys: value }))
+                    }
+                  >
+                    <SelectTrigger className="h-8 text-xs w-[150px] shrink-0">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {JSON_PATH_SORT_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : undefined
+              }
+              footerLeftContent={
+                <div className="flex-1 flex items-center gap-2">
+                  {activeTab === 'tree' && (
+                    <>
+                      <div className="flex-1 relative min-w-0">
+                        <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" aria-hidden="true" />
+                        <Input
+                          type="text"
+                          placeholder="Search keys, values, or paths..."
+                          value={treeSearchTerm}
+                          onChange={(e) => setTreeSearchTerm(e.target.value)}
+                          className="pl-8 h-8 text-sm w-full"
+                        />
+                      </div>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTreeExpandAll}
+                        className="h-8 px-2 text-xs shrink-0"
+                      >
+                        <ArrowsPointingOutIcon className="h-3 w-3 mr-1" />
+                        Expand All
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={handleTreeCollapseAll}
+                        className="h-8 px-2 text-xs shrink-0"
+                      >
+                        <ArrowsPointingInIcon className="h-3 w-3 mr-1" />
+                        Collapse All
+                      </Button>
+                    </>
                   )}
                   {activeTab === 'results' && output && result && (
                     <>
@@ -578,7 +637,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                       <span>{getLineCount(output)} lines</span>
                     </>
                   )}
-                </>
+                </div>
               }
             />
           </div>
