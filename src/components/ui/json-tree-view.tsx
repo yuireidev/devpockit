@@ -1,18 +1,16 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import type { CodeEditorTheme } from '@/config/code-editor-themes';
+import { getMonacoTheme } from '@/config/monaco-themes';
+import { DEFAULT_EDITOR_THEME_COLORS, getThemeColors, loadShikiTheme, type EditorThemeColors } from '@/libs/shiki-init';
 import { cn } from '@/libs/utils';
 import {
-  ArrowsPointingInIcon,
-  ArrowsPointingOutIcon,
   ChevronDownIcon,
   ChevronRightIcon,
   DocumentDuplicateIcon,
-  MagnifyingGlassIcon,
 } from '@heroicons/react/24/outline';
 import { CheckIcon } from '@heroicons/react/24/solid';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { List, useListRef } from 'react-window';
 
 export interface JsonTreeNode {
@@ -35,7 +33,12 @@ export interface JsonTreeViewProps {
   onGetExpandedJson?: (getExpandedJson: () => string) => void; // Callback to expose function to get expanded JSON
   maxDepth?: number;
   className?: string;
-  height?: string;
+  theme?: CodeEditorTheme; // Active code editor theme for color sync
+  // Controlled search term from the parent (parent renders the search input)
+  searchTerm?: string;
+  // Register expand/collapse-all controls with the parent (parent-owned footer buttons)
+  onExpandAll?: (fn: () => void) => void;
+  onCollapseAll?: (fn: () => void) => void;
 }
 
 // Transform JSON data into tree nodes
@@ -216,6 +219,7 @@ interface TreeNodeItemProps {
   searchTerm: string;
   itemHeight: number;
   isCopied: boolean;
+  themeColors: EditorThemeColors;
 }
 
 function TreeNodeItem({
@@ -227,6 +231,7 @@ function TreeNodeItem({
   searchTerm,
   itemHeight,
   isCopied,
+  themeColors,
 }: TreeNodeItemProps) {
   const hasChildren = node.children && node.children.length > 0;
   const isRoot = node.key === 'root' && node.level === 0;
@@ -254,6 +259,9 @@ function TreeNodeItem({
     node.path.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
+  const typeBadgeBg = getTypeBg(node.type);
+  const typeBadgeColor = getTypeColor(node.type);
+
   return (
     <div
       className={cn(
@@ -261,6 +269,7 @@ function TreeNodeItem({
         isHighlighted && 'bg-orange-50 dark:bg-orange-950/30 border-l-2 border-orange-600',
         isSearchMatch && !isHighlighted && 'bg-yellow-50 dark:bg-yellow-950/20'
       )}
+      style={isHighlighted ? { backgroundColor: themeColors.findMatchBackground, color: themeColors.foreground } : { color: themeColors.foreground }}
     >
       {/* Tree Lines */}
       {node.level === 0 ? (
@@ -312,16 +321,17 @@ function TreeNodeItem({
         onClick={handleToggle}
         disabled={!hasChildren}
         className={cn(
-          'shrink-0 w-4 h-4 flex items-center justify-center rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors',
+          'shrink-0 w-4 h-4 flex items-center justify-center rounded hover:opacity-70 transition-colors',
           !hasChildren && 'opacity-0 cursor-default'
         )}
+        style={{ color: themeColors.foreground }}
         aria-label={isExpanded ? 'Collapse' : 'Expand'}
       >
         {hasChildren && (
           isExpanded ? (
-            <ChevronDownIcon className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
+            <ChevronDownIcon className="h-3 w-3" style={{ color: themeColors.foreground }} />
           ) : (
-            <ChevronRightIcon className="h-3 w-3 text-neutral-600 dark:text-neutral-400" />
+            <ChevronRightIcon className="h-3 w-3" style={{ color: themeColors.foreground }} />
           )
         )}
       </button>
@@ -330,8 +340,8 @@ function TreeNodeItem({
       <span
         className={cn(
           'shrink-0 px-1.5 py-0.5 text-xs font-mono rounded',
-          getTypeBg(node.type),
-          getTypeColor(node.type)
+          typeBadgeBg,
+          typeBadgeColor
         )}
       >
         {node.type === 'object' ? '{}' : node.type === 'array' ? '[]' : node.type[0].toUpperCase()}
@@ -339,34 +349,63 @@ function TreeNodeItem({
 
       {/* Key */}
       {!isRoot && (
-        <span className="font-mono text-sm text-neutral-700 dark:text-neutral-300">
+        <span className="font-mono text-sm" style={{ color: themeColors.foreground }}>
           {displayKey}:
         </span>
       )}
 
       {/* Value */}
-      <span className={cn('text-sm flex-1', getTypeColor(node.type))}>
+      <span className={cn('text-sm flex-1', typeBadgeColor)}>
         {displayValue}
       </span>
     </div>
   );
 }
 
-export function JsonTreeView({
+export const JsonTreeView = memo(function JsonTreeView({
   data,
   highlightedPaths = [],
   onPathClick,
   onGetExpandedJson,
   maxDepth = 3,
   className,
-  height = '500px',
+  theme = 'basicDark',
+  searchTerm = '',
+  onExpandAll,
+  onCollapseAll,
 }: JsonTreeViewProps) {
   const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
-  const [searchTerm, setSearchTerm] = useState('');
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
+  const [themeColors, setThemeColors] = useState<EditorThemeColors | null>(null);
   const listRef = useListRef(null);
   const highlightedPathSet = useMemo(() => new Set(highlightedPaths), [highlightedPaths]);
   const lastSearchTermRef = useRef<string>('');
+
+  // Fetch theme colors from Shiki when theme changes
+  useEffect(() => {
+    let cancelled = false;
+    const applyThemeColors = async () => {
+      const shikiThemeName = getMonacoTheme(theme);
+      try {
+        // Await highlighter + theme readiness so colors resolve on first mount too
+        await loadShikiTheme(shikiThemeName);
+      } catch {
+        // Theme may be unavailable; fall back to defaults below
+      }
+      if (cancelled) return;
+      const colors = getThemeColors(shikiThemeName);
+      if (colors) setThemeColors(colors);
+    };
+    applyThemeColors();
+    return () => {
+      cancelled = true;
+    };
+  }, [theme]);
+
+  // Fallback colors for initial render / SSR
+  const colors = useMemo<EditorThemeColors>(() => {
+    return themeColors || DEFAULT_EDITOR_THEME_COLORS;
+  }, [themeColors]);
 
   // Transform data to tree nodes
   const rootNodes = useMemo(() => {
@@ -463,6 +502,17 @@ export function JsonTreeView({
   const handleCollapseAll = useCallback(() => {
     setExpandedPaths(new Set());
   }, []);
+
+  // Expose expand/collapse-all controls to the parent's footer buttons
+  useEffect(() => {
+    onExpandAll?.(handleExpandAll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleExpandAll]);
+
+  useEffect(() => {
+    onCollapseAll?.(handleCollapseAll);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [handleCollapseAll]);
 
   const handleCopy = useCallback(async (node: JsonTreeNode) => {
     try {
@@ -567,13 +617,6 @@ export function JsonTreeView({
   }, [highlightedPaths, filteredNodes, highlightedPathSet]);
 
   const itemHeight = 36;
-  // Calculate height - if height prop is provided, use it; otherwise use container height
-  const containerHeight = typeof height === 'string'
-    ? parseInt(height.replace('px', '')) || 500
-    : typeof height === 'number'
-    ? height
-    : 500;
-  const listHeight = Math.max(containerHeight - 60, 100); // Subtract toolbar height, min 100px
 
   // Row component for react-window v2
   const RowComponent = useCallback(({ index, style, ariaAttributes }: { index: number; style: React.CSSProperties; ariaAttributes: any }) => {
@@ -583,7 +626,7 @@ export function JsonTreeView({
     }
 
     return (
-      <div style={style} className="group" {...ariaAttributes}>
+      <div style={{ ...style, backgroundColor: colors.background }} className="group" {...ariaAttributes}>
         <TreeNodeItem
           node={node}
           isHighlighted={highlightedPathSet.has(node.path)}
@@ -593,67 +636,35 @@ export function JsonTreeView({
           searchTerm={searchTerm}
           itemHeight={itemHeight}
           isCopied={copiedPath === node.path}
+          themeColors={colors}
         />
       </div>
     );
-  }, [filteredNodes, highlightedPathSet, expandedPaths, handleToggle, handleCopy, searchTerm, copiedPath, itemHeight]);
+  }, [filteredNodes, highlightedPathSet, expandedPaths, handleToggle, handleCopy, searchTerm, copiedPath, itemHeight, colors]);
 
   return (
-    <div className={cn('flex flex-col h-full relative', className)}>
-      {/* Toolbar */}
-      <div className="flex items-center gap-2 p-2 border-b border-neutral-200 dark:border-neutral-700">
-        {/* Search */}
-        <div className="flex-1 relative">
-          <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400" />
-          <Input
-            type="text"
-            placeholder="Search keys, values, or paths..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-8 h-8 text-sm"
-          />
-        </div>
-
-        {/* Expand/Collapse All */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleExpandAll}
-          className="h-8 px-2 text-xs"
-        >
-          <ArrowsPointingOutIcon className="h-3 w-3 mr-1" />
-          Expand All
-        </Button>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={handleCollapseAll}
-          className="h-8 px-2 text-xs"
-        >
-          <ArrowsPointingInIcon className="h-3 w-3 mr-1" />
-          Collapse All
-        </Button>
-      </div>
-
+    <div className={cn('flex flex-col h-full relative rounded-[10px]', className)} style={{ backgroundColor: colors.background, color: colors.foreground }}>
       {/* Tree View */}
-      <div className="flex-1 overflow-hidden relative">
+      <div className="flex-1 overflow-hidden relative rounded-[10px]" style={{ backgroundColor: colors.background }}>
         {filteredNodes.length === 0 ? (
-          <div className="flex items-center justify-center h-full text-neutral-500 dark:text-neutral-400">
+          <div className="flex items-center justify-center h-full" style={{ color: colors.foreground }}>
             No nodes to display
           </div>
         ) : (
-          <List<Record<string, never>>
-            listRef={listRef}
-            style={{ height: `${listHeight}px`, width: '100%' }}
-            rowCount={filteredNodes.length}
-            rowHeight={itemHeight}
-            rowComponent={RowComponent}
-            rowProps={{} as Record<string, never>}
-            className="scrollbar-thin"
-          />
-          )}
-        </div>
+          <div className="h-full w-full" style={{ backgroundColor: colors.background }}>
+            <List<Record<string, never>>
+              listRef={listRef}
+              style={{ height: '100%', width: '100%', backgroundColor: colors.background }}
+              rowCount={filteredNodes.length}
+              rowHeight={itemHeight}
+              rowComponent={RowComponent}
+              rowProps={{} as Record<string, never>}
+              className="scrollbar-thin"
+            />
+          </div>
+        )}
       </div>
-    );
-  }
+    </div>
+  );
+});
 

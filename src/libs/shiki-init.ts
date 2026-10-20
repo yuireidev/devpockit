@@ -248,3 +248,51 @@ export function getLoadedLanguages(): string[] {
   return highlighterInstance.getLoadedLanguages() as string[];
 }
 
+/**
+ * Semantic editor theme colors extracted from a Shiki theme
+ */
+export interface EditorThemeColors {
+  background: string;
+  foreground: string;
+  lineNumber: string;
+  findMatchBackground: string;
+  findMatchHighlightBackground: string;
+  selectionBackground: string;
+}
+
+/**
+ * Fallback editor theme colors (VS Code light defaults)
+ * Single source of truth for components that need colors before a Shiki theme resolves
+ */
+export const DEFAULT_EDITOR_THEME_COLORS: EditorThemeColors = {
+  background: '#ffffff',
+  foreground: '#000000',
+  lineNumber: '#999999',
+  findMatchBackground: '#ffff00',
+  findMatchHighlightBackground: '#ffd700',
+  selectionBackground: '#add6ff',
+};
+
+/**
+ * Extract semantic editor colors from a loaded Shiki theme
+ * @param themeName - Shiki theme name (e.g. 'github-dark', 'dark-plus')
+ * @returns EditorThemeColors or null if highlighter/theme not available
+ */
+export function getThemeColors(themeName: string): EditorThemeColors | null {
+  const highlighter = getShikiHighlighter();
+  if (!highlighter) return null;
+
+  const shikiTheme = (highlighter as any).getTheme(themeName);
+  if (!shikiTheme) return null;
+
+  const colors = shikiTheme.colors || {};
+  return {
+    background: colors['editor.background'] || DEFAULT_EDITOR_THEME_COLORS.background,
+    foreground: colors['editor.foreground'] || DEFAULT_EDITOR_THEME_COLORS.foreground,
+    lineNumber: colors['editorLineNumber.foreground'] || DEFAULT_EDITOR_THEME_COLORS.lineNumber,
+    findMatchBackground: colors['editor.findMatchBackground'] || DEFAULT_EDITOR_THEME_COLORS.findMatchBackground,
+    findMatchHighlightBackground: colors['editor.findMatchHighlightBackground'] || DEFAULT_EDITOR_THEME_COLORS.findMatchHighlightBackground,
+    selectionBackground: colors['editor.selectionBackground'] || DEFAULT_EDITOR_THEME_COLORS.selectionBackground,
+  };
+}
+
