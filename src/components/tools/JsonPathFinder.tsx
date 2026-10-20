@@ -583,7 +583,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                       setOptions(prev => ({ ...prev, sortKeys: value }))
                     }
                   >
-                    <SelectTrigger className="h-6 text-xs w-[150px]">
+                    <SelectTrigger className="h-8 text-xs w-[150px] shrink-0">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
