@@ -62,7 +62,7 @@ To run one test by name, pass Playwright's name filter after `--`:
 pnpm e2e -- --grep "JSON Formatter"
 ```
 
-CI runs the static export smoke suite and uploads `test-results/` when failures produce artifacts. The local dev-server suite is intended for quick iteration; Jest remains the detailed unit and component test suite.
+Run these browser suites during development when a change affects app loading, navigation, or tool interactions. They are not part of GitHub Actions CI; Jest remains the detailed unit and component test suite.
 
 ## Architecture and tool system
 
