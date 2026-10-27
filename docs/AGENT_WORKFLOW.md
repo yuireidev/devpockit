@@ -47,6 +47,15 @@ pnpm exec playwright install chromium
 
 `pnpm e2e` starts the Next.js development server on `127.0.0.1:3100`, runs the local smoke suite headlessly, and stops the server afterward. `pnpm e2e:static` builds the static export, serves `out/` on `127.0.0.1:3101`, and checks the exported home page and a tool route. Both commands retain screenshots and traces for failed tests under `test-results/`.
 
+To review the actions from a successful run, record traces for every test and open one in Playwright Trace Viewer:
+
+```bash
+pnpm e2e -- --trace on
+pnpm exec playwright show-trace test-results/<test-folder>/trace.zip
+```
+
+Use `pnpm e2e:static -- --trace on` to do the same for the static export suite. Trace Viewer shows the action timeline, screenshots and DOM snapshots around each step, and network activity. Tracing every test creates larger output and adds overhead; the default configuration keeps traces only for failures.
+
 To run one test by name, pass Playwright's name filter after `--`:
 
 ```bash
