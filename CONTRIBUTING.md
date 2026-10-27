@@ -26,8 +26,8 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js**: Version 18+ (recommended: Node.js 20+)
-- **pnpm**: Version 8+ (package manager)
+- **Node.js**: Version 20+
+- **pnpm**: Version 10 (the version is pinned in `package.json`)
 - **Git**: Latest version
 
 ### Fork and Clone
@@ -102,7 +102,10 @@ pnpm lint:fix
 # Run TypeScript type checking
 pnpm type-check
 
-# Format code with Prettier
+# Check only changed JS/TS files and related tests while iterating
+pnpm check:changed
+
+# Format supported project files with Prettier
 pnpm format
 
 # Check code formatting
@@ -115,10 +118,7 @@ pnpm format:check
 # Build the application
 pnpm build
 
-# Start production server
-pnpm start
-
-# Preview production build locally
+# Preview the static export from `out/` on port 8080 (run after `pnpm build`)
 pnpm preview
 ```
 
@@ -138,6 +138,8 @@ Create branches using the following naming conventions:
   - Example: `refactor/tool-component-structure`
 - **Performance**: `perf/description-of-improvement`
   - Example: `perf/optimize-bundle-size`
+- **Maintenance/workflow**: `chore/description-of-change`
+  - Example: `chore/agent-agnostic-dev-workflow`
 
 ### Commit Message Format
 
@@ -359,7 +361,7 @@ export function formatJson(input: string, minify: boolean = false): string {
 ```
 devpockit/
 ├── src/
-│   ├── app/                  # Next.js 15 App Router
+│   ├── app/                  # Next.js App Router
 │   │   ├── globals.css       # Global styles
 │   │   ├── layout.tsx       # Root layout
 │   │   └── page.tsx         # Home page

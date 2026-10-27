@@ -1,4 +1,5 @@
 import { getAllTools, getCategoryById, getPopularTools, getToolById, toolCategories } from '../tools-data';
+import { toolComponentNames } from '../tool-components';
 
 describe('Tools Data', () => {
   describe('toolCategories', () => {
@@ -114,6 +115,15 @@ describe('Tools Data', () => {
       const ids = allTools.map(tool => tool.id);
       const uniqueIds = new Set(ids);
       expect(uniqueIds.size).toBe(ids.length);
+    });
+
+    it('should register a component loader for every tool', () => {
+      const registeredComponents = new Set(toolComponentNames);
+      const unregisteredComponents = getAllTools()
+        .map(tool => tool.component)
+        .filter(component => !registeredComponents.has(component));
+
+      expect(unregisteredComponents).toEqual([]);
     });
 
     it('should include all tool properties', () => {
