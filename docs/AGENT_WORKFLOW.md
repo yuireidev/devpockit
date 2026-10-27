@@ -28,12 +28,32 @@ pnpm format:check         # Check formatting
 pnpm type-check           # Run TypeScript checks
 pnpm test                 # Run Jest tests
 pnpm test <file>          # Run one test file
+pnpm e2e                  # Run the fast browser suite against the dev server
+pnpm e2e:static           # Build and smoke-test the static export
 pnpm check:changed        # Type-check and check tests related to changed JS/TS files
 pnpm build                # Create the static export
 pnpm preview              # Serve the generated out/ directory on port 8080
 pnpm build:verify         # Build and verify static export output
 pnpm build:test           # Full type-check, lint, test, and build sequence
 ```
+
+### Browser E2E tests
+
+Install the Chromium browser once after installing project dependencies:
+
+```bash
+pnpm exec playwright install chromium
+```
+
+`pnpm e2e` starts the Next.js development server on `127.0.0.1:3100`, runs the local smoke suite headlessly, and stops the server afterward. `pnpm e2e:static` builds the static export, serves `out/` on `127.0.0.1:3101`, and checks the exported home page and a tool route. Both commands retain screenshots and traces for failed tests under `test-results/`.
+
+To run one test by name, pass Playwright's name filter after `--`:
+
+```bash
+pnpm e2e -- --grep "JSON Formatter"
+```
+
+CI runs the static export smoke suite and uploads `test-results/` when failures produce artifacts. The local dev-server suite is intended for quick iteration; Jest remains the detailed unit and component test suite.
 
 ## Architecture and tool system
 
@@ -59,10 +79,11 @@ Do not commit, push, create a pull request, or change release state unless the u
 
 ## Branches
 
-- `develop` is the active development branch.
-- `main` contains production-ready releases.
+- `main` is the active integration branch; it may contain unreleased changes.
+- Release tags identify stable, published versions. Use a tag when a stable snapshot is needed.
+- Release branches are cut from `main` for version bumps and changelog curation, then merged back to `main`.
 - Use descriptive branch prefixes such as `feature/`, `fix/`, `docs/`, `refactor/`, `perf/`, or `chore/`.
-- Pull requests for development target `develop`; release work goes from `develop` to `main`.
+- Pull requests for development and release work target `main`.
 
 ## TypeScript
 

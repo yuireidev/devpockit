@@ -130,7 +130,7 @@ DevPockit runs entirely in the browser and can be self-hosted on GitHub Pages, y
 
 Your instance will be live at `https://<username>.github.io/<repo>/`
 
-> **Note:** `main` only contains released code — development happens on `develop`. Syncing your fork is always safe; you will never accidentally deploy unreleased changes.
+> **Note:** `main` is the active development branch and can include unreleased changes. To deploy a stable release, check out its version tag (for example, `v0.4.0`).
 
 ### Docker
 

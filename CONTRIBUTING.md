@@ -177,25 +177,28 @@ refactor(tools): extract common tool logic to shared utilities
 
 ### Branching Model
 
-This project uses a two-branch model:
+This project uses a single long-lived integration branch. Feature work merges into
+`main`; each release is marked by a version tag. Release branches are short-lived
+and carry only the version bump and changelog update.
 
 | Branch | Purpose |
 |--------|---------|
-| `main` | Production only — updated exclusively by release PRs. Always stable. |
-| `develop` | Active development — feature branches merge here. |
+| `main` | Active development and release ledger. May contain unreleased changes between releases. |
+| `release/X.Y.Z` | Version bump and changelog curation for a release; cut from `main` and deleted after merge. |
 
-Fork users who sync `main` will always get released, stable code.
+Use the matching version tag (for example, `v0.4.0`) when you need a released,
+stable version.
 
 ### Pull Request Process
 
-1. **Update your fork:**
+1. **Update your fork from upstream `main`:**
    ```bash
-   git checkout develop
-   git pull upstream develop
-   git push origin develop
+   git checkout main
+   git pull upstream main
+   git push origin main
    ```
 
-2. **Create a feature branch from `develop`:**
+2. **Create a feature branch from `main`:**
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -225,10 +228,10 @@ Fork users who sync `main` will always get released, stable code.
    git push origin feature/your-feature-name
    ```
 
-7. **Create a Pull Request targeting `develop`:**
+7. **Create a Pull Request targeting `main`:**
    - Go to the GitHub repository
    - Click "New Pull Request"
-   - Set **base** to `develop` (not `main`)
+   - Set **base** to `main`
    - Select your branch
    - Fill out the PR template
    - Link any related issues
