@@ -15,7 +15,7 @@ This document provides a comprehensive overview of DevPockit's architecture, des
 
 ## System Overview
 
-DevPockit is a client-side web application built with Next.js 15 that provides 30+ developer tools. All processing happens in the browser, ensuring privacy and optimal performance.
+DevPockit is a client-side web application built with Next.js 16 that provides 30+ developer tools. All processing happens in the browser, ensuring privacy and optimal performance.
 
 ### Key Characteristics
 
@@ -27,7 +27,7 @@ DevPockit is a client-side web application built with Next.js 15 that provides 3
 
 ### Technology Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript (strict mode)
 - **UI Library**: React 19
 - **Styling**: Tailwind CSS

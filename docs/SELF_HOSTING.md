@@ -34,9 +34,9 @@ Your site will be available at:
 
 The deploy workflow sets `NEXT_PUBLIC_BASE_URL` and `BASE_PATH` automatically based on your repository.
 
-### Why syncing your fork is always safe
+### Deploying a stable release
 
-This project uses a two-branch model: development happens on `develop`, and `main` is only updated when a release is published. When you sync your fork, GitHub syncs `main` — which means you only ever get released, stable code. Tags always point to commits in `main`, so they are present in your fork after a sync.
+Development and releases use `main`; it may include changes that have not shipped yet. To deploy a stable version, check out the desired release tag (for example, `v0.4.0`). Release tags point to the versioned commits and are the recommended source for self-hosted deployments.
 
 ### Environment variables (optional)
 

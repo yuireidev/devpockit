@@ -22,8 +22,8 @@ A modern web application providing essential developer tools with a clean, respo
 
 ### Prerequisites
 
-- Node.js 18+ (recommended: Node.js 20+)
-- pnpm (package manager)
+- Node.js 20+
+- pnpm 10 (package manager)
 
 ### Installation
 
@@ -90,7 +90,7 @@ For detailed setup instructions, see [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## 🏗️ Tech Stack
 
-- **Framework**: Next.js 15 (App Router)
+- **Framework**: Next.js 16 (App Router)
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **UI Components**: Shadcn/ui
@@ -112,7 +112,7 @@ For architecture and development documentation, see the [docs](docs/) directory.
 
 ```bash
 pnpm build
-pnpm start
+pnpm preview
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for detailed deployment instructions.
@@ -130,7 +130,7 @@ DevPockit runs entirely in the browser and can be self-hosted on GitHub Pages, y
 
 Your instance will be live at `https://<username>.github.io/<repo>/`
 
-> **Note:** `main` only contains released code — development happens on `develop`. Syncing your fork is always safe; you will never accidentally deploy unreleased changes.
+> **Note:** `main` is the active development branch and can include unreleased changes. To deploy a stable release, check out its version tag (for example, `v0.4.0`).
 
 ### Docker
 

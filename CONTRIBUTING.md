@@ -26,8 +26,8 @@ This project adheres to a Code of Conduct that all contributors are expected to 
 
 Before you begin, ensure you have the following installed:
 
-- **Node.js**: Version 18+ (recommended: Node.js 20+)
-- **pnpm**: Version 8+ (package manager)
+- **Node.js**: Version 20+
+- **pnpm**: Version 10 (the version is pinned in `package.json`)
 - **Git**: Latest version
 
 ### Fork and Clone
@@ -102,7 +102,10 @@ pnpm lint:fix
 # Run TypeScript type checking
 pnpm type-check
 
-# Format code with Prettier
+# Check only changed JS/TS files and related tests while iterating
+pnpm check:changed
+
+# Format supported project files with Prettier
 pnpm format
 
 # Check code formatting
@@ -115,10 +118,7 @@ pnpm format:check
 # Build the application
 pnpm build
 
-# Start production server
-pnpm start
-
-# Preview production build locally
+# Preview the static export from `out/` on port 8080 (run after `pnpm build`)
 pnpm preview
 ```
 
@@ -138,6 +138,8 @@ Create branches using the following naming conventions:
   - Example: `refactor/tool-component-structure`
 - **Performance**: `perf/description-of-improvement`
   - Example: `perf/optimize-bundle-size`
+- **Maintenance/workflow**: `chore/description-of-change`
+  - Example: `chore/agent-agnostic-dev-workflow`
 
 ### Commit Message Format
 
@@ -175,25 +177,28 @@ refactor(tools): extract common tool logic to shared utilities
 
 ### Branching Model
 
-This project uses a two-branch model:
+This project uses a single long-lived integration branch. Feature work merges into
+`main`; each release is marked by a version tag. Release branches are short-lived
+and carry only the version bump and changelog update.
 
 | Branch | Purpose |
 |--------|---------|
-| `main` | Production only — updated exclusively by release PRs. Always stable. |
-| `develop` | Active development — feature branches merge here. |
+| `main` | Active development and release ledger. May contain unreleased changes between releases. |
+| `release/X.Y.Z` | Version bump and changelog curation for a release; cut from `main` and deleted after merge. |
 
-Fork users who sync `main` will always get released, stable code.
+Use the matching version tag (for example, `v0.4.0`) when you need a released,
+stable version.
 
 ### Pull Request Process
 
-1. **Update your fork:**
+1. **Update your fork from upstream `main`:**
    ```bash
-   git checkout develop
-   git pull upstream develop
-   git push origin develop
+   git checkout main
+   git pull upstream main
+   git push origin main
    ```
 
-2. **Create a feature branch from `develop`:**
+2. **Create a feature branch from `main`:**
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -223,10 +228,10 @@ Fork users who sync `main` will always get released, stable code.
    git push origin feature/your-feature-name
    ```
 
-7. **Create a Pull Request targeting `develop`:**
+7. **Create a Pull Request targeting `main`:**
    - Go to the GitHub repository
    - Click "New Pull Request"
-   - Set **base** to `develop` (not `main`)
+   - Set **base** to `main`
    - Select your branch
    - Fill out the PR template
    - Link any related issues
@@ -359,7 +364,7 @@ export function formatJson(input: string, minify: boolean = false): string {
 ```
 devpockit/
 ├── src/
-│   ├── app/                  # Next.js 15 App Router
+│   ├── app/                  # Next.js App Router
 │   │   ├── globals.css       # Global styles
 │   │   ├── layout.tsx       # Root layout
 │   │   └── page.tsx         # Home page

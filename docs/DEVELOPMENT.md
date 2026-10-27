@@ -34,7 +34,7 @@ This guide covers day-to-day development workflows, debugging techniques, and pr
    ```bash
    pnpm dev:https
    ```
-   Uses self-signed certificates from `certificates/` directory
+   Uses Next.js experimental HTTPS for local development.
 
 ### Development Scripts
 
@@ -47,7 +47,9 @@ pnpm dev:https        # Start with HTTPS
 pnpm lint             # Run ESLint
 pnpm lint:fix         # Fix ESLint issues
 pnpm type-check       # TypeScript type checking
-pnpm format           # Format with Prettier
+pnpm format           # Format supported project files with Prettier
+pnpm format:check     # Check formatting
+pnpm check:changed    # Type-check and run lint/tests related to changed JS/TS files
 
 # Testing
 pnpm test             # Run tests
@@ -56,8 +58,8 @@ pnpm test:coverage     # Coverage report
 
 # Building
 pnpm build            # Production build
-pnpm start            # Start production server
 pnpm export           # Static export (for GitHub Pages)
+pnpm preview          # Serve generated out/ directory on port 8080
 
 # Verification
 pnpm build:test       # Full test suite before build
@@ -89,8 +91,7 @@ NEXT_PUBLIC_APP_VERSION=0.1.0
 
 4. **Check Code Quality**:
    ```bash
-   pnpm lint
-   pnpm type-check
+   pnpm check:changed
    ```
 
 5. **Run Tests** (if applicable):
@@ -98,7 +99,7 @@ NEXT_PUBLIC_APP_VERSION=0.1.0
    pnpm test:watch
    ```
 
-6. **Build Verification** (before committing):
+6. **Full Build Verification** (before release or when needed):
    ```bash
    pnpm build:test
    ```
