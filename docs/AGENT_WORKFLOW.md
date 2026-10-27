@@ -39,6 +39,8 @@ pnpm build:test           # Full type-check, lint, test, and build sequence
 
 ### Browser E2E tests
 
+Before running or debugging browser E2E tests, use the available `playwright-cli` skill for Playwright-specific workflow and browser interaction. The repository commands below remain the canonical way to run its suites.
+
 Install the Chromium browser once after installing project dependencies:
 
 ```bash
@@ -50,16 +52,24 @@ pnpm exec playwright install chromium
 To review the actions from a successful run, record traces for every test and open one in Playwright Trace Viewer:
 
 ```bash
-pnpm e2e -- --trace on
+pnpm e2e --trace on
 pnpm exec playwright show-trace test-results/<test-folder>/trace.zip
 ```
 
-Use `pnpm e2e:static -- --trace on` to do the same for the static export suite. Trace Viewer shows the action timeline, screenshots and DOM snapshots around each step, and network activity. Tracing every test creates larger output and adds overhead; the default configuration keeps traces only for failures.
+Use `pnpm e2e:static --trace on` to do the same for the static export suite. Trace Viewer shows the action timeline, screenshots and DOM snapshots around each step, and network activity. Tracing every test creates larger output and adds overhead; the default configuration keeps traces only for failures.
 
-To run one test by name, pass Playwright's name filter after `--`:
+To run and inspect one test in Playwright UI Mode, use:
 
 ```bash
-pnpm e2e -- --grep "JSON Formatter"
+pnpm e2e:static --ui --grep "JSON Formatter route"
+```
+
+The UI lets you run the selected test and review its action timeline and page snapshots.
+
+To run one test by name, pass Playwright's name filter directly to the pnpm script:
+
+```bash
+pnpm e2e --grep "JSON Formatter"
 ```
 
 Run these browser suites during development when a change affects app loading, navigation, or tool interactions. They are not part of GitHub Actions CI; Jest remains the detailed unit and component test suite.
