@@ -45,7 +45,7 @@
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "test:ci": "jest --ci --coverage --watchAll=false",
-    "build:test": "pnpm type-check && pnpm lint && pnpm test:ci && pnpm build",
+    "build:test": "pnpm format:check && pnpm type-check && pnpm lint && pnpm test:ci && pnpm build",
     "build:verify": "pnpm build && node scripts/verify-build.js",
     "preview": "python3 -m http.server 8080 --directory out",
     "resolve:version": "bash scripts/resolve-version.sh",

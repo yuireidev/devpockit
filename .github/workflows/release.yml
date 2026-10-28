@@ -59,9 +59,14 @@ jobs:
           node-version: '20'
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - run: pnpm format:check
       - run: pnpm type-check
       - run: pnpm lint
       - run: pnpm test:ci
+      - name: Install Chromium for release smoke test
+        run: pnpm exec playwright install --with-deps chromium
+      - name: Run browser smoke suite
+        run: pnpm e2e
       - run: pnpm build
         env:
           NEXT_PUBLIC_APP_VERSION: ${{ steps.tag_version.outputs.version }}
