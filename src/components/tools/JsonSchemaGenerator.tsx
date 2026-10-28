@@ -31,13 +31,13 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
   const { toolState, updateToolState } = useToolState('json-schema-generator', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<JsonSchemaGeneratorOptions>(DEFAULT_SCHEMA_OPTIONS);
-  const [input, setInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
+  const [options, setOptions] = useState<JsonSchemaGeneratorOptions>((toolState?.options as JsonSchemaGeneratorOptions) ?? (DEFAULT_SCHEMA_OPTIONS));
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [schemaResult, setSchemaResult] = useState<JsonSchemaResult | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [schemaResult, setSchemaResult] = useState<JsonSchemaResult | null>((toolState?.schemaResult as JsonSchemaResult) ?? (null));
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
@@ -45,42 +45,22 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
   const [outputWrapText, setOutputWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) setOptions(toolState.options as JsonSchemaGeneratorOptions);
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.schemaResult) setSchemaResult(toolState.schemaResult as JsonSchemaResult);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         input,
         output,
         error,
         schemaResult: schemaResult || undefined
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, input, output, error, schemaResult, isHydrated]);
+  }, [options, input, output, error, schemaResult]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_SCHEMA_OPTIONS);
-      setInput('');
-      setOutput('');
-      setError('');
-      setSchemaResult(null);
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleGenerateSchema = async () => {
     if (!input.trim()) {

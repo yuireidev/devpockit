@@ -42,7 +42,7 @@ export function buildRegExp(pattern: string, flags: RegexFlags): RegExp | null {
   try {
     const flagsString = flagsToString(flags);
     return new RegExp(pattern, flagsString);
-  } catch (error) {
+  } catch {
     return null;
   }
 }
@@ -227,7 +227,7 @@ export function testRegex(options: RegexTesterOptions, timeoutMs: number = 2000)
   if (options.replaceString !== undefined && options.replaceString !== '') {
     try {
       replacedText = testString.replace(regex, options.replaceString);
-    } catch (error) {
+    } catch {
       // Replacement failed, but we still have matches
     }
   }
@@ -381,10 +381,15 @@ type MonacoDecoration = {
   options: { inlineClassName: string };
 };
 
+type MonacoModule = typeof import('monaco-editor');
+
 /**
  * Convert decorations to Monaco editor format
  */
-export function toMonacoDecorations(decorations: MonacoDecoration[], monaco: any): any[] {
+export function toMonacoDecorations(
+  decorations: MonacoDecoration[],
+  monaco: MonacoModule
+){
   return decorations.map(dec => ({
     range: new monaco.Range(
       dec.range.startLineNumber,
@@ -778,7 +783,7 @@ function addGroupDecorations(
   }
 
   // Add named group decorations
-  Object.entries(match.namedGroups).forEach(([name, value], index) => {
+  Object.values(match.namedGroups).forEach((value, index) => {
     if (!value) return;
     const groupIndexInMatch = match.match.indexOf(value);
     if (groupIndexInMatch === -1) return;
@@ -919,7 +924,7 @@ export function explainRegex(pattern: string, flags: RegexFlags): RegexExplanati
       explanation = 'Matches the pattern as written.';
     }
 
-  } catch (error) {
+  } catch {
     explanation = 'Unable to analyze pattern.';
     warnings.push('Pattern analysis failed');
   }

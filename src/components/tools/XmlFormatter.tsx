@@ -22,13 +22,13 @@ export function XmlFormatter({ className, instanceId }: XmlFormatterProps) {
   const { toolState, updateToolState } = useToolState('xml-formatter', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<XmlFormatOptions>(DEFAULT_XML_OPTIONS);
-  const [input, setInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
+  const [options, setOptions] = useState<XmlFormatOptions>((toolState?.options as XmlFormatOptions) ?? (DEFAULT_XML_OPTIONS));
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isFormatting, setIsFormatting] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [stats, setStats] = useState<{ size: number; lines: number; depth: number; tags: number; attributes: number } | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [stats, setStats] = useState<{ size: number; lines: number; depth: number; tags: number; attributes: number } | null>((toolState?.stats as { size: number; lines: number; depth: number; tags: number; attributes: number }) ?? (null));
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
@@ -36,42 +36,22 @@ export function XmlFormatter({ className, instanceId }: XmlFormatterProps) {
   const [outputWrapText, setOutputWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) setOptions(toolState.options as XmlFormatOptions);
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.stats) setStats(toolState.stats as { size: number; lines: number; depth: number; tags: number; attributes: number });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         input,
         output,
         error,
         stats: stats || undefined
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, input, output, error, stats, isHydrated]);
+  }, [options, input, output, error, stats]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_XML_OPTIONS);
-      setInput('');
-      setOutput('');
-      setError('');
-      setStats(null);
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleFormat = async () => {
     if (!input.trim()) {

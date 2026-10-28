@@ -165,7 +165,7 @@ function base64UrlDecode(str: string): string {
         .map(c => '%' + ('00' + c.charCodeAt(0).toString(16)).slice(-2))
         .join('')
     );
-  } catch (err) {
+  } catch {
     throw new Error('Invalid base64url encoding');
   }
 }

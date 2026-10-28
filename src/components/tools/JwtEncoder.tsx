@@ -29,12 +29,12 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
   const { toolState, updateToolState } = useToolState('jwt-encoder', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<JwtEncoderOptions>(DEFAULT_JWT_ENCODER_OPTIONS);
-  const [encodedResult, setEncodedResult] = useState<JwtEncodeResult | null>(null);
+  const [options, setOptions] = useState<JwtEncoderOptions>(((toolState?.options as JwtEncoderOptions)) ?? (DEFAULT_JWT_ENCODER_OPTIONS));
+  const [encodedResult, setEncodedResult] = useState<JwtEncodeResult | null>((toolState?.encodedResult as JwtEncodeResult) ?? (null));
   const [isEncoding, setIsEncoding] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'token' | 'header' | 'payload'>('token');
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [activeTab, setActiveTab] = useState<'token' | 'header' | 'payload'>((toolState?.activeTab as 'token' | 'header' | 'payload' | undefined) ?? 'token');
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
@@ -43,65 +43,37 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
   const [outputWrapText, setOutputWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) {
-        const opts = toolState.options as JwtEncoderOptions;
-        setOptions(opts);
-      }
-      if (toolState.encodedResult) setEncodedResult(toolState.encodedResult as JwtEncodeResult);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.activeTab) setActiveTab(toolState.activeTab as typeof activeTab);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         encodedResult: encodedResult || undefined,
         error,
         activeTab
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, encodedResult, error, activeTab, isHydrated]);
+  }, [options, encodedResult, error, activeTab]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_JWT_ENCODER_OPTIONS);
-      setEncodedResult(null);
-      setError('');
-      setActiveTab('token');
-    }
-  }, [toolState, isHydrated]);
 
-  // Update header when algorithm changes
-  useEffect(() => {
-    const headerValidation = validateJson(options.header);
-    if (headerValidation.isValid) {
-      try {
-        const headerObj = JSON.parse(options.header);
-        if (headerObj.alg !== options.algorithm) {
-          const newHeader = { ...getDefaultHeader(options.algorithm), ...headerObj, alg: options.algorithm };
-          setOptions(prev => ({ ...prev, header: JSON.stringify(newHeader, null, 2) }));
+
+  const handleAlgorithmChange = (algorithm: JwtEncoderOptions['algorithm']) => {
+    setOptions(prev => {
+      let header = getDefaultHeader(algorithm);
+      const validation = validateJson(prev.header);
+      if (validation.isValid) {
+        try {
+          const headerObject = JSON.parse(prev.header) as Record<string, unknown>;
+          header = { ...header, ...headerObject, alg: algorithm };
+        } catch {
+          // Keep the default header for malformed JSON.
         }
-      } catch {
-        // If header is invalid, set default
-        const newHeader = getDefaultHeader(options.algorithm);
-        setOptions(prev => ({ ...prev, header: JSON.stringify(newHeader, null, 2) }));
       }
-    } else {
-      // If header is invalid JSON, set default
-      const newHeader = getDefaultHeader(options.algorithm);
-      setOptions(prev => ({ ...prev, header: JSON.stringify(newHeader, null, 2) }));
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options.algorithm]);
+      return { ...prev, algorithm, header: JSON.stringify(header, null, 2) };
+    });
+  };
 
   const handleEncode = async () => {
     // Validate header JSON
@@ -227,7 +199,7 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
               {/* Algorithm Selection */}
               <Select
                 value={options.algorithm}
-                onValueChange={(value) => setOptions(prev => ({ ...prev, algorithm: value }))}
+                onValueChange={handleAlgorithmChange}
               >
                 <SelectTrigger label="Algorithm:" className="min-w-[300px]">
                   <SelectValue />

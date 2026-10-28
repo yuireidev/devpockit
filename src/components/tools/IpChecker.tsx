@@ -20,14 +20,14 @@ export function IpChecker({ className, instanceId }: IpCheckerProps) {
   const { toolState, updateToolState } = useToolState('ip-checker', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<IpCheckerOptions>(DEFAULT_IP_OPTIONS);
-  const [output, setOutput] = useState<string>('');
+  const [options, setOptions] = useState<IpCheckerOptions>((toolState?.options as IpCheckerOptions) ?? (DEFAULT_IP_OPTIONS));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [ipInfo, setIpInfo] = useState<IpInfo | null>(null);
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [ipInfo, setIpInfo] = useState<IpInfo | null>((toolState?.ipInfo as IpInfo) ?? (null));
   const [lastChecked, setLastChecked] = useState<string>('');
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [customIp, setCustomIp] = useState<string>('');
+
+  const [customIp, setCustomIp] = useState<string>((toolState?.customIp as string) ?? (''));
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
@@ -35,10 +35,12 @@ export function IpChecker({ className, instanceId }: IpCheckerProps) {
 
   // Use ref to get current options in callback
   const optionsRef = useRef(options);
-  optionsRef.current = options;
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   // Track if we've already hydrated to prevent re-hydration on toolState changes
-  const hasHydratedRef = useRef(false);
+
 
   const handleCheckMyIp = useCallback(async () => {
     setIsLoading(true);
@@ -126,47 +128,22 @@ export function IpChecker({ className, instanceId }: IpCheckerProps) {
   }, [customIp]);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    if (!hasHydratedRef.current && toolState) {
-      hasHydratedRef.current = true;
-      setIsHydrated(true);
-      if (toolState.options) setOptions(toolState.options as IpCheckerOptions);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.ipInfo) setIpInfo(toolState.ipInfo as IpInfo);
-      if (toolState.customIp) setCustomIp(toolState.customIp as string);
-    } else if (!hasHydratedRef.current) {
-      // Still mark as hydrated even if no toolState exists
-      hasHydratedRef.current = true;
-      setIsHydrated(true);
-    }
-  }, [toolState]);
+
 
   // Update persistent state
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         output,
         error,
         ipInfo: ipInfo || undefined,
         customIp
       });
-    }
-  }, [options, output, error, ipInfo, isHydrated, updateToolState, customIp]);
+  }, [options, output, error, ipInfo, updateToolState, customIp]);
 
 
   // Reset state when tool is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_IP_OPTIONS);
-      setOutput('');
-      setError('');
-      setIpInfo(null);
-      setLastChecked('');
-      setCustomIp('');
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleOptionChange = (key: keyof IpCheckerOptions, value: unknown) => {
     setOptions(prev => ({ ...prev, [key]: value }));

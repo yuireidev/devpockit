@@ -8,6 +8,7 @@
 import { MonacoEditorInstance } from '@/components/ui/monaco-editor-instance';
 import { type CodeEditorTheme } from '@/config/code-editor-themes';
 import { cn } from '@/libs/utils';
+import type { OnMount } from '@monaco-editor/react';
 
 export interface CodeEditorCoreProps {
   value: string;
@@ -21,7 +22,7 @@ export interface CodeEditorCoreProps {
   height?: string;
   className?: string;
   singleLine?: boolean;
-  onMount?: (editor: any, monaco: any) => void;
+  onMount?: OnMount;
 }
 
 export function CodeEditorCore({

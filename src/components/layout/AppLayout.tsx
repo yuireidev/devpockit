@@ -98,7 +98,7 @@ function isAboutPage(pathname: string): boolean {
 }
 
 // Inner component that has access to ToolStateContext
-function AppLayoutInner({ children }: AppLayoutProps) {
+function AppLayoutInner({}: AppLayoutProps) {
   const { clearToolState, clearAllToolStates } = useToolStateContext();
   const { recordToolOpen } = useToolActivity();
   const { isMobile } = useSidebar();

@@ -1,5 +1,3 @@
-import { ComponentType } from 'react';
-
 export interface Tool {
   id: string;
   name: string;

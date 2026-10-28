@@ -305,9 +305,32 @@ function detectDeviceType(): DeviceInfo['type'] {
 }
 
 // Collection functions
+interface NetworkConnectionInfo {
+  type?: string;
+  effectiveType?: string;
+  downlink?: number;
+  rtt?: number;
+  saveData?: boolean;
+}
+
+type ExtendedNavigator = Navigator & {
+  javaEnabled?: () => boolean;
+  deviceMemory?: number;
+  connection?: NetworkConnectionInfo;
+  mozConnection?: NetworkConnectionInfo;
+  webkitConnection?: NetworkConnectionInfo;
+};
+
+type ExtendedPerformance = Performance & {
+  memory?: { usedJSHeapSize: number; totalJSHeapSize: number; jsHeapSizeLimit: number };
+};
+
+type ExtendedStorageEstimate = StorageEstimate & { usageDetails?: Record<string, number> };
+
 export function getBrowserInfo(): BrowserInfo {
   try {
     const parsed = parseUserAgent(navigator.userAgent);
+    const extendedNavigator = navigator as ExtendedNavigator;
 
     return {
       userAgent: navigator.userAgent || 'Unknown',
@@ -319,12 +342,12 @@ export function getBrowserInfo(): BrowserInfo {
       languages: [...(navigator.languages || [])],
       cookieEnabled: navigator.cookieEnabled ?? true,
       onLine: navigator.onLine ?? true,
-      javaEnabled: typeof (navigator as any).javaEnabled === 'function'
-        ? (navigator as any).javaEnabled()
+      javaEnabled: typeof extendedNavigator.javaEnabled === 'function'
+        ? extendedNavigator.javaEnabled()
         : false,
       parsed,
     };
-  } catch (error) {
+  } catch {
     return {
       userAgent: 'Unknown',
       vendor: 'Unknown',
@@ -356,14 +379,15 @@ export function getDeviceInfo(): DeviceInfo {
 
     let orientation = 'unknown';
     try {
+      const orientationAngle = (window as Window & { orientation?: number }).orientation;
       if (screen.orientation) {
         orientation = screen.orientation.type || 'unknown';
-      } else if ((window as any).orientation !== undefined) {
-        const angle = (window as any).orientation;
+      } else if (orientationAngle !== undefined) {
+        const angle = orientationAngle;
         if (angle === 0 || angle === 180) orientation = 'portrait';
         else orientation = 'landscape';
       }
-    } catch (e) {
+    } catch {
       // Orientation not available
     }
 
@@ -376,10 +400,10 @@ export function getDeviceInfo(): DeviceInfo {
       touchSupport: 'ontouchstart' in window || navigator.maxTouchPoints > 0,
       maxTouchPoints: navigator.maxTouchPoints || 0,
       cores: navigator.hardwareConcurrency || null,
-      deviceMemory: (navigator as any).deviceMemory || null,
+      deviceMemory: (navigator as ExtendedNavigator).deviceMemory || null,
       hardwareConcurrency: navigator.hardwareConcurrency || null,
     };
-  } catch (error) {
+  } catch {
     return {
       type: 'unknown',
       os: 'Unknown',
@@ -405,7 +429,7 @@ export function getDisplayInfo(): DisplayInfo {
           type: screen.orientation.type || 'unknown',
         };
       }
-    } catch (e) {
+    } catch {
       // Orientation not available
     }
 
@@ -431,7 +455,7 @@ export function getDisplayInfo(): DisplayInfo {
       pixelRatio: window.devicePixelRatio || 1,
       orientation,
     };
-  } catch (error) {
+  } catch {
     return {
       screen: {
         width: 0,
@@ -459,10 +483,11 @@ export function getDisplayInfo(): DisplayInfo {
 
 export function getNetworkInfo(): NetworkInfo {
   try {
+    const extendedNavigator = navigator as ExtendedNavigator;
     const connection =
-      (navigator as any).connection ||
-      (navigator as any).mozConnection ||
-      (navigator as any).webkitConnection;
+      extendedNavigator.connection ||
+      extendedNavigator.mozConnection ||
+      extendedNavigator.webkitConnection;
 
     if (!connection) {
       return {
@@ -479,7 +504,7 @@ export function getNetworkInfo(): NetworkInfo {
       rtt: connection.rtt ?? null,
       saveData: connection.saveData || false,
     };
-  } catch (error) {
+  } catch {
     return {
       available: false,
       message: 'Failed to retrieve network information',
@@ -491,7 +516,7 @@ export function getPerformanceInfo(): PerformanceInfo {
   try {
     let memory = null;
     try {
-      const perfMemory = (performance as any).memory;
+      const perfMemory = (performance as ExtendedPerformance).memory;
       if (perfMemory) {
         memory = {
           available: true,
@@ -500,7 +525,7 @@ export function getPerformanceInfo(): PerformanceInfo {
           limit: formatBytes(perfMemory.jsHeapSizeLimit),
         };
       }
-    } catch (e) {
+    } catch {
       // Memory API not available
     }
 
@@ -516,17 +541,17 @@ export function getPerformanceInfo(): PerformanceInfo {
           domContentLoaded: navTiming.domContentLoadedEventEnd - navTiming.domContentLoadedEventStart,
         };
       }
-    } catch (e) {
+    } catch {
       // Navigation timing not available
     }
 
     return {
       memory,
       hardwareConcurrency: navigator.hardwareConcurrency || null,
-      deviceMemory: (navigator as any).deviceMemory || null,
+      deviceMemory: (navigator as ExtendedNavigator).deviceMemory || null,
       navigationTiming,
     };
-  } catch (error) {
+  } catch {
     return {
       memory: null,
       hardwareConcurrency: null,
@@ -555,9 +580,9 @@ export async function getStorageInfo(): Promise<StorageInfo> {
         const estimate = await navigator.storage.estimate();
         quota = estimate.quota ?? null;
         usage = estimate.usage ?? null;
-        usageDetails = (estimate as any).usageDetails ?? null;
+        usageDetails = (estimate as ExtendedStorageEstimate).usageDetails ?? null;
         available = true;
-      } catch (e) {
+      } catch {
         // Storage estimate failed
       }
     }
@@ -569,7 +594,7 @@ export async function getStorageInfo(): Promise<StorageInfo> {
       usageDetails,
       available,
     };
-  } catch (error) {
+  } catch {
     return {
       features: {
         localStorage: typeof Storage !== 'undefined',
@@ -609,13 +634,13 @@ export async function getMediaCapabilities(): Promise<MediaInfo> {
         supportedConstraints: Object.keys(constraints),
         getUserMedia: 'getUserMedia' in navigator.mediaDevices,
       };
-    } catch (e) {
+    } catch {
       return {
         available: false,
         error: 'Failed to enumerate media devices',
       };
     }
-  } catch (error) {
+  } catch {
     return {
       available: false,
       error: 'Media capabilities unavailable',
@@ -647,7 +672,7 @@ export async function getPermissionsInfo(): Promise<PermissionsInfo> {
       try {
         const result = await navigator.permissions.query({ name: name as PermissionName });
         permissions[name] = result.state;
-      } catch (e) {
+      } catch {
         permissions[name] = 'not-supported';
       }
     }
@@ -656,7 +681,7 @@ export async function getPermissionsInfo(): Promise<PermissionsInfo> {
       available: true,
       permissions,
     };
-  } catch (error) {
+  } catch {
     return {
       available: false,
       message: 'Failed to check permissions',
@@ -683,7 +708,7 @@ export function getTimeLocaleInfo(): TimeLocaleInfo {
       dateTime: new Date().toLocaleString(),
       dateTimeISO: new Date().toISOString(),
     };
-  } catch (error) {
+  } catch {
     return {
       timezone: 'Unknown',
       timezoneOffset: '+00:00',
@@ -713,7 +738,7 @@ export function getSecurityInfo(): SecurityInfo {
           renderer: webglContext.getParameter(webglContext.RENDERER) || 'Unknown',
         };
       }
-    } catch (e) {
+    } catch {
       // WebGL not available
     }
 
@@ -721,7 +746,7 @@ export function getSecurityInfo(): SecurityInfo {
     try {
       localStorage.setItem('__test__', 'test');
       localStorage.removeItem('__test__');
-    } catch (e) {
+    } catch {
       isPrivateBrowsing = true;
     }
 
@@ -733,7 +758,7 @@ export function getSecurityInfo(): SecurityInfo {
       webgl: webglInfo,
       privateBrowsing: isPrivateBrowsing,
     };
-  } catch (error) {
+  } catch {
     return {
       https: false,
       secureContext: false,

@@ -27,12 +27,12 @@ export function SchemaConverter({ className, instanceId }: SchemaConverterProps)
   const { toolState, updateToolState } = useToolState('schema-converter', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<SchemaConverterOptions>(DEFAULT_SCHEMA_CONVERTER_OPTIONS);
-  const [input, setInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
+  const [options, setOptions] = useState<SchemaConverterOptions>((toolState?.options as SchemaConverterOptions) ?? (DEFAULT_SCHEMA_CONVERTER_OPTIONS));
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isConverting, setIsConverting] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
@@ -40,39 +40,21 @@ export function SchemaConverter({ className, instanceId }: SchemaConverterProps)
   const [outputWrapText, setOutputWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) setOptions(toolState.options as SchemaConverterOptions);
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         input,
         output,
         error
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, input, output, error, isHydrated]);
+  }, [options, input, output, error]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_SCHEMA_CONVERTER_OPTIONS);
-      setInput('');
-      setOutput('');
-      setError('');
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleConvert = async () => {
     if (!input.trim()) {

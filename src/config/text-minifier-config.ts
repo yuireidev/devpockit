@@ -2,7 +2,7 @@
  * Text minifier tool configuration
  */
 
-import type { TextMinifyMode, TextMinifyOptions } from '@/libs/text-minifier';
+import type { TextMinifyOptions } from '@/libs/text-minifier';
 
 export const TEXT_MINIFY_MODE_OPTIONS = [
   { value: 'single_line' as const, label: 'Single line', description: 'Collapse all whitespace into single spaces (one paragraph)' },

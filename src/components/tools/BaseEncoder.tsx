@@ -10,7 +10,7 @@ import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
 import { decodeBase, encodeBase, type BaseEncoderOptions, type BaseEncoderResult } from '@/libs/base-encoder';
 import { cn } from '@/libs/utils';
 import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface BaseEncoderProps {
   className?: string;
@@ -20,67 +20,26 @@ interface BaseEncoderProps {
 export function BaseEncoder({ className, instanceId }: BaseEncoderProps) {
   const { toolState, updateToolState } = useToolState('base-encoder', instanceId);
 
-  const [mode, setMode] = useState<'encode' | 'decode'>('encode');
-  const [options, setOptions] = useState<BaseEncoderOptions>(DEFAULT_BASE_OPTIONS);
-  const [input, setInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
+  const [mode, setMode] = useState<'encode' | 'decode'>(() => (toolState?.mode as 'encode' | 'decode' | undefined) ?? 'encode');
+  const [options, setOptions] = useState<BaseEncoderOptions>(() => (toolState?.options as BaseEncoderOptions | undefined) ?? DEFAULT_BASE_OPTIONS);
+  const [input, setInput] = useState<string>(() => (toolState?.input as string | undefined) ?? '');
+  const [output, setOutput] = useState<string>(() => (toolState?.output as string | undefined) ?? '');
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>(() => (toolState?.error as string | undefined) ?? '');
   const [stats, setStats] = useState<{
     originalLength: number;
     encodedLength: number;
     compressionRatio: number;
     encodingEfficiency: number;
-  } | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
+  } | null>(() => (toolState?.stats as { originalLength: number; encodedLength: number; compressionRatio: number; encodingEfficiency: number } | undefined) ?? null);
 
   const [theme] = useCodeEditorTheme('basicDark');
   const [inputWrapText, setInputWrapText] = useState(true);
   const [outputWrapText, setOutputWrapText] = useState(true);
 
-  // Track if we've already hydrated to prevent re-hydration on toolState changes
-  const hasHydratedRef = useRef(false);
-
   useEffect(() => {
-    if (!hasHydratedRef.current && toolState) {
-      hasHydratedRef.current = true;
-      setIsHydrated(true);
-      if (toolState.mode) setMode(toolState.mode as 'encode' | 'decode');
-      if (toolState.options) setOptions(toolState.options as BaseEncoderOptions);
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.stats) setStats(toolState.stats as { originalLength: number; encodedLength: number; compressionRatio: number; encodingEfficiency: number });
-    } else if (!hasHydratedRef.current) {
-      // Still mark as hydrated even if no toolState exists
-      hasHydratedRef.current = true;
-      setIsHydrated(true);
-    }
-  }, [toolState]);
-
-  useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
-        mode,
-        options,
-        input,
-        output,
-        error,
-        stats: stats || undefined
-      });
-    }
-  }, [mode, options, input, output, error, stats, isHydrated, updateToolState]);
-
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setMode('encode');
-      setOptions(DEFAULT_BASE_OPTIONS);
-      setInput('');
-      setOutput('');
-      setError('');
-      setStats(null);
-    }
-  }, [toolState, isHydrated]);
+    updateToolState({ mode, options, input, output, error, stats: stats || undefined });
+  }, [mode, options, input, output, error, stats, updateToolState]);
 
   const handleProcess = async () => {
     if (!input.trim()) {

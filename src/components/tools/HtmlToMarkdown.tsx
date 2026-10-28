@@ -25,48 +25,30 @@ interface HtmlToMarkdownProps {
 export function HtmlToMarkdown({ className, instanceId }: HtmlToMarkdownProps) {
   const { toolState, updateToolState } = useToolState('html-to-markdown', instanceId);
 
-  const [options, setOptions] = useState<HtmlToMarkdownOptions>(DEFAULT_HTML_TO_MARKDOWN_OPTIONS);
-  const [input, setInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
+  const [options, setOptions] = useState<HtmlToMarkdownOptions>((toolState?.options as HtmlToMarkdownOptions) ?? (DEFAULT_HTML_TO_MARKDOWN_OPTIONS));
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isConverting, setIsConverting] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+
 
   const [theme] = useCodeEditorTheme('basicDark');
   const [inputWrapText, setInputWrapText] = useState(true);
   const [outputWrapText, setOutputWrapText] = useState(true);
 
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) setOptions(toolState.options as HtmlToMarkdownOptions);
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         input,
         output,
         error,
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, input, output, error, isHydrated]);
+  }, [options, input, output, error]);
 
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_HTML_TO_MARKDOWN_OPTIONS);
-      setInput('');
-      setOutput('');
-      setError('');
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleConvert = async () => {
     if (!input.trim()) {

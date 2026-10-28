@@ -5,10 +5,17 @@
 
 export interface JsonPathResult {
   success: boolean;
-  matches: any[];
+  matches: JsonValue[];
   paths: string[];
   count: number;
   error?: string;
+}
+
+type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+type JsonObject = { [key: string]: JsonValue };
+
+function isJsonObject(value: JsonValue): value is JsonObject {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
 export interface JsonPathOptions {
@@ -28,7 +35,7 @@ export interface JsonPathOptions {
  * - [start:end] (array slice)
  * - [?(expression)] (filter expression - basic support)
  */
-export function evaluateJsonPath(data: any, path: string): JsonPathResult {
+export function evaluateJsonPath(data: JsonValue, path: string): JsonPathResult {
   if (!path || !path.trim()) {
     return {
       success: false,
@@ -93,11 +100,11 @@ export function evaluateJsonPath(data: any, path: string): JsonPathResult {
 }
 
 interface PathEvaluationResult {
-  values: any[];
+  values: JsonValue[];
   paths: string[];
 }
 
-function evaluatePath(data: any, path: string, currentPath: string): PathEvaluationResult {
+function evaluatePath(data: JsonValue, path: string, currentPath: string): PathEvaluationResult {
   if (!path || path === '.') {
     return {
       values: [data],
@@ -194,7 +201,7 @@ function evaluatePath(data: any, path: string, currentPath: string): PathEvaluat
   return { values: [], paths: [] };
 }
 
-function evaluateBracketNotation(data: any, path: string, currentPath: string): PathEvaluationResult {
+function evaluateBracketNotation(data: JsonValue, path: string, currentPath: string): PathEvaluationResult {
   // Extract bracket content
   const bracketEnd = path.indexOf(']');
   if (bracketEnd === -1) {
@@ -266,7 +273,7 @@ function evaluateBracketNotation(data: any, path: string, currentPath: string): 
   }
 
   // Handle objects (non-array) - arrays were already handled above
-  if (!data || typeof data !== 'object') {
+  if (!isJsonObject(data)) {
     return { values: [], paths: [] };
   }
 
@@ -292,7 +299,7 @@ function evaluateBracketNotation(data: any, path: string, currentPath: string): 
         results.paths.push(...itemResults.paths);
       });
       return results;
-    } else if (typeof data === 'object' && data !== null) {
+    } else if (isJsonObject(data)) {
       const results: PathEvaluationResult = { values: [], paths: [] };
       Object.keys(data).forEach(key => {
         const itemPath = `${currentPath}['${key}']`;
@@ -320,10 +327,10 @@ function evaluateBracketNotation(data: any, path: string, currentPath: string): 
   return { values: [], paths: [] };
 }
 
-function evaluateWildcard(data: any, remainingPath: string, currentPath: string): PathEvaluationResult {
+function evaluateWildcard(data: JsonValue, remainingPath: string, currentPath: string): PathEvaluationResult {
   const results: PathEvaluationResult = { values: [], paths: [] };
 
-  if (!data || typeof data !== 'object') {
+  if (data === null || typeof data !== 'object') {
     return results;
   }
 
@@ -346,7 +353,7 @@ function evaluateWildcard(data: any, remainingPath: string, currentPath: string)
   return results;
 }
 
-function collectRecursive(data: any, path: string, currentPath: string, results: PathEvaluationResult): void {
+function collectRecursive(data: JsonValue, path: string, currentPath: string, results: PathEvaluationResult): void {
   // Check current node
   if (path === '' || path === '.') {
     results.values.push(data);
@@ -366,7 +373,7 @@ function collectRecursive(data: any, path: string, currentPath: string, results:
       data.forEach((item, index) => {
         collectRecursive(item, path, `${currentPath}[${index}]`, results);
       });
-    } else {
+    } else if (isJsonObject(data)) {
       Object.keys(data).forEach(key => {
         collectRecursive(data[key], path, `${currentPath}.${key}`, results);
       });
@@ -386,7 +393,7 @@ export function formatJsonPathResults(result: JsonPathResult): string {
     return 'No matches found';
   }
 
-  const output: any = {
+  const output = {
     count: result.count,
     matches: result.matches.map((match, index) => ({
       path: result.paths[index] || `$[${index}]`,
@@ -401,7 +408,7 @@ export function formatJsonPathResults(result: JsonPathResult): string {
  * Get JSONPath for a specific value in JSON (reverse lookup)
  * This is a simplified version - finds first occurrence
  */
-export function findJsonPath(data: any, targetValue: any, currentPath: string = '$'): string | null {
+export function findJsonPath(data: JsonValue, targetValue: JsonValue, currentPath: string = '$'): string | null {
   if (data === targetValue) {
     return currentPath;
   }
@@ -412,7 +419,7 @@ export function findJsonPath(data: any, targetValue: any, currentPath: string = 
         const path = findJsonPath(data[i], targetValue, `${currentPath}[${i}]`);
         if (path) return path;
       }
-    } else {
+    } else if (isJsonObject(data)) {
       for (const key in data) {
         const path = findJsonPath(data[key], targetValue, `${currentPath}.${key}`);
         if (path) return path;

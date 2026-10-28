@@ -6,7 +6,7 @@ import type { CodeOutputTab } from '@/components/ui/code-panel';
 import { CodePanel } from '@/components/ui/code-panel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { JsonTreeView } from '@/components/ui/json-tree-view';
+import { JsonTreeView, type JsonValue } from '@/components/ui/json-tree-view';
 import { Label } from '@/components/ui/label';
 import {
   DEFAULT_YAML_PATH_OPTIONS,
@@ -36,15 +36,15 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
   const { toolState, updateToolState } = useToolState('yaml-path-finder', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<YamlPathFinderOptions>(DEFAULT_YAML_PATH_OPTIONS);
-  const [yamlInput, setYamlInput] = useState<string>('');
-  const [pathInput, setPathInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
+  const [options] = useState<YamlPathFinderOptions>((toolState?.options as YamlPathFinderOptions) ?? (DEFAULT_YAML_PATH_OPTIONS));
+  const [yamlInput, setYamlInput] = useState<string>((toolState?.yamlInput as string) ?? (''));
+  const [pathInput, setPathInput] = useState<string>((toolState?.pathInput as string) ?? (''));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isEvaluating, setIsEvaluating] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [result, setResult] = useState<YamlPathResult | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>('tree');
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [result, setResult] = useState<YamlPathResult | null>((toolState?.result as YamlPathResult) ?? (null));
+
+  const [activeTab, setActiveTab] = useState<string>((toolState?.activeTab as string) ?? ('tree'));
   const [getExpandedJson, setGetExpandedJson] = useState<(() => string) | null>(null);
   // Tree View search + expand/collapse controls (footer buttons)
   const [treeSearchTerm, setTreeSearchTerm] = useState<string>('');
@@ -57,24 +57,11 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
   const [outputWrapText, setOutputWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) setOptions(toolState.options as YamlPathFinderOptions);
-      if (toolState.yamlInput) setYamlInput(toolState.yamlInput as string);
-      if (toolState.pathInput) setPathInput(toolState.pathInput as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.result) setResult(toolState.result as YamlPathResult);
-      if (toolState.activeTab) setActiveTab(toolState.activeTab as string);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         yamlInput,
         pathInput,
@@ -83,22 +70,11 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
         result: result || undefined,
         activeTab
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, yamlInput, pathInput, output, error, result, activeTab, isHydrated]);
+  }, [options, yamlInput, pathInput, output, error, result, activeTab]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_YAML_PATH_OPTIONS);
-      setYamlInput('');
-      setPathInput('');
-      setOutput('');
-      setError('');
-      setResult(null);
-      setActiveTab('tree');
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleEvaluate = async () => {
     if (!yamlInput.trim()) {
@@ -217,7 +193,8 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
       if (parseResult.error || parseResult.documents.length === 0) {
         return null;
       }
-      return parseResult.documents[0].content;
+      const serialized = JSON.stringify(parseResult.documents[0].content);
+      return serialized === undefined ? null : JSON.parse(serialized) as JsonValue;
     } catch {
       return null;
     }
@@ -243,17 +220,10 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
     return tabs;
   }, [output]);
 
-  // Ensure activeTab is valid when outputTabs change
-  useEffect(() => {
-    if (outputTabs.length > 0) {
-      const treeTab = outputTabs.find(tab => tab.id === 'tree');
-      const currentTab = outputTabs.find(tab => tab.id === activeTab);
-
-      if (!currentTab) {
-        setActiveTab(treeTab ? 'tree' : outputTabs[0].id);
-      }
-    }
-  }, [outputTabs, activeTab]);
+  const selectedOutputTab = outputTabs.find(tab => tab.id === activeTab)?.id
+    ?? outputTabs.find(tab => tab.id === 'tree')?.id
+    ?? outputTabs[0]?.id
+    ?? activeTab;
 
   // Tree View expand/collapse controls registered by JsonTreeView (used by footer buttons)
   const registerTreeExpandAll = useCallback((fn: () => void) => setTreeExpandAll(() => fn), []);
@@ -310,7 +280,7 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
 
   // Custom copy handler for tree view and results
   const handleTreeViewCopy = useCallback(async (): Promise<string | null> => {
-    if (activeTab === 'tree') {
+    if (selectedOutputTab === 'tree') {
       if (getExpandedJson) {
         try {
           const json = getExpandedJson();
@@ -331,7 +301,7 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
       }
       // Function not ready yet, but button should still be enabled
       return '';
-    } else if (activeTab === 'results') {
+    } else if (selectedOutputTab === 'results') {
       // For results tab, convert JSON output to YAML
       if (output) {
         try {
@@ -339,7 +309,7 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
           const jsonData = JSON.parse(output);
           const yaml = stringify(jsonData, { indent: 2, lineWidth: 0 });
           return yaml;
-        } catch (parseErr) {
+        } catch {
           // If it's not valid JSON, return as-is (might already be YAML or error message)
           return output;
         }
@@ -347,7 +317,7 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
       return null;
     }
     return null; // Use default copy behavior for other tabs
-  }, [activeTab, getExpandedJson, output]);
+  }, [selectedOutputTab, getExpandedJson, output]);
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
@@ -482,7 +452,7 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
             {/* Output Panel */}
             <CodePanel fillHeight={true}
               tabs={outputTabs}
-              activeTab={activeTab}
+              activeTab={selectedOutputTab}
               onTabChange={setActiveTab}
               customTabContent={renderCustomTabContent}
               onCopy={handleTreeViewCopy}
@@ -491,9 +461,9 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
               theme={theme}
               wrapText={outputWrapText}
               onWrapTextChange={setOutputWrapText}
-              showWrapToggle={activeTab === 'results'}
+              showWrapToggle={selectedOutputTab === 'results'}
               headerActions={
-                activeTab === 'tree' && result ? (
+                selectedOutputTab === 'tree' && result ? (
                   <span
                     className={cn(
                       'px-2.5 py-1 rounded-full text-xs font-semibold',
@@ -514,7 +484,7 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
               }
               footerLeftContent={
                 <div className="flex-1 flex items-center gap-2">
-                  {activeTab === 'tree' && (
+                  {selectedOutputTab === 'tree' && (
                     <>
                       <div className="flex-1 relative min-w-0">
                         <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" aria-hidden="true" />
@@ -546,7 +516,7 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
                       </Button>
                     </>
                   )}
-                  {activeTab === 'results' && output && result && (
+                  {selectedOutputTab === 'results' && output && result && (
                     <>
                       <span>{result.count} match{result.count !== 1 ? 'es' : ''}</span>
                       <span>{getCharacterCount(output)} characters</span>

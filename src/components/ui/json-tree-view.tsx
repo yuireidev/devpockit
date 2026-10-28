@@ -11,11 +11,13 @@ import {
 } from '@heroicons/react/24/outline';
 import { CheckIcon } from '@heroicons/react/24/solid';
 import { memo, useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { List, useListRef } from 'react-window';
+import { List, useListRef, type RowComponentProps } from 'react-window';
+
+export type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
 
 export interface JsonTreeNode {
   key: string | number;
-  value: any;
+  value: JsonValue;
   path: string;
   type: 'object' | 'array' | 'string' | 'number' | 'boolean' | 'null';
   level: number;
@@ -27,7 +29,7 @@ export interface JsonTreeNode {
 }
 
 export interface JsonTreeViewProps {
-  data: any;
+  data: JsonValue;
   highlightedPaths?: string[];
   onPathClick?: (path: string) => void;
   onGetExpandedJson?: (getExpandedJson: () => string) => void; // Callback to expose function to get expanded JSON
@@ -43,7 +45,7 @@ export interface JsonTreeViewProps {
 
 // Transform JSON data into tree nodes
 function transformToTreeNodes(
-  data: any,
+  data: JsonValue,
   key: string | number = 'root',
   path: string = '$',
   level: number = 0,
@@ -148,16 +150,8 @@ function flattenTreeNodes(nodes: JsonTreeNode[], expandedPaths: Set<string>): Js
   return flattened;
 }
 
-// Get expanded value (full JSON subtree)
-function getExpandedValue(node: JsonTreeNode): string {
-  if (node.type === 'object' || node.type === 'array') {
-    return JSON.stringify(node.value, null, 2);
-  }
-  return JSON.stringify(node.value);
-}
-
 // Format value for display
-function formatValue(value: any, type: string): string {
+function formatValue(value: JsonValue, type: string): string {
   if (type === 'string') {
     return `"${value}"`;
   }
@@ -217,7 +211,6 @@ interface TreeNodeItemProps {
   onToggle: (path: string) => void;
   onCopy: (node: JsonTreeNode) => void;
   searchTerm: string;
-  itemHeight: number;
   isCopied: boolean;
   themeColors: EditorThemeColors;
 }
@@ -229,7 +222,6 @@ function TreeNodeItem({
   onToggle,
   onCopy,
   searchTerm,
-  itemHeight,
   isCopied,
   themeColors,
 }: TreeNodeItemProps) {
@@ -365,7 +357,6 @@ function TreeNodeItem({
 export const JsonTreeView = memo(function JsonTreeView({
   data,
   highlightedPaths = [],
-  onPathClick,
   onGetExpandedJson,
   maxDepth = 3,
   className,
@@ -374,7 +365,6 @@ export const JsonTreeView = memo(function JsonTreeView({
   onExpandAll,
   onCollapseAll,
 }: JsonTreeViewProps) {
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
   const [themeColors, setThemeColors] = useState<EditorThemeColors | null>(null);
   const listRef = useListRef(null);
@@ -412,8 +402,7 @@ export const JsonTreeView = memo(function JsonTreeView({
     return transformToTreeNodes(data, 'root', '$', 0, maxDepth);
   }, [data, maxDepth]);
 
-  // Initialize expanded paths based on maxDepth
-  useEffect(() => {
+  const initialExpandedPaths = useMemo(() => {
     const initialExpanded = new Set<string>();
     function markExpanded(nodes: JsonTreeNode[]) {
       for (const node of nodes) {
@@ -426,8 +415,14 @@ export const JsonTreeView = memo(function JsonTreeView({
       }
     }
     markExpanded(rootNodes);
-    setExpandedPaths(initialExpanded);
+    return initialExpanded;
   }, [rootNodes]);
+  const [expandedPaths, setExpandedPaths] = useState(initialExpandedPaths);
+  const [previousRootNodes, setPreviousRootNodes] = useState(rootNodes);
+  if (rootNodes !== previousRootNodes) {
+    setPreviousRootNodes(rootNodes);
+    setExpandedPaths(initialExpandedPaths);
+  }
 
   // Flatten tree for virtual scrolling
   const flattenedNodes = useMemo(() => {
@@ -525,23 +520,22 @@ export const JsonTreeView = memo(function JsonTreeView({
     }
   }, []);
 
-  const handleNodeClick = useCallback((path: string) => {
-    onPathClick?.(path);
-  }, [onPathClick]);
-
   // Function to get JSON content of all expanded nodes only
   const getExpandedJson = useCallback((): string => {
     // Reconstruct JSON from expanded nodes only - collapsed nodes are completely removed
-    function buildFromNode(node: JsonTreeNode): any {
+    function buildFromNode(node: JsonTreeNode): JsonValue | undefined {
       if (node.type === 'object') {
         if (expandedPaths.has(node.path) && node.children) {
           // Node is expanded, include only its expanded children
-          const obj: any = {};
+          const obj: Record<string, JsonValue> = {};
           node.children.forEach((child) => {
             if (child.type === 'object' || child.type === 'array') {
               if (expandedPaths.has(child.path)) {
                 // Child is also expanded, recurse to get its expanded structure
-                obj[child.key] = buildFromNode(child);
+                const childValue = buildFromNode(child);
+                if (childValue !== undefined) {
+                  obj[child.key] = childValue;
+                }
               }
               // If child is collapsed, skip it entirely (don't include in result)
             } else {
@@ -557,7 +551,7 @@ export const JsonTreeView = memo(function JsonTreeView({
       } else if (node.type === 'array') {
         if (expandedPaths.has(node.path) && node.children) {
           // Node is expanded, include only its expanded children
-          const result: any[] = [];
+          const result: JsonValue[] = [];
           node.children.forEach((child) => {
             if (child.type === 'object' || child.type === 'array') {
               if (expandedPaths.has(child.path)) {
@@ -619,7 +613,7 @@ export const JsonTreeView = memo(function JsonTreeView({
   const itemHeight = 36;
 
   // Row component for react-window v2
-  const RowComponent = useCallback(({ index, style, ariaAttributes }: { index: number; style: React.CSSProperties; ariaAttributes: any }) => {
+  const RowComponent = useCallback(({ index, style, ariaAttributes }: RowComponentProps) => {
     const node = filteredNodes[index];
     if (!node) {
       return <div style={style} />;
@@ -634,13 +628,12 @@ export const JsonTreeView = memo(function JsonTreeView({
           onToggle={handleToggle}
           onCopy={handleCopy}
           searchTerm={searchTerm}
-          itemHeight={itemHeight}
           isCopied={copiedPath === node.path}
           themeColors={colors}
         />
       </div>
     );
-  }, [filteredNodes, highlightedPathSet, expandedPaths, handleToggle, handleCopy, searchTerm, copiedPath, itemHeight, colors]);
+  }, [filteredNodes, highlightedPathSet, expandedPaths, handleToggle, handleCopy, searchTerm, copiedPath, colors]);
 
   return (
     <div className={cn('flex flex-col h-full relative rounded-[10px]', className)} style={{ backgroundColor: colors.background, color: colors.foreground }}>

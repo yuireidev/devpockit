@@ -21,15 +21,15 @@ export function JwtDecoder({ className, instanceId }: JwtDecoderProps) {
   const { toolState, updateToolState } = useToolState('jwt-decoder', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [token, setToken] = useState<string>('');
-  const [secret, setSecret] = useState<string>('');
-  const [decodedResult, setDecodedResult] = useState<JwtDecodeResult | null>(null);
+  const [token, setToken] = useState<string>((toolState?.token as string) ?? (''));
+  const [secret, setSecret] = useState<string>((toolState?.secret as string) ?? (''));
+  const [decodedResult, setDecodedResult] = useState<JwtDecodeResult | null>((toolState?.decodedResult as JwtDecodeResult) ?? (null));
   const [isDecoding, setIsDecoding] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
   const [isVerifying, setIsVerifying] = useState(false);
-  const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; error?: string } | null>(null);
-  const [activeTab, setActiveTab] = useState<'header' | 'payload' | 'signature' | 'raw'>('header');
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [verificationResult, setVerificationResult] = useState<{ isValid: boolean; error?: string } | null>((toolState?.verificationResult as { isValid: boolean; error?: string } | undefined) ?? null);
+  const [activeTab, setActiveTab] = useState<'header' | 'payload' | 'signature' | 'raw'>((toolState?.activeTab as 'header' | 'payload' | 'signature' | 'raw' | undefined) ?? 'header');
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
@@ -37,23 +37,11 @@ export function JwtDecoder({ className, instanceId }: JwtDecoderProps) {
   const [outputWrapText, setOutputWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.token) setToken(toolState.token as string);
-      if (toolState.secret) setSecret(toolState.secret as string);
-      if (toolState.decodedResult) setDecodedResult(toolState.decodedResult as JwtDecodeResult);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.verificationResult) setVerificationResult(toolState.verificationResult as typeof verificationResult);
-      if (toolState.activeTab) setActiveTab(toolState.activeTab as typeof activeTab);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         token,
         secret,
         decodedResult: decodedResult || undefined,
@@ -61,21 +49,11 @@ export function JwtDecoder({ className, instanceId }: JwtDecoderProps) {
         verificationResult: verificationResult || undefined,
         activeTab
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, secret, decodedResult, error, verificationResult, activeTab, isHydrated]);
+  }, [token, secret, decodedResult, error, verificationResult, activeTab]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setToken('');
-      setSecret('');
-      setDecodedResult(null);
-      setError('');
-      setVerificationResult(null);
-      setActiveTab('header');
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleDecode = async () => {
     if (!token.trim()) {

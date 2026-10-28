@@ -18,13 +18,12 @@ import {
   parseListInput,
   performOperation,
   sortListItems,
-  type ListComparisonStats,
   type ListItem,
 } from '@/libs/list-comparison';
 import { cn } from '@/libs/utils';
 import { ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Check, Copy, Download, Search } from 'lucide-react';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { stringify } from 'yaml';
 
 interface ListComparisonProps {
@@ -36,12 +35,25 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
   const { toolState, updateToolState } = useToolState('list-comparison', instanceId);
 
   // State
-  const [listAText, setListAText] = useState<string>('');
-  const [listBText, setListBText] = useState<string>('');
-  const [options, setOptions] = useState<ListComparisonOptions>(DEFAULT_LIST_COMPARISON_OPTIONS);
-  const [stats, setStats] = useState<ListComparisonStats | null>(null);
-  const [results, setResults] = useState<ListItem[]>([]);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [listAText, setListAText] = useState<string>((toolState?.listAText as string) ?? (''));
+  const [listBText, setListBText] = useState<string>((toolState?.listBText as string) ?? (''));
+  const [options, setOptions] = useState<ListComparisonOptions>((toolState?.options as ListComparisonOptions) ?? (DEFAULT_LIST_COMPARISON_OPTIONS));
+  const { stats, results } = useMemo(() => {
+    if (!listAText.trim() && !listBText.trim()) return { stats: null, results: [] as ListItem[] };
+    try {
+      const listA = parseListInput(listAText, options.inputFormat, options.caseSensitive);
+      const listB = parseListInput(listBText, options.inputFormat, options.caseSensitive);
+      const comparisonStats = calculateStats(listA, listB, options.caseSensitive);
+      const comparisonResults = performOperation(listA, listB, options.operation, options.caseSensitive);
+      return {
+        stats: comparisonStats,
+        results: sortListItems(comparisonResults, options.sortOrder),
+      };
+    } catch {
+      return { stats: null, results: [] as ListItem[] };
+    }
+  }, [listAText, listBText, options]);
+
   const [copySuccess, setCopySuccess] = useState<'results' | null>(null);
   const [searchQuery, setSearchQuery] = useState<string>('');
 
@@ -51,76 +63,20 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
   const [listBWrapText, setListBWrapText] = useState(true);
 
   // Hydrate state from toolState after mount
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.listAText) setListAText(toolState.listAText as string);
-      if (toolState.listBText) setListBText(toolState.listBText as string);
-      if (toolState.options) setOptions(toolState.options as ListComparisonOptions);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         listAText,
         listBText,
         options,
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listAText, listBText, options, isHydrated]);
-
-  // Reset state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setListAText('');
-      setListBText('');
-      setOptions(DEFAULT_LIST_COMPARISON_OPTIONS);
-      setStats(null);
-      setResults([]);
-      setSearchQuery('');
-    }
-
-  }, [toolState, isHydrated]);
-
-  // Parse lists and calculate comparison
-  const compareLists = useCallback(() => {
-    try {
-      const listA = parseListInput(listAText, options.inputFormat, options.caseSensitive);
-      const listB = parseListInput(listBText, options.inputFormat, options.caseSensitive);
-
-      // Calculate statistics
-      const calculatedStats = calculateStats(listA, listB, options.caseSensitive);
-      setStats(calculatedStats);
-
-      // Perform operation
-      let operationResults = performOperation(listA, listB, options.operation, options.caseSensitive);
-
-      // Sort based on sort order
-      operationResults = sortListItems(operationResults, options.sortOrder);
-
-      setResults(operationResults);
-    } catch (error) {
-      // Handle parsing errors silently or show in UI
-      setStats(null);
-      setResults([]);
-    }
   }, [listAText, listBText, options]);
 
-  // Auto-compare when inputs or options change
-  useEffect(() => {
-    if (isHydrated && (listAText.trim() || listBText.trim())) {
-      compareLists();
-    } else {
-      setStats(null);
-      setResults([]);
-    }
-    // compareLists already includes listAText, listBText, and options in its dependencies
+  // Reset state when tool state is cleared
 
-  }, [compareLists, isHydrated, listAText, listBText]);
 
   // Filter results based on search query
   const filteredResults = useMemo(() => {

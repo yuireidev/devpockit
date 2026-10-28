@@ -33,15 +33,15 @@ interface SqlFormatterProps {
 export function SqlFormatter({ className, instanceId }: SqlFormatterProps) {
   const { toolState, updateToolState } = useToolState('sql-formatter', instanceId);
 
-  const [options, setOptions] = useState<SqlFormatOptions>(DEFAULT_SQL_OPTIONS);
-  const [input, setInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
+  const [options, setOptions] = useState<SqlFormatOptions>((toolState?.options as SqlFormatOptions) ?? (DEFAULT_SQL_OPTIONS));
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isFormatting, setIsFormatting] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
   const [stats, setStats] = useState<{ size: number; lines: number; statements: number } | null>(
-    null
+    (toolState?.stats as { size: number; lines: number; statements: number }) ?? (null)
   );
-  const [isHydrated, setIsHydrated] = useState(false);
+
 
   const [theme] = useCodeEditorTheme('basicDark');
   const [inputWrapText, setInputWrapText] = useState(true);
@@ -49,42 +49,20 @@ export function SqlFormatter({ className, instanceId }: SqlFormatterProps) {
 
   const validationHint = getSqlDialectValidationHint(options.dialect);
 
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) setOptions(toolState.options as SqlFormatOptions);
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.stats) {
-        setStats(toolState.stats as { size: number; lines: number; statements: number });
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         input,
         output,
         error,
         stats: stats || undefined,
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, input, output, error, stats, isHydrated]);
+  }, [options, input, output, error, stats]);
 
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_SQL_OPTIONS);
-      setInput('');
-      setOutput('');
-      setError('');
-      setStats(null);
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleFormat = async () => {
     if (!input.trim()) {

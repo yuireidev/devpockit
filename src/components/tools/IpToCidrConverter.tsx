@@ -34,43 +34,27 @@ export function IpToCidrConverter({ className, instanceId }: IpToCidrConverterPr
   const { toolState, updateToolState } = useToolState('ip-to-cidr-converter', instanceId);
 
   // Initialize with defaults
-  const [input, setInput] = useState('');
-  const [output, setOutput] = useState('');
-  const [error, setError] = useState('');
+  const [input, setInput] = useState((toolState?.input as string) ?? (''));
+  const [output, setOutput] = useState((toolState?.output as string) ?? (''));
+  const [error, setError] = useState((toolState?.error as string) ?? (''));
   const [isConverting, setIsConverting] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
   const [wrapText, setWrapText] = useState(true);
 
   // Hydrate state from toolState after mount
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({ input, output, error });
-    }
+    updateToolState({ input, output, error });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, output, error, isHydrated]);
+  }, [input, output, error]);
 
   // Reset state when tool is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setInput('');
-      setOutput('');
-      setError('');
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleConvert = async () => {
     if (!input.trim()) {

@@ -19,6 +19,7 @@ import {
   type RegexTesterOptions
 } from '@/config/regex-tester-config';
 import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
+import type { OnMount } from '@monaco-editor/react';
 import {
   analyzeBackreferences,
   deleteTestCase,
@@ -43,32 +44,47 @@ import {
 } from '@/libs/regex-tester';
 import { cn } from '@/libs/utils';
 import { ArrowDownTrayIcon, ChevronDownIcon, PlusIcon, TrashIcon } from '@heroicons/react/24/outline';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, useSyncExternalStore } from 'react';
 
 interface RegexTesterProps {
   className?: string;
   instanceId: string;
 }
 
+type MonacoEditorInstance = Parameters<OnMount>[0];
+type MonacoInstance = Parameters<OnMount>[1];
+type RegexEditorKey = 'testString' | 'pattern' | 'output';
+
+const subscribeToTestCases = (onStoreChange: () => void) => {
+  window.addEventListener('storage', onStoreChange);
+  window.addEventListener('devpockit:test-cases-change', onStoreChange);
+  return () => {
+    window.removeEventListener('storage', onStoreChange);
+    window.removeEventListener('devpockit:test-cases-change', onStoreChange);
+  };
+};
+const getTestCasesSnapshot = () => JSON.stringify(loadTestCases());
+const getServerTestCasesSnapshot = () => '[]';
+
 export function RegexTester({ className, instanceId }: RegexTesterProps) {
   const { toolState, updateToolState } = useToolState('regex-tester', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<RegexTesterOptions>(DEFAULT_REGEX_OPTIONS);
-  const [testResult, setTestResult] = useState<RegexTestResult | null>(null);
-  const [error, setError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'matches' | 'replace' | 'code' | 'explanation' | 'empty'>('matches');
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [options, setOptions] = useState<RegexTesterOptions>(((toolState?.options as RegexTesterOptions)) ?? (DEFAULT_REGEX_OPTIONS));
+  const [testResult, setTestResult] = useState<RegexTestResult | null>((toolState?.testResult as RegexTestResult) ?? (null));
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [activeTab, setActiveTab] = useState<'matches' | 'replace' | 'code' | 'explanation' | 'empty'>((toolState?.activeTab as 'matches' | 'replace' | 'code' | 'explanation' | 'empty' | undefined) ?? 'matches');
+
   const [explanation, setExplanation] = useState<RegexExplanation | null>(null);
-  const [testCases, setTestCases] = useState<TestCase[]>([]);
-  const [showExplanation, setShowExplanation] = useState(false);
+  const testCasesSnapshot = useSyncExternalStore(subscribeToTestCases, getTestCasesSnapshot, getServerTestCasesSnapshot);
+  const testCases = useMemo(() => JSON.parse(testCasesSnapshot) as TestCase[], [testCasesSnapshot]);
   const [flagsDropdownOpen, setFlagsDropdownOpen] = useState(false);
 
   // Monaco editor refs - consolidated structure
   const editorRefs = useRef({
-    testString: { editor: null as any, monaco: null as any, decorations: [] as string[] },
-    pattern: { editor: null as any, monaco: null as any, decorations: [] as string[] },
-    output: { editor: null as any, monaco: null as any, decorations: [] as string[] }
+    testString: { editor: null as MonacoEditorInstance | null, monaco: null as MonacoInstance | null, decorations: [] as string[] },
+    pattern: { editor: null as MonacoEditorInstance | null, monaco: null as MonacoInstance | null, decorations: [] as string[] },
+    output: { editor: null as MonacoEditorInstance | null, monaco: null as MonacoInstance | null, decorations: [] as string[] }
   });
 
   // Editor settings
@@ -78,53 +94,25 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
   const [outputWrapText, setOutputWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) {
-        const opts = toolState.options as RegexTesterOptions;
-        setOptions(opts);
-      }
-      if (toolState.testResult) setTestResult(toolState.testResult as RegexTestResult);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.activeTab) setActiveTab(toolState.activeTab as typeof activeTab);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         testResult: testResult || undefined,
         error,
         activeTab
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, testResult, error, activeTab, isHydrated]);
+  }, [options, testResult, error, activeTab]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_REGEX_OPTIONS);
-      setTestResult(null);
-      setError('');
-      setActiveTab('matches');
-    }
-  }, [toolState, isHydrated]);
 
-  // Load test cases on mount
-  useEffect(() => {
-    if (isHydrated) {
-      setTestCases(loadTestCases());
-    }
-  }, [isHydrated]);
 
   // Helper to create editor mount handler
-  const createEditorMountHandler = useCallback((key: 'testString' | 'pattern' | 'output') => {
-    return (editor: any, monaco: any) => {
+  const createEditorMountHandler = useCallback((key: RegexEditorKey) => {
+    return (editor: MonacoEditorInstance, monaco: MonacoInstance) => {
       editorRefs.current[key].editor = editor;
       editorRefs.current[key].monaco = monaco;
     };
@@ -133,20 +121,21 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
   // Apply decorations to test string editor
   useEffect(() => {
     const refs = editorRefs.current.testString;
-    if (!refs.editor || !refs.monaco) return;
+    const editor = refs.editor;
+    if (!editor || !refs.monaco) return;
 
     const timeoutId = setTimeout(() => {
       try {
         if (!testResult || !testResult.isValid || testResult.matches.length === 0) {
           if (refs.decorations.length > 0) {
-            refs.decorations = refs.editor.deltaDecorations(refs.decorations, []);
+            refs.decorations = editor.deltaDecorations(refs.decorations, []);
           }
           return;
         }
 
         const decorations = generateMatchDecorations(testResult.matches, options.testString, options.showGroups);
         const monacoDecorations = toMonacoDecorations(decorations, refs.monaco);
-        refs.decorations = refs.editor.deltaDecorations(refs.decorations, monacoDecorations);
+        refs.decorations = editor.deltaDecorations(refs.decorations, monacoDecorations);
       } catch (err) {
         console.warn('Failed to update test string decorations:', err);
       }
@@ -158,13 +147,14 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
   // Apply decorations to pattern input
   useEffect(() => {
     const refs = editorRefs.current.pattern;
-    if (!refs.editor || !refs.monaco) return;
+    const editor = refs.editor;
+    if (!editor || !refs.monaco) return;
 
     const timeoutId = setTimeout(() => {
       try {
         const decorations = generatePatternDecorations(options.pattern);
         const monacoDecorations = toMonacoDecorations(decorations, refs.monaco);
-        refs.decorations = refs.editor.deltaDecorations(refs.decorations, monacoDecorations);
+        refs.decorations = editor.deltaDecorations(refs.decorations, monacoDecorations);
       } catch (err) {
         console.warn('Failed to update pattern decorations:', err);
       }
@@ -176,18 +166,19 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
   // Apply decorations to output panel
   useEffect(() => {
     const refs = editorRefs.current.output;
-    if (!refs.editor || !refs.monaco) return;
+    const editor = refs.editor;
+    if (!editor || !refs.monaco) return;
 
     if (activeTab !== 'matches') {
       if (refs.decorations.length > 0) {
-        refs.decorations = refs.editor.deltaDecorations(refs.decorations, []);
+        refs.decorations = editor.deltaDecorations(refs.decorations, []);
       }
       return;
     }
 
     if (!testResult || !testResult.isValid || testResult.matches.length === 0) {
       if (refs.decorations.length > 0) {
-        refs.decorations = refs.editor.deltaDecorations(refs.decorations, []);
+        refs.decorations = editor.deltaDecorations(refs.decorations, []);
       }
       return;
     }
@@ -197,7 +188,7 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
         const formattedOutput = formatMatchResults(testResult.matches, options.showGroups, options.showPositions);
         const decorations = generateOutputDecorations(testResult.matches, formattedOutput, options.showGroups);
         const monacoDecorations = toMonacoDecorations(decorations, refs.monaco);
-        refs.decorations = refs.editor.deltaDecorations(refs.decorations, monacoDecorations);
+        refs.decorations = editor.deltaDecorations(refs.decorations, monacoDecorations);
       } catch (err) {
         console.warn('Failed to update output decorations:', err);
       }
@@ -210,7 +201,6 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
   // Update explanation when pattern changes (debounced)
   useEffect(() => {
     if (!options.pattern || !options.pattern.trim()) {
-      setExplanation(null);
       return;
     }
 
@@ -219,7 +209,7 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
       try {
         const expl = explainRegex(options.pattern, options.flags);
         setExplanation(expl);
-      } catch (err) {
+      } catch {
         setExplanation(null);
       }
     }, 500); // 500ms debounce for explanation
@@ -277,7 +267,7 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
     const name = prompt('Enter a name for this test case:');
     if (!name) return;
 
-    const id = saveTestCase({
+    saveTestCase({
       name,
       pattern: options.pattern,
       testString: options.testString,
@@ -286,7 +276,7 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
       expectedMatchCount: testResult?.matchCount
     });
 
-    setTestCases(loadTestCases());
+    window.dispatchEvent(new Event('devpockit:test-cases-change'));
     alert('Test case saved!');
   }, [options, testResult]);
 
@@ -305,7 +295,7 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
   const handleDeleteTestCase = useCallback((id: string) => {
     if (confirm('Are you sure you want to delete this test case?')) {
       deleteTestCase(id);
-      setTestCases(loadTestCases());
+      window.dispatchEvent(new Event('devpockit:test-cases-change'));
     }
   }, []);
 
@@ -394,7 +384,7 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
     }
 
     // Explanation tab
-    if (explanation) {
+    if (explanation && explanation.pattern === options.pattern) {
       let explanationText = `Pattern: ${explanation.pattern}\n\n`;
       explanationText += `Explanation: ${explanation.explanation}\n\n`;
 
@@ -412,7 +402,7 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
 
       if (explanation.warnings.length > 0) {
         explanationText += 'Warnings:\n';
-        explanation.warnings.forEach((warning, idx) => {
+        explanation.warnings.forEach((warning) => {
           explanationText += `  ⚠ ${warning}\n`;
         });
       }
@@ -438,12 +428,9 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
     return tabs;
   }, [testResult, options, explanation]);
 
-  // Ensure activeTab is valid when outputTabs change
-  useEffect(() => {
-    if (outputTabs.length > 0 && !outputTabs.find(tab => tab.id === activeTab)) {
-      setActiveTab(outputTabs[0].id as typeof activeTab);
-    }
-  }, [outputTabs, activeTab]);
+  const selectedOutputTab = outputTabs.find(tab => tab.id === activeTab)?.id
+    ?? outputTabs[0]?.id
+    ?? activeTab;
 
   // Group patterns by category
   const patternsByCategory = useMemo(() => {
@@ -774,7 +761,7 @@ export function RegexTester({ className, instanceId }: RegexTesterProps) {
             <div className="flex-1 flex flex-col">
               <CodePanel fillHeight={true}
                 tabs={outputTabs}
-                activeTab={activeTab}
+                activeTab={selectedOutputTab}
                 onTabChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
                 height="400px"
                 className="flex-1"

@@ -12,6 +12,24 @@ export interface IpInfo {
   query_time: string;
 }
 
+interface IpServiceResponse {
+  ip?: string;
+  query?: string;
+  country_name?: string;
+  country?: string;
+  region?: string;
+  regionName?: string;
+  city?: string;
+  org?: string;
+  isp?: string;
+  organization?: string;
+  timezone?: string;
+  latitude?: number;
+  lat?: number;
+  longitude?: number;
+  lon?: number;
+}
+
 export interface IpCheckerOptions {
   showLocation: boolean;
   showISP: boolean;
@@ -160,7 +178,7 @@ export async function getPublicIpInfo(): Promise<IpInfo> {
   let lastError: Error | null = null;
   let ipv4: string | null = null;
   let ipv6: string | null = null;
-  let locationData: any = null;
+  let locationData: IpServiceResponse | null = null;
 
   // Try to get both IPv4 and IPv6
   for (const service of services) {
@@ -181,7 +199,7 @@ export async function getPublicIpInfo(): Promise<IpInfo> {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      const data = await response.json();
+      const data = (await response.json()) as IpServiceResponse;
       const ip = data.ip || data.query;
 
       if (ip) {

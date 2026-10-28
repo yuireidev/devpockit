@@ -11,6 +11,9 @@ import {
   validateImageFile,
   validateQrData
 } from '../qr-code-decoder';
+import jsQR from 'jsqr';
+
+const mockedJsQR = jest.mocked(jsQR);
 
 // Mock jsQR
 jest.mock('jsqr', () => ({
@@ -66,7 +69,7 @@ Object.defineProperty(document, 'createElement', {
 });
 
 // Mock Image constructor
-global.Image = jest.fn(() => mockImage) as any;
+Object.defineProperty(global, 'Image', { configurable: true, value: jest.fn(() => mockImage) });
 
 describe('QR Code Decoder', () => {
   beforeEach(() => {
@@ -100,8 +103,7 @@ describe('QR Code Decoder', () => {
         }
       };
 
-      const jsQR = require('jsqr').default;
-      jsQR.mockReturnValue(mockQrData);
+      mockedJsQR.mockReturnValue(mockQrData as unknown as NonNullable<ReturnType<typeof jsQR>>);
 
       mockCreateObjectURL.mockReturnValue('blob:test-url');
 
@@ -143,8 +145,7 @@ describe('QR Code Decoder', () => {
     it('should return empty array when no QR code is found', async () => {
       // Create a larger file to pass validation
       const mockFile = new File(['x'.repeat(2000)], 'test.png', { type: 'image/png' });
-      const jsQR = require('jsqr').default;
-      jsQR.mockReturnValue(null);
+      mockedJsQR.mockReturnValue(null);
 
       // Mock getImageData to return proper image data
       mockGetImageData.mockReturnValue({
@@ -185,7 +186,7 @@ describe('QR Code Decoder', () => {
     it('should handle canvas context creation failure', async () => {
       // Create a larger file to pass validation
       const mockFile = new File(['x'.repeat(2000)], 'test.png', { type: 'image/png' });
-      mockCanvas.getContext.mockReturnValue(null as any);
+      mockCanvas.getContext.mockReturnValue(null as unknown as ReturnType<typeof mockCanvas.getContext>);
 
       setTimeout(() => {
         if (mockImage.onload) {
@@ -207,8 +208,7 @@ describe('QR Code Decoder', () => {
         }
       };
 
-      const jsQR = require('jsqr').default;
-      jsQR.mockReturnValue(mockQrData);
+      mockedJsQR.mockReturnValue(mockQrData as unknown as NonNullable<ReturnType<typeof jsQR>>);
 
       setTimeout(() => {
         if (mockImage.onload) {
@@ -230,8 +230,7 @@ describe('QR Code Decoder', () => {
         }
       };
 
-      const jsQR = require('jsqr').default;
-      jsQR.mockReturnValue(mockQrData);
+      mockedJsQR.mockReturnValue(mockQrData as unknown as NonNullable<ReturnType<typeof jsQR>>);
 
       // Mock getImageData to return proper image data
       mockGetImageData.mockReturnValue({
@@ -256,8 +255,7 @@ describe('QR Code Decoder', () => {
     });
 
     it('should return empty array when no QR code is detected', async () => {
-      const jsQR = require('jsqr').default;
-      jsQR.mockReturnValue(null);
+      mockedJsQR.mockReturnValue(null);
 
       // Mock getImageData to return proper image data
       mockGetImageData.mockReturnValue({
@@ -272,7 +270,7 @@ describe('QR Code Decoder', () => {
     });
 
     it('should handle canvas context creation failure', async () => {
-      mockCanvas.getContext.mockReturnValue(null as any);
+      mockCanvas.getContext.mockReturnValue(null as unknown as ReturnType<typeof mockCanvas.getContext>);
 
       await expect(decodeQrFromCamera(mockVideoElement as HTMLVideoElement)).rejects.toThrow('Failed to decode QR code from camera');
     });
@@ -550,7 +548,7 @@ END:VCARD`;
     });
 
     it('should handle unknown error types', () => {
-      const result = getErrorMessage({ message: 'string error' } as any);
+      const result = getErrorMessage({ message: 'string error' });
 
       expect(result).toBe('An error occurred while processing the QR code. Please try again.');
     });

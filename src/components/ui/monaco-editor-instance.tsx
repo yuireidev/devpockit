@@ -12,6 +12,7 @@ import { connectShikiToMonaco, isShikiConnectedToMonaco } from '@/libs/monaco-sh
 import { createMonacoOptions, getMonacoLanguageId } from '@/libs/monaco-utils';
 import { getShikiHighlighter, initializeShiki, isShikiInitialized, loadShikiTheme } from '@/libs/shiki-init';
 import { cn } from '@/libs/utils';
+import type { OnMount } from '@monaco-editor/react';
 import dynamic from 'next/dynamic';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
@@ -45,7 +46,7 @@ export interface MonacoEditorInstanceProps {
   className?: string;
   padding?: { top?: number; bottom?: number };
   singleLine?: boolean;
-  onMount?: (editor: any, monaco: any) => void;
+  onMount?: OnMount;
 }
 
 /**
@@ -69,20 +70,20 @@ export function MonacoEditorInstance({
 }: MonacoEditorInstanceProps) {
   const [initError, setInitError] = useState<Error | null>(null);
   const initializationRef = useRef(false);
-  const editorRef = useRef<any>(null);
-  const monacoRef = useRef<any>(null);
+  const editorRef = useRef<Parameters<OnMount>[0] | null>(null);
+  const monacoRef = useRef<Parameters<OnMount>[1] | null>(null);
 
   // Get Monaco theme - recalculate when theme prop changes
   // This ensures the theme is always up-to-date, especially on initial load
   const monacoTheme = useMemo(() => getMonacoTheme(theme), [theme]);
 
   // Load theme helper function with proper fallback chain
-  const loadThemeSafely = async (monaco: any, themeName: string, currentTheme: CodeEditorTheme): Promise<string> => {
+  const loadThemeSafely = async (monaco: Parameters<OnMount>[1], themeName: string, currentTheme: CodeEditorTheme): Promise<string> => {
     // First, check if theme is already loaded
     const highlighter = getShikiHighlighter();
     if (highlighter) {
-      const loadedThemes = highlighter.getLoadedThemes();
-      if (loadedThemes.includes(themeName as any)) {
+      const loadedThemes: readonly string[] = highlighter.getLoadedThemes();
+      if (loadedThemes.includes(themeName)) {
         return themeName;
       }
     }
@@ -112,15 +113,15 @@ export function MonacoEditorInstance({
         try {
           // Check if already loaded
           if (highlighter) {
-            const loaded = highlighter.getLoadedThemes();
-            if (loaded.includes(fallbackTheme as any)) {
+            const loaded: readonly string[] = highlighter.getLoadedThemes();
+            if (loaded.includes(fallbackTheme)) {
               return fallbackTheme;
             }
           }
 
           await loadShikiTheme(fallbackTheme);
           return fallbackTheme;
-        } catch (fallbackError) {
+        } catch {
           // Try next fallback
           continue;
         }
@@ -134,19 +135,16 @@ export function MonacoEditorInstance({
   };
 
   // Handle editor mount - initialize Shiki and connect to Monaco here
-  const handleEditorDidMount = async (editor: any, monaco: any) => {
+  const handleEditorDidMount: OnMount = async (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
 
     // Configure single-line mode if enabled
     if (singleLine) {
       // Prevent Enter key from creating new lines
-      editor.onKeyDown((e: any) => {
+      editor.onKeyDown((e) => {
         // Check both keyCode (Monaco's KeyCode enum) and key property
-        const isEnter = e.keyCode === monaco.KeyCode?.Enter ||
-                       e.keyCode === 3 || // Enter key code
-                       e.key === 'Enter' ||
-                       e.code === 'Enter';
+        const isEnter = e.keyCode === monaco.KeyCode?.Enter || e.keyCode === 3;
         if (isEnter) {
           e.preventDefault();
           e.stopPropagation();

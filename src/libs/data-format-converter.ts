@@ -1,6 +1,7 @@
 import { parse, stringify } from 'yaml';
 
 export type FormatType = 'json' | 'yaml' | 'python' | 'typescript' | 'xml';
+type JsonData = null | boolean | number | string | JsonData[] | { [key: string]: JsonData };
 
 export interface MultiFormatConversionResult {
   success: boolean;
@@ -20,7 +21,7 @@ export interface MultiFormatStats {
 /**
  * Convert any format to JSON (common format)
  */
-function toJson(content: string, inputFormat: FormatType): { success: boolean; data?: any; error?: string } {
+function toJson(content: string, inputFormat: FormatType): { success: boolean; data?: JsonData; error?: string } {
   try {
     if (inputFormat === 'json') {
       return { success: true, data: JSON.parse(content) };
@@ -108,7 +109,7 @@ function toJson(content: string, inputFormat: FormatType): { success: boolean; d
 
         try {
           return { success: true, data: JSON.parse(cleaned) };
-        } catch (parseError) {
+        } catch {
           // If parsing still fails, try one more cleanup
           // Remove trailing commas more aggressively
           cleaned = cleaned.replace(/,\s*}/g, '}');
@@ -141,7 +142,7 @@ function toJson(content: string, inputFormat: FormatType): { success: boolean; d
 /**
  * Convert XML to JSON
  */
-function xmlToJson(xmlString: string): { success: boolean; data?: any; error?: string } {
+function xmlToJson(xmlString: string): { success: boolean; data?: JsonData; error?: string } {
   try {
     // Remove XML declaration
     let cleaned = xmlString.trim();
@@ -164,7 +165,7 @@ function xmlToJson(xmlString: string): { success: boolean; data?: any; error?: s
 /**
  * Parse XML string to JavaScript object
  */
-function parseXmlToObject(xml: string): any {
+function parseXmlToObject(xml: string): Record<string, JsonData> {
   // Remove leading/trailing whitespace
   xml = xml.trim();
 
@@ -192,7 +193,7 @@ function parseXmlToObject(xml: string): any {
   const children = parseXmlContent(content);
 
   // Build result object
-  const result: any = {};
+  const result: Record<string, JsonData> = {};
 
   // Add attributes if present
   if (attributes && Object.keys(attributes).length > 0) {
@@ -230,8 +231,8 @@ function parseAttributes(attrString: string): Record<string, string> {
 /**
  * Parse XML content (children and text)
  */
-function parseXmlContent(content: string): Record<string, any> {
-  const result: Record<string, any> = {};
+function parseXmlContent(content: string): Record<string, JsonData> {
+  const result: Record<string, JsonData> = {};
 
   if (!content.trim()) return result;
 
@@ -243,7 +244,6 @@ function parseXmlContent(content: string): Record<string, any> {
   // Parse child elements
   const childRegex = /<([^>\s]+)([^>]*)>([\s\S]*?)<\/\1>/g;
   let match;
-  const children: any[] = [];
   let lastIndex = 0;
 
   while ((match = childRegex.exec(content)) !== null) {
@@ -257,7 +257,7 @@ function parseXmlContent(content: string): Record<string, any> {
     const childAttrs = parseAttributes(match[2]);
     const childContent = match[3].trim();
 
-    let childValue: any;
+    let childValue: JsonData;
     if (childContent && childContent.match(/<[^>]+>/)) {
       // Nested elements
       childValue = parseXmlToObject(`<${childTag}${match[2]}>${childContent}</${childTag}>`);
@@ -294,7 +294,7 @@ function parseXmlContent(content: string): Record<string, any> {
 /**
  * Convert JSON to target format
  */
-function fromJson(data: any, targetFormat: FormatType, indentSize: number = 2, pythonQuoteStyle: 'single' | 'double' = 'single'): string {
+function fromJson(data: JsonData, targetFormat: FormatType, indentSize: number = 2, pythonQuoteStyle: 'single' | 'double' = 'single'): string {
   // Ensure indentSize is valid (between 1 and 9 for YAML, any positive number for others)
   const validIndent = Math.max(1, Math.min(9, indentSize));
 
@@ -320,11 +320,10 @@ function fromJson(data: any, targetFormat: FormatType, indentSize: number = 2, p
 /**
  * Convert JSON object to Python dictionary string
  */
-function jsonToPythonDict(data: any, indentSize: number = 2, currentIndent: number = 0, quoteStyle: 'single' | 'double' = 'single'): string {
+function jsonToPythonDict(data: JsonData, indentSize: number = 2, currentIndent: number = 0, quoteStyle: 'single' | 'double' = 'single'): string {
   const indent = ' '.repeat(currentIndent);
   const nextIndent = ' '.repeat(currentIndent + indentSize);
   const quote = quoteStyle === 'single' ? "'" : '"';
-  const oppositeQuote = quoteStyle === 'single' ? '"' : "'";
 
   if (data === null) {
     return 'None';
@@ -373,7 +372,7 @@ function jsonToPythonDict(data: any, indentSize: number = 2, currentIndent: numb
 /**
  * Convert JSON object to TypeScript Map string
  */
-function jsonToTypeScriptMap(data: any, indentSize: number = 2, currentIndent: number = 0): string {
+function jsonToTypeScriptMap(data: JsonData, indentSize: number = 2, currentIndent: number = 0): string {
   const indent = ' '.repeat(currentIndent);
   const nextIndent = ' '.repeat(currentIndent + indentSize);
 
@@ -421,10 +420,8 @@ function jsonToTypeScriptMap(data: any, indentSize: number = 2, currentIndent: n
 /**
  * Convert JSON object to XML string
  */
-function jsonToXml(data: any, indentSize: number = 2, currentIndent: number = 0, rootTag: string = 'root'): string {
+function jsonToXml(data: JsonData, indentSize: number = 2, currentIndent: number = 0, rootTag: string = 'root'): string {
   const indent = ' '.repeat(currentIndent);
-  const nextIndent = ' '.repeat(currentIndent + indentSize);
-
   // Handle special case: if data is an object with a single key, use that as root
   if (typeof data === 'object' && data !== null && !Array.isArray(data)) {
     const keys = Object.keys(data);

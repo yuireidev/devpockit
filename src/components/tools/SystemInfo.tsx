@@ -28,7 +28,7 @@ import {
   VideoCameraIcon,
   WifiIcon,
 } from '@heroicons/react/24/outline';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface SystemInfoProps {
   className?: string;
@@ -39,26 +39,22 @@ export function SystemInfo({ className, instanceId }: SystemInfoProps) {
   const { toolState, updateToolState } = useToolState('system-info', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<SystemInfoOptions>(DEFAULT_SYSTEM_INFO_OPTIONS);
-  const [output, setOutput] = useState<string>(toolState?.output || '');
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState<string>(toolState?.error || '');
+  const [options, setOptions] = useState<SystemInfoOptions>((toolState?.options as SystemInfoOptions) ?? (DEFAULT_SYSTEM_INFO_OPTIONS));
   const [systemInfo, setSystemInfo] = useState<SystemInfoType | null>(
-    (toolState?.systemInfo as SystemInfoType) || null
+    (toolState?.systemInfo as SystemInfoType) ?? ((toolState?.systemInfo as SystemInfoType) || null)
   );
+  const [isLoading, setIsLoading] = useState(() => !toolState?.systemInfo);
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (toolState?.error || ''));
+  const output = useMemo(() => systemInfo ? formatSystemInfo(systemInfo, options) : '', [systemInfo, options]);
   const [lastChecked, setLastChecked] = useState<string>('');
-  const [isHydrated, setIsHydrated] = useState(false);
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
   const [wrapText, setWrapText] = useState(true);
 
-  // Use ref to get current options in callback
-  const optionsRef = useRef(options);
-  optionsRef.current = options;
-
   // Track if we've already hydrated to prevent re-hydration on toolState changes
-  const hasHydratedRef = useRef(false);
+
 
   const handleCollectInfo = useCallback(async () => {
     setIsLoading(true);
@@ -67,9 +63,6 @@ export function SystemInfo({ className, instanceId }: SystemInfoProps) {
     try {
       const info = await collectSystemInfo();
       setSystemInfo(info);
-
-      const formatted = formatSystemInfo(info, optionsRef.current);
-      setOutput(formatted);
       setLastChecked(new Date().toLocaleString());
     } catch (err) {
       let errorMessage = 'Failed to collect system information';
@@ -79,65 +72,48 @@ export function SystemInfo({ className, instanceId }: SystemInfoProps) {
       }
 
       setError(errorMessage);
-      setOutput('');
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    if (!hasHydratedRef.current && toolState) {
-      hasHydratedRef.current = true;
-      setIsHydrated(true);
-      if (toolState.options) setOptions(toolState.options as SystemInfoOptions);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.systemInfo) setSystemInfo(toolState.systemInfo as SystemInfoType);
-    } else if (!hasHydratedRef.current) {
-      // Still mark as hydrated even if no toolState exists
-      hasHydratedRef.current = true;
-      setIsHydrated(true);
-    }
-  }, [toolState]);
+
 
   // Update persistent state
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         output,
         error,
         systemInfo: systemInfo || undefined,
       });
-    }
-  }, [options, output, error, systemInfo, isHydrated, updateToolState]);
+  }, [options, output, error, systemInfo, updateToolState]);
 
-  // Auto-collect on mount if no data exists
+  // Collect browser information asynchronously when no prior result exists.
   useEffect(() => {
-    if (isHydrated && !systemInfo && !isLoading) {
-      handleCollectInfo();
-    }
-  }, [isHydrated, systemInfo, isLoading, handleCollectInfo]);
-
-  // Reset state when tool is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_SYSTEM_INFO_OPTIONS);
-      setOutput('');
-      setError('');
-      setSystemInfo(null);
-      setLastChecked('');
-    }
-  }, [toolState, isHydrated]);
-
-  // Update output when options change
-  useEffect(() => {
-    if (isHydrated && systemInfo) {
-      const formatted = formatSystemInfo(systemInfo, options);
-      setOutput(formatted);
-    }
-  }, [options, systemInfo, isHydrated]);
+    if (systemInfo) return;
+    let cancelled = false;
+    const collect = async () => {
+      try {
+        const info = await collectSystemInfo();
+        if (!cancelled) {
+          setSystemInfo(info);
+          setLastChecked(new Date().toLocaleString());
+        }
+      } catch (err) {
+        if (!cancelled) {
+          setError(err instanceof Error ? err.message : 'Failed to collect system information');
+        }
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    };
+    void collect();
+    return () => {
+      cancelled = true;
+    };
+  }, [systemInfo]);
 
   const handleOptionChange = (key: keyof SystemInfoOptions, value: unknown) => {
     setOptions(prev => ({ ...prev, [key]: value }));

@@ -12,7 +12,8 @@ import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
 import { cn } from '@/libs/utils';
 import { ArrowsRightLeftIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
 import { Change, diffLines, diffWordsWithSpace } from 'diff';
-import { useCallback, useEffect, useRef, useState } from 'react';
+import type { OnMount } from '@monaco-editor/react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 interface DiffCheckerProps {
   className?: string;
@@ -39,6 +40,15 @@ interface InlineDecoration {
   type: 'added' | 'removed';
 }
 
+type MonacoEditorInstance = Parameters<OnMount>[0];
+type MonacoInstance = Parameters<OnMount>[1];
+interface LineDecoration {
+  lineNumber: number;
+  type: 'added' | 'removed';
+}
+type ViewZoneAccessor = Parameters<MonacoEditorInstance['changeViewZones']>[0] extends (accessor: infer T) => void ? T : never;
+type MonacoViewZone = Parameters<ViewZoneAccessor['addZone']>[0];
+
 const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
   js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
   ts: 'typescript', tsx: 'typescript',
@@ -55,19 +65,28 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
   const { toolState, updateToolState } = useToolState('diff-checker', instanceId);
 
   // State
-  const [originalText, setOriginalText] = useState<string>('');
-  const [modifiedText, setModifiedText] = useState<string>('');
-  const [options, setOptions] = useState<DiffOptions>(DEFAULT_DIFF_OPTIONS);
-  const [stats, setStats] = useState<DiffStats>({ additions: 0, deletions: 0, changes: 0 });
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [originalText, setOriginalText] = useState<string>((toolState?.originalText as string) ?? (''));
+  const [modifiedText, setModifiedText] = useState<string>((toolState?.modifiedText as string) ?? (''));
+  const [options, setOptions] = useState<DiffOptions>((toolState?.options as DiffOptions) ?? (DEFAULT_DIFF_OPTIONS));
+  const stats = useMemo<DiffStats>(() => {
+    const changes = diffLines(originalText, modifiedText, { ignoreWhitespace: options.ignoreWhitespace });
+    let additions = 0;
+    let deletions = 0;
+    for (const change of changes) {
+      if (change.added) additions += change.count || 0;
+      if (change.removed) deletions += change.count || 0;
+    }
+    return { additions, deletions, changes: additions + deletions };
+  }, [originalText, modifiedText, options.ignoreWhitespace]);
+
   const [originalWrapText, setOriginalWrapText] = useState(false);
   const [modifiedWrapText, setModifiedWrapText] = useState(false);
   const [editorsReady, setEditorsReady] = useState(false);
   const [zoomEpoch, setZoomEpoch] = useState(0);
 
   // Editor refs for decorations
-  const originalEditorRef = useRef<any>(null);
-  const modifiedEditorRef = useRef<any>(null);
+  const originalEditorRef = useRef<MonacoEditorInstance | null>(null);
+  const modifiedEditorRef = useRef<MonacoEditorInstance | null>(null);
   const originalDecorationsRef = useRef<string[]>([]);
   const modifiedDecorationsRef = useRef<string[]>([]);
 
@@ -77,44 +96,27 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
 
   // Scroll sync refs
   const isSyncingScrollRef = useRef<boolean>(false);
-  const originalScrollDisposableRef = useRef<any>(null);
-  const modifiedScrollDisposableRef = useRef<any>(null);
+  const originalScrollDisposableRef = useRef<{ dispose: () => void } | null>(null);
+  const modifiedScrollDisposableRef = useRef<{ dispose: () => void } | null>(null);
 
   // Theme
   const [theme] = useCodeEditorTheme('basicDark');
 
   // Hydrate state from toolState after mount
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.originalText) setOriginalText(toolState.originalText as string);
-      if (toolState.modifiedText) setModifiedText(toolState.modifiedText as string);
-      if (toolState.options) setOptions(toolState.options as DiffOptions);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         originalText,
         modifiedText,
         options,
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originalText, modifiedText, options, isHydrated]);
+  }, [originalText, modifiedText, options]);
 
   // Reset state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOriginalText('');
-      setModifiedText('');
-      setOptions(DEFAULT_DIFF_OPTIONS);
-      setStats({ additions: 0, deletions: 0, changes: 0 });
-    }
-  }, [toolState, isHydrated]);
+
 
   interface ViewZoneData {
     afterLineNumber: number;
@@ -130,10 +132,8 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
       ignoreWhitespace: options.ignoreWhitespace,
     });
 
-    let additions = 0;
-    let deletions = 0;
-    const originalLineDecorations: any[] = [];
-    const modifiedLineDecorations: any[] = [];
+    const originalLineDecorations: LineDecoration[] = [];
+    const modifiedLineDecorations: LineDecoration[] = [];
     const originalInlineDecorations: InlineDecoration[] = [];
     const modifiedInlineDecorations: InlineDecoration[] = [];
     const originalViewZones: ViewZoneData[] = [];
@@ -149,7 +149,6 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
 
       if (change.added) {
         // Standalone addition (not preceded by a removal that already handled it)
-        additions += lineCount;
         const lines = (change.value || '').split('\n').filter((_, idx, arr) => idx < arr.length - 1 || arr[idx] !== '');
         lines.forEach((_, idx) => {
           modifiedLineDecorations.push({
@@ -164,12 +163,12 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
         // Check if next is added (paired change for inline diff)
         const nextChange = i + 1 < lineChanges.length ? lineChanges[i + 1] : null;
 
-        deletions += lineCount;
         const removedLines = (change.value || '').split('\n').filter((_, idx, arr) => idx < arr.length - 1 || arr[idx] !== '');
 
         if (nextChange && nextChange.added) {
           // Paired change - do character-level diff
           const addedLines = (nextChange.value || '').split('\n').filter((_, idx, arr) => idx < arr.length - 1 || arr[idx] !== '');
+          const addedCount = nextChange.count || 0;
           const minLines = Math.min(removedLines.length, addedLines.length);
 
           for (let j = 0; j < minLines; j++) {
@@ -227,9 +226,6 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
             });
           }
 
-          const addedCount = nextChange.count || 0;
-          additions += addedCount;
-
           // Add alignment padding on the shorter side
           if (removedLines.length > addedLines.length) {
             modifiedViewZones.push({
@@ -268,14 +264,8 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
       i++;
     }
 
-    setStats({
-      additions,
-      deletions,
-      changes: additions + deletions,
-    });
-
     // Apply decorations to editors
-    const monaco = (window as any).monaco;
+    const monaco = (window as Window & { monaco?: MonacoInstance }).monaco;
     if (!monaco) return;
 
     // Only insert alignment zones when both panels have content — avoids blocking
@@ -348,13 +338,13 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
     // Phase 1 — remove stale zones from both editors so getTopForLineNumber
     // returns accurate positions unaffected by previously applied zones.
     if (originalEditorRef.current) {
-      originalEditorRef.current.changeViewZones((accessor: any) => {
+      originalEditorRef.current.changeViewZones((accessor) => {
         originalViewZoneIdsRef.current.forEach((id) => accessor.removeZone(id));
         originalViewZoneIdsRef.current = [];
       });
     }
     if (modifiedEditorRef.current) {
-      modifiedEditorRef.current.changeViewZones((accessor: any) => {
+      modifiedEditorRef.current.changeViewZones((accessor) => {
         modifiedViewZoneIdsRef.current.forEach((id) => accessor.removeZone(id));
         modifiedViewZoneIdsRef.current = [];
       });
@@ -366,11 +356,11 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
     const usePixelZones = originalWrapText || modifiedWrapText;
 
     if (originalEditorRef.current) {
-      originalEditorRef.current.changeViewZones((accessor: any) => {
+      originalEditorRef.current.changeViewZones((accessor) => {
         originalViewZones.forEach((zone) => {
           const domNode = document.createElement('div');
           domNode.className = 'diff-placeholder-zone';
-          let zoneDef: Record<string, unknown> = { afterLineNumber: zone.afterLineNumber, domNode };
+          let zoneDef: MonacoViewZone = { afterLineNumber: zone.afterLineNumber, domNode, heightInLines: zone.heightInLines };
           if (usePixelZones && modifiedEditorRef.current) {
             const topStart = modifiedEditorRef.current.getTopForLineNumber(zone.otherEditorStart);
             const topEnd = modifiedEditorRef.current.getTopForLineNumber(zone.otherEditorStart + zone.otherEditorCount);
@@ -386,11 +376,11 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
     }
 
     if (modifiedEditorRef.current) {
-      modifiedEditorRef.current.changeViewZones((accessor: any) => {
+      modifiedEditorRef.current.changeViewZones((accessor) => {
         modifiedViewZones.forEach((zone) => {
           const domNode = document.createElement('div');
           domNode.className = 'diff-placeholder-zone';
-          let zoneDef: Record<string, unknown> = { afterLineNumber: zone.afterLineNumber, domNode };
+          let zoneDef: MonacoViewZone = { afterLineNumber: zone.afterLineNumber, domNode, heightInLines: zone.heightInLines };
           if (usePixelZones && originalEditorRef.current) {
             const topStart = originalEditorRef.current.getTopForLineNumber(zone.otherEditorStart);
             const topEnd = originalEditorRef.current.getTopForLineNumber(zone.otherEditorStart + zone.otherEditorCount);
@@ -433,7 +423,7 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
     const modifiedEditor = modifiedEditorRef.current;
 
     // Helper function to calculate scroll percentage
-    const getScrollPercentage = (editor: any): number => {
+    const getScrollPercentage = (editor: MonacoEditorInstance): number => {
       const scrollTop = editor.getScrollTop();
       const scrollHeight = editor.getScrollHeight();
       const editorHeight = editor.getLayoutInfo().height;
@@ -444,7 +434,7 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
     };
 
     // Helper function to set scroll position by percentage
-    const setScrollPercentage = (editor: any, percentage: number, scrollLeft?: number): void => {
+    const setScrollPercentage = (editor: MonacoEditorInstance, percentage: number, scrollLeft?: number): void => {
       const scrollHeight = editor.getScrollHeight();
       const editorHeight = editor.getLayoutInfo().height;
       const maxScrollTop = Math.max(0, scrollHeight - editorHeight);
@@ -491,11 +481,11 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
     };
 
     // Set up scroll listeners
-    originalScrollDisposableRef.current = originalEditor.onDidScrollChange((e: any) => {
+    originalScrollDisposableRef.current = originalEditor.onDidScrollChange(() => {
       syncOriginalToModified();
     });
 
-    modifiedScrollDisposableRef.current = modifiedEditor.onDidScrollChange((e: any) => {
+    modifiedScrollDisposableRef.current = modifiedEditor.onDidScrollChange(() => {
       syncModifiedToOriginal();
     });
 
@@ -531,12 +521,12 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
     setOptions((prev) => ({ ...prev, language: lang }));
   };
 
-  const handleOriginalEditorMount = (editor: any) => {
+  const handleOriginalEditorMount = (editor: MonacoEditorInstance) => {
     originalEditorRef.current = editor;
     // Increment zoomEpoch when font size or line height changes so pixel-based
     // alignment zones are recomputed at the new scale.
-    editor.onDidChangeConfiguration((e: any) => {
-      const monaco = (window as any).monaco;
+    editor.onDidChangeConfiguration((e) => {
+      const monaco = (window as Window & { monaco?: MonacoInstance }).monaco;
       if (
         monaco &&
         (e.hasChanged(monaco.editor.EditorOption.fontSize) ||
@@ -550,10 +540,10 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
     }
   };
 
-  const handleModifiedEditorMount = (editor: any) => {
+  const handleModifiedEditorMount = (editor: MonacoEditorInstance) => {
     modifiedEditorRef.current = editor;
-    editor.onDidChangeConfiguration((e: any) => {
-      const monaco = (window as any).monaco;
+    editor.onDidChangeConfiguration((e) => {
+      const monaco = (window as Window & { monaco?: MonacoInstance }).monaco;
       if (
         monaco &&
         (e.hasChanged(monaco.editor.EditorOption.fontSize) ||

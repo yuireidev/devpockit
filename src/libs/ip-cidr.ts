@@ -325,7 +325,6 @@ export function parseCidr(cidr: string): CidrParseResult {
       const addrBytes = addr.toByteArray();
       const hostBits = 32 - prefixLength;
       const hostMask = (1 << hostBits) - 1;
-
       // Calculate broadcast address
       const broadcastBytes = [...addrBytes];
       for (let i = 0; i < 4; i++) {
@@ -534,8 +533,6 @@ export function ipToCidr(ip: string, prefixLength: number): IpToCidrResult {
       // Calculate network address for IPv4
       const addrBytes = addr.toByteArray();
       const hostBits = 32 - prefixLength;
-      const hostMask = (1 << hostBits) - 1;
-
       // Calculate network address
       const networkBytes = [...addrBytes];
       for (let i = 0; i < 4; i++) {

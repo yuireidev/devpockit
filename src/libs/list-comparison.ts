@@ -78,7 +78,7 @@ export function parseListInput(input: string, format: InputFormat, caseSensitive
         } else {
           throw new Error('Input is not a valid JSON array');
         }
-      } catch (error) {
+      } catch {
         throw new Error('Invalid JSON array format');
       }
       break;
@@ -91,7 +91,7 @@ export function parseListInput(input: string, format: InputFormat, caseSensitive
         } else {
           throw new Error('Input is not a valid YAML array');
         }
-      } catch (error) {
+      } catch {
         throw new Error('Invalid YAML array format');
       }
       break;
@@ -124,7 +124,6 @@ export function parseListInput(input: string, format: InputFormat, caseSensitive
 
       while (i < content.length) {
         const char = content[i];
-        const prevChar = i > 0 ? content[i - 1] : '';
         const nextChar = i + 1 < content.length ? content[i + 1] : '';
 
         if (!inString) {

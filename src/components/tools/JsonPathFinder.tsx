@@ -6,7 +6,7 @@ import type { CodeOutputTab } from '@/components/ui/code-panel';
 import { CodePanel } from '@/components/ui/code-panel';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Input } from '@/components/ui/input';
-import { JsonTreeView } from '@/components/ui/json-tree-view';
+import { JsonTreeView, type JsonValue } from '@/components/ui/json-tree-view';
 import { Label } from '@/components/ui/label';
 import { LoadFileButton } from '@/components/ui/load-file-button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -27,7 +27,7 @@ import {
 } from '@/libs/json-path-finder';
 import { cn } from '@/libs/utils';
 import { ArrowDownTrayIcon, ArrowPathIcon, ChevronDownIcon, LinkIcon, MagnifyingGlassIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 
 interface JsonPathFinderProps {
   className?: string;
@@ -38,15 +38,15 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
   const { toolState, updateToolState } = useToolState('json-path-finder', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<JsonPathFinderOptions>(DEFAULT_JSON_PATH_OPTIONS);
-  const [jsonInput, setJsonInput] = useState<string>('');
-  const [pathInput, setPathInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
+  const [options, setOptions] = useState<JsonPathFinderOptions>((toolState?.options as JsonPathFinderOptions) ?? (DEFAULT_JSON_PATH_OPTIONS));
+  const [jsonInput, setJsonInput] = useState<string>((toolState?.jsonInput as string) ?? (''));
+  const [pathInput, setPathInput] = useState<string>((toolState?.pathInput as string) ?? (''));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isEvaluating, setIsEvaluating] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [result, setResult] = useState<JsonPathResult | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>('tree');
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [result, setResult] = useState<JsonPathResult | null>((toolState?.result as JsonPathResult) ?? (null));
+
+  const [activeTab, setActiveTab] = useState<string>((toolState?.activeTab as string) ?? ('tree'));
   const [getExpandedJson, setGetExpandedJson] = useState<(() => string) | null>(null);
   // Tree View search state
   const [treeSearchTerm, setTreeSearchTerm] = useState<string>('');
@@ -62,24 +62,11 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
   const [outputWrapText, setOutputWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) setOptions(toolState.options as JsonPathFinderOptions);
-      if (toolState.jsonInput) setJsonInput(toolState.jsonInput as string);
-      if (toolState.pathInput) setPathInput(toolState.pathInput as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.result) setResult(toolState.result as JsonPathResult);
-      if (toolState.activeTab) setActiveTab(toolState.activeTab as string);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         jsonInput,
         pathInput,
@@ -88,22 +75,11 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
         result: result || undefined,
         activeTab
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, jsonInput, pathInput, output, error, result, activeTab, isHydrated]);
+  }, [options, jsonInput, pathInput, output, error, result, activeTab]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_JSON_PATH_OPTIONS);
-      setJsonInput('');
-      setPathInput('');
-      setOutput('');
-      setError('');
-      setResult(null);
-      setActiveTab('tree');
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleEvaluate = async () => {
     if (!jsonInput.trim()) {
@@ -134,9 +110,9 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
       }
 
       // Parse JSON
-      let jsonData: any;
+      let jsonData: JsonValue;
       try {
-        jsonData = JSON.parse(jsonInput);
+        jsonData = JSON.parse(jsonInput) as JsonValue;
       } catch (parseError) {
         setError(parseError instanceof Error ? parseError.message : 'Invalid JSON format');
         setOutput('');
@@ -263,16 +239,10 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
     ];
   }, [output]);
 
-  // Ensure activeTab is valid when outputTabs change
-  useEffect(() => {
-    if (outputTabs.length > 0) {
-      const treeTab = outputTabs.find(tab => tab.id === 'tree');
-      const currentTab = outputTabs.find(tab => tab.id === activeTab);
-      if (!currentTab) {
-        setActiveTab(treeTab ? 'tree' : outputTabs[0].id);
-      }
-    }
-  }, [outputTabs, activeTab]);
+  const selectedOutputTab = outputTabs.find(tab => tab.id === activeTab)?.id
+    ?? outputTabs.find(tab => tab.id === 'tree')?.id
+    ?? outputTabs[0]?.id
+    ?? activeTab;
 
   // Tree View expand/collapse controls registered by JsonTreeView (used by footer buttons)
   const [treeExpandAll, setTreeExpandAll] = useState<(() => void) | null>(null);
@@ -329,7 +299,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
 
   // Custom copy handler for tree view
   const handleTreeViewCopy = useCallback(async (): Promise<string | null> => {
-    if (activeTab === 'tree') {
+    if (selectedOutputTab === 'tree') {
       if (getExpandedJson) {
         try {
           const json = getExpandedJson();
@@ -341,7 +311,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
       return '';
     }
     return null;
-  }, [activeTab, getExpandedJson]);
+  }, [selectedOutputTab, getExpandedJson]);
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
@@ -532,7 +502,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
             {/* Output Panel */}
             <CodePanel fillHeight={true}
               tabs={outputTabs}
-              activeTab={activeTab}
+              activeTab={selectedOutputTab}
               onTabChange={setActiveTab}
               customTabContent={renderCustomTabContent}
               onCopy={handleTreeViewCopy}
@@ -541,10 +511,10 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               theme={theme}
               wrapText={outputWrapText}
               onWrapTextChange={setOutputWrapText}
-              showWrapToggle={activeTab === 'results'}
+              showWrapToggle={selectedOutputTab === 'results'}
               headerActions={
                 <>
-                  {activeTab === 'tree' && result ? (
+                  {selectedOutputTab === 'tree' && result ? (
                     <span
                       className={cn(
                         'px-2.5 py-1 rounded-full text-xs font-semibold shrink-0',
@@ -562,7 +532,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                         : ''}
                     </span>
                   ) : null}
-                  {activeTab === 'results' && output ? (
+                  {selectedOutputTab === 'results' && output ? (
                     <Button
                       variant="outline"
                       size="sm"
@@ -576,7 +546,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                 </>
               }
               footerRightContent={
-                activeTab === 'tree' ? (
+                selectedOutputTab === 'tree' ? (
                   <Select
                     value={options.sortKeys}
                     onValueChange={(value: 'none' | 'asc' | 'desc') =>
@@ -598,7 +568,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               }
               footerLeftContent={
                 <div className="flex-1 flex items-center gap-2">
-                  {activeTab === 'tree' && (
+                  {selectedOutputTab === 'tree' && (
                     <>
                       <div className="flex-1 relative min-w-0">
                         <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" aria-hidden="true" />
@@ -630,7 +600,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                       </Button>
                     </>
                   )}
-                  {activeTab === 'results' && output && result && (
+                  {selectedOutputTab === 'results' && output && result && (
                     <>
                       <span>{result.count} match{result.count !== 1 ? 'es' : ''}</span>
                       <span>{getCharacterCount(output)} characters</span>

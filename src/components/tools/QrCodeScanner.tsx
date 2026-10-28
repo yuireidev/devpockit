@@ -26,7 +26,7 @@ import {
   Share,
   Trash2
 } from 'lucide-react';
-import { startTransition, useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { QR_SCANNER_CONFIG } from '../../config/qr-code-scanner-config';
 
 interface QrCodeScannerProps {
@@ -36,38 +36,37 @@ interface QrCodeScannerProps {
   onError?: (error: string) => void;
 }
 
+type CameraStatus = ReturnType<CameraManager['getCameraStatus']> & {
+  facingMode?: string;
+  width?: number;
+  height?: number;
+};
+
 export function QrCodeScanner({ className, instanceId, onResult, onError }: QrCodeScannerProps) {
+  const { toolState, updateToolState } = useToolState('qr-code-scanner', instanceId);
+
   // State management
   const [isScanning, setIsScanning] = useState(false);
   const [isCameraActive, setIsCameraActive] = useState(false);
-  const [results, setResults] = useState<QrDecoderResult[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [state, setState] = useState<string>('idle');
-  const [options, setOptions] = useState<QrDecoderOptions>(QR_SCANNER_CONFIG.DEFAULT_OPTIONS);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [results, setResults] = useState<QrDecoderResult[]>(() => (toolState?.results as QrDecoderResult[] | undefined) ?? []);
+  const [error, setError] = useState<string | null>(() => (toolState?.error as string | undefined) ?? null);
+  const [state, setState] = useState<string>(() => (toolState?.state as string | undefined) ?? 'idle');
+  const [options] = useState<QrDecoderOptions>(() => (toolState?.options as QrDecoderOptions | undefined) ?? QR_SCANNER_CONFIG.DEFAULT_OPTIONS);
 
   // Camera state
   const [currentCamera, setCurrentCamera] = useState<string>('environment');
   const [isFlashOn, setIsFlashOn] = useState(false);
-  const [cameraStatus, setCameraStatus] = useState<any>(null);
+  const [cameraStatus, setCameraStatus] = useState<CameraStatus | null>(null);
 
   // UI state
-  const [showParsedData, setShowParsedData] = useState(true);
+  const [showParsedData] = useState(true);
 
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null);
   const cameraManagerRef = useRef<CameraManager | null>(null);
-  const prevStateRef = useRef<any>(null);
+  const prevStateRef = useRef<string | null>(null);
 
   // Tool state management
-  const { toolState, updateToolState, clearToolState } = useToolState('qr-code-scanner', instanceId);
-
-  useEffect(() => {
-    startTransition(() => {
-      setIsHydrated(true);
-    });
-  }, []);
-
   // Initialize camera manager
   useEffect(() => {
     if (!cameraManagerRef.current) {
@@ -80,47 +79,16 @@ export function QrCodeScanner({ className, instanceId, onResult, onError }: QrCo
     };
   }, []);
 
-  // Handle tool state updates
-  useEffect(() => {
-    if (toolState && Object.keys(toolState).length > 0) {
-      const { options: savedOptions, results: savedResults, state: savedState } = toolState;
-      startTransition(() => {
-        if (savedOptions) setOptions(savedOptions as QrDecoderOptions);
-        if (savedResults) setResults(savedResults as QrDecoderResult[]);
-        if (savedState) setState(savedState as string);
-      });
-    }
-  }, [toolState]);
-
   // Update tool state when state changes
   useEffect(() => {
-    if (!isHydrated) return;
     const currentState = { options, results, error: error || undefined, state };
-    const prevState = prevStateRef.current;
+    const serializedState = JSON.stringify(currentState);
 
-    if (!prevState || JSON.stringify(currentState) !== JSON.stringify(prevState)) {
+    if (prevStateRef.current !== serializedState) {
       updateToolState(currentState);
-      prevStateRef.current = currentState;
+      prevStateRef.current = serializedState;
     }
-  }, [options, results, error, state, updateToolState, isHydrated]);
-
-  // Clear tool state when switching tools
-  useEffect(() => {
-    if (!toolState || Object.keys(toolState).length === 0) {
-      startTransition(() => {
-        setOptions(QR_SCANNER_CONFIG.DEFAULT_OPTIONS);
-        setResults([]);
-        setError(null);
-        setState('idle');
-        setIsScanning(false);
-        setIsCameraActive(false);
-      });
-      if (cameraManagerRef.current) {
-        cameraManagerRef.current.cleanup();
-      }
-      prevStateRef.current = null;
-    }
-  }, [toolState, clearToolState]);
+  }, [options, results, error, state, updateToolState]);
 
   // Initialize camera
   const initializeCamera = useCallback(async () => {
@@ -292,7 +260,7 @@ export function QrCodeScanner({ className, instanceId, onResult, onError }: QrCo
   const copyToClipboard = useCallback(async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-    } catch (err) {
+    } catch {
       setError('Failed to copy to clipboard');
     }
   }, []);
@@ -306,7 +274,7 @@ export function QrCodeScanner({ className, instanceId, onResult, onError }: QrCo
           text: result.data,
           url: result.format === 'url' ? result.data : undefined
         });
-      } catch (err) {
+      } catch {
         // User cancelled or error
       }
     } else {

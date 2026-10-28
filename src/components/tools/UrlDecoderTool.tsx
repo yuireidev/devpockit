@@ -11,7 +11,7 @@ import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
 import { decodeUrl, type UrlEncoderOptions, type UrlEncoderResult } from '@/libs/url-encoder';
 import { cn } from '@/libs/utils';
 import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 
 interface UrlDecoderToolProps {
   className?: string;
@@ -21,61 +21,37 @@ interface UrlDecoderToolProps {
 export function UrlDecoderTool({ className, instanceId }: UrlDecoderToolProps) {
   const { toolState, updateToolState } = useToolState('url-decoder-tool', instanceId);
 
-  const [options, setOptions] = useState<UrlEncoderOptions>(DEFAULT_URL_OPTIONS);
-  const [input, setInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
+  const [options, setOptions] = useState<UrlEncoderOptions>((toolState?.options as UrlEncoderOptions) ?? (DEFAULT_URL_OPTIONS));
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
   const [stats, setStats] = useState<{
     originalLength: number;
     decodedLength: number;
-  } | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
+  } | null>((toolState?.stats as { originalLength: number; decodedLength: number }) ?? (null));
+
 
   const [theme] = useCodeEditorTheme('basicDark');
   const [inputWrapText, setInputWrapText] = useState(true);
   const [outputWrapText, setOutputWrapText] = useState(true);
 
   // Track if we've already hydrated to prevent re-hydration on toolState changes
-  const hasHydratedRef = useRef(false);
+
+
+
 
   useEffect(() => {
-    if (!hasHydratedRef.current && toolState) {
-      hasHydratedRef.current = true;
-      setIsHydrated(true);
-      if (toolState.options) setOptions(toolState.options as UrlEncoderOptions);
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.stats) setStats(toolState.stats as { originalLength: number; decodedLength: number });
-    } else if (!hasHydratedRef.current) {
-      // Still mark as hydrated even if no toolState exists
-      hasHydratedRef.current = true;
-      setIsHydrated(true);
-    }
-  }, [toolState]);
-
-  useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         input,
         output,
         error,
         stats: stats || undefined
       });
-    }
-  }, [options, input, output, error, stats, isHydrated, updateToolState]);
+  }, [options, input, output, error, stats, updateToolState]);
 
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_URL_OPTIONS);
-      setInput('');
-      setOutput('');
-      setError('');
-      setStats(null);
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleDecode = async () => {
     if (!input.trim()) {

@@ -5,6 +5,21 @@
 
 import { parse } from 'yaml';
 
+type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+
+interface GeneratedSchema {
+  [key: string]: unknown;
+  type?: string;
+  description?: string;
+  examples?: JsonValue[];
+  properties?: Record<string, GeneratedSchema>;
+  required?: string[] | boolean;
+  items?: GeneratedSchema | { oneOf: GeneratedSchema[] };
+  minItems?: number;
+  maxItems?: number;
+  additionalProperties?: boolean;
+}
+
 export interface JsonSchemaOptions {
   strictTypes: boolean; // If true, uses specific types (string, number, etc.), otherwise uses more generic types
   includeExamples: boolean; // Include example values in schema
@@ -18,7 +33,7 @@ export interface JsonSchemaOptions {
 
 export interface JsonSchemaResult {
   success: boolean;
-  schema: any; // JSON Schema object
+  schema: GeneratedSchema; // JSON Schema object
   error?: string;
   format: 'json' | 'yaml';
 }
@@ -36,9 +51,9 @@ export const DEFAULT_SCHEMA_OPTIONS: JsonSchemaOptions = {
  * Generate JSON Schema from JSON data
  */
 export function generateJsonSchema(
-  data: any,
+  data: JsonValue,
   options: JsonSchemaOptions = DEFAULT_SCHEMA_OPTIONS
-): any {
+): GeneratedSchema {
   if (data === null) {
     return { type: 'null' };
   }
@@ -58,8 +73,8 @@ export function generateJsonSchema(
 /**
  * Generate schema for primitive types
  */
-function generatePrimitiveSchema(value: any, options: JsonSchemaOptions): any {
-  const schema: any = {};
+function generatePrimitiveSchema(value: JsonValue, options: JsonSchemaOptions): GeneratedSchema {
+  const schema: GeneratedSchema = {};
 
   if (options.strictTypes) {
     if (typeof value === 'string') {
@@ -92,8 +107,8 @@ function generatePrimitiveSchema(value: any, options: JsonSchemaOptions): any {
 /**
  * Generate schema for arrays
  */
-function generateArraySchema(array: any[], options: JsonSchemaOptions): any {
-  const schema: any = {
+function generateArraySchema(array: JsonValue[], options: JsonSchemaOptions): GeneratedSchema {
+  const schema: GeneratedSchema = {
     type: 'array'
   };
 
@@ -148,12 +163,12 @@ function generateArraySchema(array: any[], options: JsonSchemaOptions): any {
 /**
  * Generate schema for objects
  */
-function generateObjectSchema(obj: any, options: JsonSchemaOptions): any {
-  const schema: any = {
+function generateObjectSchema(obj: Record<string, JsonValue>, options: JsonSchemaOptions): GeneratedSchema {
+  const schema: GeneratedSchema = {
     type: 'object'
   };
 
-  const properties: any = {};
+  const properties: Record<string, GeneratedSchema> = {};
   const required: string[] = [];
 
   for (const key in obj) {
@@ -193,8 +208,8 @@ function generateObjectSchema(obj: any, options: JsonSchemaOptions): any {
 /**
  * Get unique schemas from an array
  */
-function getUniqueSchemas(schemas: any[]): any[] {
-  const unique: any[] = [];
+function getUniqueSchemas(schemas: GeneratedSchema[]): GeneratedSchema[] {
+  const unique: GeneratedSchema[] = [];
   const seen = new Set<string>();
 
   for (const schema of schemas) {
@@ -211,7 +226,7 @@ function getUniqueSchemas(schemas: any[]): any[] {
 /**
  * Generate description from property name
  */
-function generateDescription(key: string, value: any): string {
+function generateDescription(key: string, value: JsonValue): string {
   // Convert camelCase, snake_case, kebab-case to readable text
   const readable = key
     .replace(/([A-Z])/g, ' $1')
@@ -366,7 +381,7 @@ export function generateSchema(
 /**
  * Format schema as JSON string
  */
-export function formatSchema(schema: any, indent: number = 2): string {
+export function formatSchema(schema: GeneratedSchema, indent: number = 2): string {
   return JSON.stringify(schema, null, indent);
 }
 

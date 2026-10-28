@@ -21,11 +21,10 @@ export interface CronStats {
 export function parseCronExpression(expression: string, nextRunCount: number = 5, timezone?: string): CronParseResult {
   try {
     // Validate and parse the cron expression
-    const options: any = {};
-    if (timezone && timezone !== 'local') {
-      options.tz = timezone;
-    }
-    const interval = CronExpressionParser.parse(expression, options);
+    const interval = CronExpressionParser.parse(
+      expression,
+      timezone && timezone !== 'local' ? { tz: timezone } : {}
+    );
 
     // Generate human-readable description
     const humanReadable = generateHumanReadable(expression);
@@ -135,7 +134,14 @@ function generateHumanReadable(expression: string): string {
   const parts: string[] = [];
 
   // Helper function to parse field value
-  const parseField = (field: string, fieldName: string, min: number, max: number): { type: 'every' | 'step' | 'range' | 'list' | 'specific', value?: any } => {
+  type ParsedCronField =
+    | { type: 'every' }
+    | { type: 'step'; value: number }
+    | { type: 'range'; value: { start: number; end: number } }
+    | { type: 'list'; value: number[] }
+    | { type: 'specific'; value: number };
+
+  const parseField = (field: string): ParsedCronField => {
     // Every
     if (field === '*') {
       return { type: 'every' };
@@ -178,7 +184,7 @@ function generateHumanReadable(expression: string): string {
   };
 
   // Minute
-  const minuteParsed = parseField(minute, 'minute', 0, 59);
+  const minuteParsed = parseField(minute);
   if (minuteParsed.type === 'every') {
     parts.push('Every minute');
   } else if (minuteParsed.type === 'step') {
@@ -198,7 +204,7 @@ function generateHumanReadable(expression: string): string {
   }
 
   // Hour
-  const hourParsed = parseField(hour, 'hour', 0, 23);
+  const hourParsed = parseField(hour);
   if (hourParsed.type === 'every') {
     // Already covered by "Every minutes"
   } else if (hourParsed.type === 'step') {
@@ -223,7 +229,7 @@ function generateHumanReadable(expression: string): string {
   }
 
   // Day
-  const dayParsed = parseField(day, 'day', 1, 31);
+  const dayParsed = parseField(day);
   if (dayParsed.type === 'range') {
     const { start, end } = dayParsed.value;
     parts.push(`day ${start} to ${end}`);
@@ -237,7 +243,7 @@ function generateHumanReadable(expression: string): string {
   }
 
   // Month
-  const monthParsed = parseField(month, 'month', 1, 12);
+  const monthParsed = parseField(month);
   if (monthParsed.type === 'range') {
     const { start, end } = monthParsed.value;
     const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
@@ -262,7 +268,7 @@ function generateHumanReadable(expression: string): string {
   }
 
   // Weekday
-  const weekdayParsed = parseField(weekday, 'weekday', 0, 6);
+  const weekdayParsed = parseField(weekday);
   if (weekdayParsed.type === 'range') {
     const { start, end } = weekdayParsed.value;
     const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];

@@ -1,5 +1,5 @@
 // Dynamic component loader for static export compatibility
-export const toolComponentLoaders: Record<string, () => Promise<any>> = {
+export const toolComponentLoaders: Record<string, () => Promise<unknown>> = {
   LoremIpsumGenerator: () => import('@/components/tools/LoremIpsumGenerator').then((m) => m.LoremIpsumGenerator),
   JsonFormatter: () => import('@/components/tools/JsonFormatter').then((m) => m.JsonFormatter),
   XmlFormatter: () => import('@/components/tools/XmlFormatter').then((m) => m.XmlFormatter),

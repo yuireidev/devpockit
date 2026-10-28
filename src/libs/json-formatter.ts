@@ -18,6 +18,8 @@ export interface JsonFormatResult {
   compressionRatio?: number;
 }
 
+type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+
 /**
  * Format JSON based on options
  */
@@ -26,7 +28,7 @@ export function formatJson(jsonString: string, options: JsonFormatOptions): Json
 
   try {
     // Parse JSON to validate
-    const parsed = JSON.parse(jsonString);
+    const parsed = JSON.parse(jsonString) as JsonValue;
 
     let formatted: string;
 
@@ -85,7 +87,7 @@ export function validateJson(jsonString: string): { isValid: boolean; error?: st
 /**
  * Sort object keys recursively
  */
-export function sortObjectKeys(obj: any, sortOrder: 'asc' | 'desc'): any {
+export function sortObjectKeys(obj: JsonValue, sortOrder: 'asc' | 'desc'): JsonValue {
   if (obj === null || typeof obj !== 'object') {
     return obj;
   }
@@ -94,7 +96,7 @@ export function sortObjectKeys(obj: any, sortOrder: 'asc' | 'desc'): any {
     return obj.map(item => sortObjectKeys(item, sortOrder));
   }
 
-  const sorted: any = {};
+  const sorted: Record<string, JsonValue> = {};
   const keys = Object.keys(obj);
 
   if (sortOrder === 'asc') {
@@ -123,7 +125,7 @@ export function getJsonStats(jsonString: string): {
   const lines = jsonString.split('\n').length;
 
   try {
-    const parsed = JSON.parse(jsonString);
+    const parsed = JSON.parse(jsonString) as JsonValue;
     const { depth, keys } = analyzeJsonStructure(parsed);
 
     return { size, lines, depth, keys };
@@ -135,7 +137,7 @@ export function getJsonStats(jsonString: string): {
 /**
  * Analyze JSON structure for statistics
  */
-function analyzeJsonStructure(obj: any, currentDepth = 0): { depth: number; keys: number } {
+function analyzeJsonStructure(obj: JsonValue, currentDepth = 0): { depth: number; keys: number } {
   if (obj === null || typeof obj !== 'object') {
     return { depth: currentDepth, keys: 0 };
   }

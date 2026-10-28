@@ -67,11 +67,11 @@ function copyText(text: string) {
 export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookiesExplainerProps) {
   const { toolState, updateToolState } = useToolState(TOOL_ID, instanceId);
 
-  const [mainTab, setMainTab] = useState<MainTab>('headers');
-  const [headersText, setHeadersText] = useState('');
-  const [cookieRequestText, setCookieRequestText] = useState('');
-  const [setCookieText, setSetCookieText] = useState('');
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [mainTab, setMainTab] = useState<MainTab>((toolState?.mainTab as MainTab) ?? ('headers'));
+  const [headersText, setHeadersText] = useState((toolState?.headersText as string) ?? (''));
+  const [cookieRequestText, setCookieRequestText] = useState((toolState?.cookieRequestText as string) ?? (''));
+  const [setCookieText, setSetCookieText] = useState((toolState?.setCookieText as string) ?? (''));
+
   const [theme] = useCodeEditorTheme('basicDark');
   const [inputWrapText, setInputWrapText] = useState(true);
 
@@ -79,43 +79,19 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
     null
   );
 
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.mainTab) setMainTab(toolState.mainTab as MainTab);
-      if (toolState.headersText !== undefined && toolState.headersText !== null) {
-        setHeadersText(toolState.headersText as string);
-      }
-      if (toolState.cookieRequestText !== undefined && toolState.cookieRequestText !== null) {
-        setCookieRequestText(toolState.cookieRequestText as string);
-      }
-      if (toolState.setCookieText !== undefined && toolState.setCookieText !== null) {
-        setSetCookieText(toolState.setCookieText as string);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         mainTab,
         headersText,
         cookieRequestText,
         setCookieText,
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mainTab, headersText, cookieRequestText, setCookieText, isHydrated]);
+  }, [mainTab, headersText, cookieRequestText, setCookieText]);
 
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setHeadersText('');
-      setCookieRequestText('');
-      setSetCookieText('');
-      setMainTab('headers');
-    }
-  }, [toolState, isHydrated]);
+
 
   const parsedHeaders = useMemo(() => parseHttpHeaderBlock(headersText), [headersText]);
   const parsedRequestCookies = useMemo(

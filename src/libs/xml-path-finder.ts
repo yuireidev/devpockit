@@ -14,7 +14,7 @@ export interface XmlPathResult {
 export interface XmlNode {
   type: 'element' | 'attribute' | 'text' | 'comment' | 'cdata';
   name: string;
-  value?: any;
+  value?: unknown;
   attributes?: Record<string, string>;
   xpath: string;
   xml?: string; // Serialized XML representation
@@ -161,7 +161,7 @@ function evaluateXPathExpression(doc: Document, xpath: string): XPathEvaluationR
         paths.push(xpathString);
       }
     }
-  } catch (error) {
+  } catch {
     // If native evaluation fails, try custom evaluation for basic paths
     const customResult = evaluateXPathCustom(doc, xpath);
     return customResult;
@@ -439,7 +439,7 @@ export function formatXPathResults(result: XmlPathResult): string {
     return 'No matches found';
   }
 
-  const output: any = {
+  const output = {
     count: result.count,
     matches: result.matches.map((match, index) => ({
       path: result.paths[index] || `[${index}]`,
@@ -536,7 +536,7 @@ export function parseXmlToTree(xmlString: string): {
     return { root: null, error: 'No root element found' };
   }
 
-  const root = xmlTreeNodeFromElement(rootElement, '/');
+  const root = xmlTreeNodeFromElement(rootElement);
   return { root };
 }
 
@@ -549,7 +549,7 @@ export interface XmlTreeNode {
   children: XmlTreeNode[];
 }
 
-function xmlTreeNodeFromElement(element: Element, basePath: string): XmlTreeNode {
+function xmlTreeNodeFromElement(element: Element): XmlTreeNode {
   const xpath = getXPathForElement(element, element.ownerDocument);
 
   // Get attributes
@@ -565,7 +565,7 @@ function xmlTreeNodeFromElement(element: Element, basePath: string): XmlTreeNode
     const child = element.childNodes[i];
 
     if (child.nodeType === Node.ELEMENT_NODE) {
-      children.push(xmlTreeNodeFromElement(child as Element, ''));
+      children.push(xmlTreeNodeFromElement(child as Element));
     } else if (child.nodeType === Node.TEXT_NODE && (child as Text).textContent?.trim()) {
       const textNode = child as Text;
       children.push({

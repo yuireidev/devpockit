@@ -26,50 +26,31 @@ interface TextMinifierProps {
 export function TextMinifier({ className, instanceId }: TextMinifierProps) {
   const { toolState, updateToolState } = useToolState('text-minifier', instanceId);
 
-  const [options, setOptions] = useState<TextMinifyOptions>(DEFAULT_TEXT_MINIFY_OPTIONS);
-  const [input, setInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
-  const [error, setError] = useState<string>('');
+  const [options, setOptions] = useState<TextMinifyOptions>((toolState?.options as TextMinifyOptions) ?? (DEFAULT_TEXT_MINIFY_OPTIONS));
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
   const [isMinifying, setIsMinifying] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
+
   const [stats, setStats] = useState<Omit<TextMinifyResult, 'output'> | null>(null);
 
   const [theme] = useCodeEditorTheme('basicDark');
   const [inputWrapText, setInputWrapText] = useState(true);
   const [outputWrapText, setOutputWrapText] = useState(true);
 
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) setOptions(toolState.options as TextMinifyOptions);
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         input,
         output,
         error,
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, input, output, error, isHydrated]);
+  }, [options, input, output, error]);
 
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_TEXT_MINIFY_OPTIONS);
-      setInput('');
-      setOutput('');
-      setError('');
-      setStats(null);
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleMinify = async () => {
     if (!input.trim()) {

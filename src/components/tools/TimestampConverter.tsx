@@ -148,48 +148,29 @@ Leap Year:    ${new Date(date.getFullYear(), 1, 29).getDate() === 29 ? 'Yes' : '
 export function TimestampConverter({ className, instanceId }: TimestampConverterProps) {
   const { toolState, updateToolState } = useToolState('timestamp-converter', instanceId);
 
-  const [input, setInput] = useState<string>('');
-  const [inputFormat, setInputFormat] = useState<InputFormat>(DEFAULT_OPTIONS.inputFormat);
-  const [timezone, setTimezone] = useState<string>(DEFAULT_OPTIONS.timezone);
-  const [output, setOutput] = useState<string>('');
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
+  const [inputFormat, setInputFormat] = useState<InputFormat>((toolState?.inputFormat as InputFormat) ?? (DEFAULT_OPTIONS.inputFormat));
+  const [timezone, setTimezone] = useState<string>((toolState?.timezone as string) ?? (DEFAULT_OPTIONS.timezone));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [error, setError] = useState<string>('');
   const [isConverting, setIsConverting] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
   const [wrapText, setWrapText] = useState(true);
 
   // Hydrate state
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.inputFormat) setInputFormat(toolState.inputFormat as InputFormat);
-      if (toolState.timezone) setTimezone(toolState.timezone as string);
-      if (toolState.output) setOutput(toolState.output as string);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Persist state
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({ input, inputFormat, timezone, output });
-    }
+    updateToolState({ input, inputFormat, timezone, output });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, inputFormat, timezone, output, isHydrated]);
+  }, [input, inputFormat, timezone, output]);
 
   // Reset state when tool is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setInput('');
-      setInputFormat(DEFAULT_OPTIONS.inputFormat);
-      setTimezone(DEFAULT_OPTIONS.timezone);
-      setOutput('');
-      setError('');
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleConvert = async () => {
     if (!input.trim()) {

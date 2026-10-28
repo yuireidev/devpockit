@@ -8,6 +8,12 @@
  */
 export type MonacoLanguageId = 'json' | 'xml' | 'javascript' | 'typescript' | 'plaintext' | 'html' | 'css' | 'yaml' | 'python' | 'java' | 'csharp' | 'cpp' | 'go' | 'rust' | 'sql' | 'markdown' | 'shell';
 
+declare global {
+  interface Window {
+    monaco?: typeof import('monaco-editor');
+  }
+}
+
 /**
  * Map language string to Monaco language ID
  * @param language - Language string (e.g., 'json', 'xml', 'javascript', 'js', 'plaintext')
@@ -87,7 +93,7 @@ export function isMonacoLoaded(): boolean {
 
   try {
     // Check if Monaco is available in global scope
-    return typeof (window as any).monaco !== 'undefined';
+    return typeof window.monaco !== 'undefined';
   } catch {
     return false;
   }
@@ -104,8 +110,8 @@ export function getMonacoInstance(): typeof import('monaco-editor') | null {
 
   try {
     // Try to get Monaco from window (loaded via @monaco-editor/react)
-    if (typeof (window as any).monaco !== 'undefined') {
-      return (window as any).monaco;
+    if (typeof window.monaco !== 'undefined') {
+      return window.monaco;
     }
 
     return null;
