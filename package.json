@@ -71,7 +71,7 @@
     "@radix-ui/react-switch": "^1.2.6",
     "@radix-ui/react-tabs": "^1.1.13",
     "@radix-ui/react-tooltip": "^1.2.8",
-    "@shikijs/monaco": "^3.23.0",
+    "@shikijs/monaco": "^4.5.0",
     "@types/qrcode": "^1.5.6",
     "canvas": "^3.2.1",
     "class-variance-authority": "^0.7.1",
