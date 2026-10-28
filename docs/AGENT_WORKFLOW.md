@@ -30,16 +30,16 @@ pnpm test                 # Run Jest tests
 pnpm test <file>          # Run one test file
 pnpm e2e                  # Run the fast browser suite against the dev server
 pnpm e2e:static           # Build and smoke-test the static export
-pnpm check:changed        # Type-check and check tests related to changed JS/TS files
+pnpm check:changed        # Type-check, lint changed JS/TS, and run related Jest tests
 pnpm build                # Create the static export
 pnpm preview              # Serve the generated out/ directory on port 8080
 pnpm build:verify         # Build and verify static export output
-pnpm build:test           # Full type-check, lint, test, and build sequence
+pnpm build:test           # Type-check, lint, test, and build sequence
 ```
 
 ### Browser E2E tests
 
-Install the Chromium browser once after installing project dependencies:
+The fast browser smoke suite runs automatically only in the release workflow when a new version is released. Pull request CI does not install a browser. If you intentionally need to debug E2E tests locally, install Chromium after installing project dependencies:
 
 ```bash
 pnpm exec playwright install chromium
@@ -56,13 +56,21 @@ pnpm exec playwright show-trace test-results/<test-folder>/trace.zip
 
 Use `pnpm e2e:static -- --trace on` to do the same for the static export suite. Trace Viewer shows the action timeline, screenshots and DOM snapshots around each step, and network activity. Tracing every test creates larger output and adds overhead; the default configuration keeps traces only for failures.
 
+To run and inspect one test in Playwright UI Mode, use:
+
+```bash
+pnpm e2e:static -- --ui --grep "JSON Formatter route"
+```
+
+The UI lets you run the selected test and review its action timeline and page snapshots.
+
 To run one test by name, pass Playwright's name filter after `--`:
 
 ```bash
 pnpm e2e -- --grep "JSON Formatter"
 ```
 
-Run these browser suites during development when a change affects app loading, navigation, or tool interactions. They are not part of GitHub Actions CI; Jest remains the detailed unit and component test suite.
+For Codex-specific Playwright workflow instructions, see [Codex Agent Workflow](CODEX_AGENT_WORKFLOW.md). Use Jest for detailed unit and component coverage; run E2E locally only when you intentionally need browser-level debugging.
 
 ## Architecture and tool system
 
@@ -81,8 +89,14 @@ Static export constraints apply: do not add server-only APIs or API routes. `BAS
 1. Read the relevant implementation and nearby tests before editing.
 2. Keep changes scoped to the requested behavior and follow existing patterns.
 3. Add or update tests for behavior changes; keep processing logic testable as pure functions where practical.
-4. Run `pnpm check:changed` during iteration and `pnpm build:test` for full verification when requested or appropriate.
-5. Report what changed, what checks ran, and any known gaps. Do not claim checks passed unless they were run.
+4. Run `pnpm check:changed` during iteration. It runs a full TypeScript check, lints changed JS/TS files, and runs related Jest tests. Run `pnpm format:check` when editing supported formatted files. For full verification, run `pnpm build:test` when requested or appropriate.
+5. Report the work using this short completion summary:
+   - **Summary:** user-visible or structural change.
+   - **Files:** main files changed.
+   - **Checks:** exact commands run and whether they passed.
+   - **Gaps:** relevant checks not run or remaining risks.
+
+Do not claim checks passed unless they were run. Stage only the files needed for the task, and inspect `git status` before any commit.
 
 Do not commit, push, create a pull request, or change release state unless the user asks.
 
