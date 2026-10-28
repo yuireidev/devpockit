@@ -1,7 +1,7 @@
 'use client';
 
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
-import { Coffee, Github, Keyboard, Lightbulb } from 'lucide-react';
+import { Coffee, CodeXml, Keyboard, Lightbulb } from 'lucide-react';
 import Link from 'next/link';
 
 function KeyboardShortcutsPanel() {
@@ -80,7 +80,7 @@ export function AboutPage() {
               rel="noopener noreferrer"
               className="flex items-center gap-3 p-4 rounded-lg border border-border hover:bg-accent transition-colors"
             >
-              <Github className="h-6 w-6 shrink-0 text-foreground" />
+              <CodeXml className="h-6 w-6 shrink-0 text-foreground" />
               <div>
                 <div className="font-semibold">Contribute & Star</div>
                 <p className="text-sm text-muted-foreground">
