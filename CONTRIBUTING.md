@@ -47,16 +47,7 @@ Before you begin, ensure you have the following installed:
 
 ### Installation
 
-1. Install dependencies:
-   ```bash
-   pnpm install
-   ```
-
-2. (Optional) Set up environment variables:
-   ```bash
-   cp .env.example .env.local
-   ```
-   Note: Environment variables are optional for local development.
+Install dependencies with `pnpm install --frozen-lockfile`. Environment variables are optional; see `.env.example` for the supported local settings. See [Development Guide](docs/DEVELOPMENT.md) for the day-to-day workflow and [Agent Workflow](docs/AGENT_WORKFLOW.md) for the canonical commands and verification guidance.
 
 ### Running the Development Server
 
@@ -68,49 +59,7 @@ pnpm dev
 # http://localhost:3000 (or 3001 if 3000 is busy)
 ```
 
-The development server includes:
-- Hot module replacement (HMR)
-- Fast refresh for React components
-- TypeScript type checking
-- ESLint error reporting
-
-### Running Tests
-
-```bash
-# Run all tests
-pnpm test
-
-# Run tests in watch mode
-pnpm test:watch
-
-# Run tests with coverage
-pnpm test:coverage
-
-# Run tests for CI
-pnpm test:ci
-```
-
-### Code Quality Checks
-
-```bash
-# Run ESLint
-pnpm lint
-
-# Fix ESLint issues automatically
-pnpm lint:fix
-
-# Run TypeScript type checking
-pnpm type-check
-
-# Check only changed JS/TS files and related tests while iterating
-pnpm check:changed
-
-# Format supported project files with Prettier
-pnpm format
-
-# Check code formatting
-pnpm format:check
-```
+For tests, code quality checks, and the recommended change-based verification loop, use the canonical commands in [Agent Workflow](docs/AGENT_WORKFLOW.md). Use `pnpm test:watch` when iterating interactively on Jest tests.
 
 ### Building for Production
 
@@ -209,18 +158,14 @@ stable version.
    - Add tests for new features
    - Update documentation as needed
 
-4. **Test your changes:**
-   ```bash
-   pnpm lint
-   pnpm type-check
-   pnpm test
-   pnpm build
-   ```
+4. **Verify your changes:** Follow the change-based verification steps in [Agent Workflow](docs/AGENT_WORKFLOW.md), and record the exact checks you ran in the PR description.
 
 5. **Commit your changes:**
+   Stage only the intended files, inspect `git status`, then commit with a Conventional Commit message. For example:
    ```bash
-   git add .
-   git commit -m "feat: your descriptive commit message"
+   git add src/libs/your-tool.ts src/libs/__tests__/your-tool.test.ts
+   git status --short
+   git commit -m "feat(your-tool): describe the change"
    ```
 
 6. **Push to your fork:**

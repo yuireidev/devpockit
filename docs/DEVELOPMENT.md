@@ -15,66 +15,7 @@ This guide covers day-to-day development workflows, debugging techniques, and pr
 
 ## Local Development Setup
 
-### Initial Setup
-
-1. **Clone and Install**:
-   ```bash
-   git clone https://github.com/yuireidev/devpockit.git
-   cd devpockit
-   pnpm install
-   ```
-
-2. **Start Development Server**:
-   ```bash
-   pnpm dev
-   ```
-   The app will be available at `http://localhost:3000`
-
-3. **HTTPS Development** (optional):
-   ```bash
-   pnpm dev:https
-   ```
-   Uses Next.js experimental HTTPS for local development.
-
-### Development Scripts
-
-```bash
-# Development
-pnpm dev              # Start dev server (port 3000)
-pnpm dev:https        # Start with HTTPS
-
-# Code Quality
-pnpm lint             # Run ESLint
-pnpm lint:fix         # Fix ESLint issues
-pnpm type-check       # TypeScript type checking
-pnpm format           # Format supported project files with Prettier
-pnpm format:check     # Check formatting
-pnpm check:changed    # Type-check and run lint/tests related to changed JS/TS files
-
-# Testing
-pnpm test             # Run tests
-pnpm test:watch       # Watch mode
-pnpm test:coverage     # Coverage report
-
-# Building
-pnpm build            # Production build
-pnpm export           # Static export (for GitHub Pages)
-pnpm preview          # Serve generated out/ directory on port 8080
-
-# Verification
-pnpm build:test       # Full test suite before build
-pnpm build:verify     # Verify build output
-```
-
-### Environment Variables
-
-Environment variables are optional for local development. If needed:
-
-```bash
-# .env.local
-NEXT_PUBLIC_APP_NAME=DevPockit
-NEXT_PUBLIC_APP_VERSION=0.1.0
-```
+Install dependencies with `pnpm install --frozen-lockfile`, then start the app with `pnpm dev` (available at `http://localhost:3000`). For optional HTTPS development, use `pnpm dev:https`. The canonical command list, environment notes, and verification guidance live in [Agent Workflow](AGENT_WORKFLOW.md).
 
 ## Development Workflow
 
@@ -89,10 +30,7 @@ NEXT_PUBLIC_APP_VERSION=0.1.0
 
 3. **Hot Reload**: Changes automatically reload in browser
 
-4. **Check Code Quality**:
-   ```bash
-   pnpm check:changed
-   ```
+4. **Check Code Quality**: Follow the change-based verification steps in [Agent Workflow](AGENT_WORKFLOW.md), including `pnpm check:changed` and `pnpm format:check` when relevant.
 
 5. **Run Tests** (if applicable):
    ```bash
