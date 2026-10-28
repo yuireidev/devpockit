@@ -34,7 +34,7 @@ pnpm check:changed        # Type-check, lint changed JS/TS, and run related Jest
 pnpm build                # Create the static export
 pnpm preview              # Serve the generated out/ directory on port 8080
 pnpm build:verify         # Build and verify static export output
-pnpm build:test           # Formatting, type-check, lint, test, and build sequence
+pnpm build:test           # Type-check, lint, test, and build sequence
 ```
 
 ### Browser E2E tests
