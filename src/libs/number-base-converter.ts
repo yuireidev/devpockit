@@ -1,4 +1,4 @@
-import { NumberBase, NumberBaseOptions } from '@/config/number-base-converter-config';
+import { NumberBase } from '@/config/number-base-converter-config';
 
 export interface ConversionResult {
   input: string;

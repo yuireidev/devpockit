@@ -68,7 +68,7 @@ export const decodeQrFromImage = async (imageFile: File): Promise<QrDecoderResul
           } else {
             resolve([]);
           }
-        } catch (error) {
+        } catch {
           reject(new Error('Failed to decode QR code from image'));
         } finally {
           // Clean up
@@ -139,7 +139,7 @@ export const decodeQrFromCamera = async (videoElement: HTMLVideoElement): Promis
     }
 
     return [];
-  } catch (error) {
+  } catch {
     throw new Error('Failed to decode QR code from camera');
   }
 };
@@ -239,7 +239,7 @@ const parseUrlContent = (data: string): ParsedQrData => {
         }
       }
     };
-  } catch (error) {
+  } catch {
     // If URL parsing fails, treat as text
     return parseTextContent(data);
   }
@@ -405,7 +405,7 @@ const parseWifiContent = (data: string): ParsedQrData => {
         }
       }
     };
-  } catch (error) {
+  } catch {
     return {
       type: 'wifi',
       data,
@@ -458,7 +458,7 @@ const parseContactContent = (data: string): ParsedQrData => {
         }
       }
     };
-  } catch (error) {
+  } catch {
     return {
       type: 'contact',
       data,
@@ -494,7 +494,7 @@ const parseSmsContent = (data: string): ParsedQrData => {
         }
       }
     };
-  } catch (error) {
+  } catch {
     return {
       type: 'sms',
       data,
@@ -543,7 +543,7 @@ const parseEmailContent = (data: string): ParsedQrData => {
         }
       }
     };
-  } catch (error) {
+  } catch {
     return {
       type: 'email',
       data,
@@ -637,7 +637,7 @@ export const validateCameraAccess = async (): Promise<{ hasCamera: boolean; erro
           const stream = await navigator.mediaDevices.getUserMedia(constraints);
           stream.getTracks().forEach(track => track.stop());
           return { hasCamera: true };
-        } catch (error) {
+        } catch {
           // Continue to next attempt
           continue;
         }
@@ -651,7 +651,7 @@ export const validateCameraAccess = async (): Promise<{ hasCamera: boolean; erro
         if (videoDevices.length > 0) {
           return { hasCamera: true };
         }
-      } catch (enumerateError) {
+      } catch {
         // Ignore enumeration errors
       }
 
@@ -671,7 +671,7 @@ export const validateCameraAccess = async (): Promise<{ hasCamera: boolean; erro
 
         stream.getTracks().forEach(track => track.stop());
         return { hasCamera: true };
-      } catch (getUserMediaError) {
+      } catch {
         // Fallback to device enumeration
         try {
           const devices = await navigator.mediaDevices.enumerateDevices();
@@ -685,7 +685,7 @@ export const validateCameraAccess = async (): Promise<{ hasCamera: boolean; erro
           }
 
           return { hasCamera: true };
-        } catch (enumerateError) {
+        } catch {
           return {
             hasCamera: false,
             error: 'Unable to detect camera on this device.'
@@ -718,16 +718,17 @@ export const requestCameraPermission = async (): Promise<{ granted: boolean; err
     stream.getTracks().forEach(track => track.stop());
 
     return { granted: true };
-  } catch (error: any) {
+  } catch (error: unknown) {
     let errorMessage = 'Camera permission denied.';
+    const errorName = error instanceof Error ? error.name : 'UnknownError';
 
-    if (error.name === 'NotAllowedError') {
+    if (errorName === 'NotAllowedError') {
       errorMessage = 'Camera permission denied. Please allow camera access in your browser settings.';
-    } else if (error.name === 'NotFoundError') {
+    } else if (errorName === 'NotFoundError') {
       errorMessage = 'No camera found on this device.';
-    } else if (error.name === 'NotSupportedError') {
+    } else if (errorName === 'NotSupportedError') {
       errorMessage = 'Camera access is not supported on this device.';
-    } else if (error.name === 'NotReadableError') {
+    } else if (errorName === 'NotReadableError') {
       errorMessage = 'Camera is already in use by another application.';
     }
 
@@ -805,8 +806,8 @@ export const retryOperation = async <T>(
 /**
  * Get user-friendly error message
  */
-export const getErrorMessage = (error: Error): string => {
-  const message = error.message.toLowerCase();
+export const getErrorMessage = (error: unknown): string => {
+  const message = (error instanceof Error ? error.message : String(error)).toLowerCase();
 
   if (message.includes('permission denied')) {
     return 'Camera permission denied. Please allow camera access and try again.';
@@ -909,7 +910,7 @@ export class CameraManager {
             this.stream = await navigator.mediaDevices.getUserMedia(constraints);
             streamObtained = true;
             break;
-          } catch (error) {
+          } catch {
             // Continue to next attempt
             continue;
           }
@@ -924,7 +925,7 @@ export class CameraManager {
           try {
             this.stream = await navigator.mediaDevices.getUserMedia({ video: true });
             streamObtained = true;
-          } catch (fallbackError) {
+          } catch {
             throw error;
           }
         }
@@ -947,7 +948,7 @@ export class CameraManager {
       videoElement.play();
 
       return { success: true };
-    } catch (error: any) {
+  } catch (error: unknown) {
       return {
         success: false,
         error: getErrorMessage(error)
@@ -1177,7 +1178,7 @@ export class CameraManager {
             }
           }
         }
-      } catch (error: any) {
+      } catch (error: unknown) {
         consecutiveFailures++;
         onError(getErrorMessage(error));
 
@@ -1253,7 +1254,12 @@ export class CameraManager {
     // 2. Running jsQR on each region
     // 3. Combining results
 
-    return [result];
+    const resultLimit = Math.max(0, Math.floor(maxResults));
+    const detections = [result].filter(detection => detection.confidence >= qualityThreshold);
+
+    // jsQR currently yields one result per frame; keep the option meaningful
+    // when multi-result detection is added while enforcing the selected limit.
+    return detections.slice(0, enableMultipleDetection ? resultLimit : Math.min(1, resultLimit));
   }
 
   /**
@@ -1407,7 +1413,7 @@ export class CameraManager {
       }
 
       return result;
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         error: getErrorMessage(error)
@@ -1435,7 +1441,7 @@ export class CameraManager {
         currentCamera: currentSettings?.deviceId,
         canSwitch: videoDevices.length > 1
       };
-    } catch (error) {
+    } catch {
       return {
         cameras: [],
         canSwitch: false
@@ -1486,7 +1492,7 @@ export class CameraManager {
         isFlashOn: !currentTorch,
         isSupported: true
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         error: getErrorMessage(error),
@@ -1565,7 +1571,7 @@ export class CameraManager {
         isSupported: true,
         focusMode: 'single-shot'
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
       return {
         success: false,
         error: getErrorMessage(error),

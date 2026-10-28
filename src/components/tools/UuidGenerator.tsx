@@ -31,54 +31,33 @@ export function UuidGenerator({ className, instanceId }: UuidGeneratorProps) {
   const { toolState, updateToolState } = useToolState('uuid-generator', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<UuidGenerationOptions>(DEFAULT_UUID_OPTIONS);
-  const [output, setOutput] = useState<string>('');
+  const [options, setOptions] = useState<UuidGenerationOptions>(((toolState?.options as UuidGenerationOptions)) ?? (DEFAULT_UUID_OPTIONS));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [stats, setStats] = useState<{ count: number; totalLength: number; averageLength: number; uniqueCount: number; duplicates: number } | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [stats, setStats] = useState<{ count: number; totalLength: number; averageLength: number; uniqueCount: number; duplicates: number } | null>((toolState?.stats as { count: number; totalLength: number; averageLength: number; uniqueCount: number; duplicates: number } | undefined) ?? null);
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
   const [wrapText, setWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) {
-        const opts = toolState.options as UuidGenerationOptions;
-        setOptions(opts);
-      }
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.stats) setStats(toolState.stats as typeof stats);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         output,
         error,
         stats: stats || undefined
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, output, error, stats, isHydrated]);
+  }, [options, output, error, stats]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_UUID_OPTIONS);
-      setOutput('');
-      setError('');
-      setStats(null);
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleGenerate = async () => {
     setIsGenerating(true);

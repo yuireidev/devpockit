@@ -2,6 +2,7 @@
 
 import { Button } from '@/components/ui/button';
 import { AlertCircle, Home, RefreshCw } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
 
 interface ErrorProps {
@@ -10,6 +11,8 @@ interface ErrorProps {
 }
 
 export default function Error({ error, reset }: ErrorProps) {
+  const router = useRouter();
+
   useEffect(() => {
     // Log error to console for debugging
     console.error('Application error:', error);
@@ -51,7 +54,7 @@ export default function Error({ error, reset }: ErrorProps) {
             Try again
           </Button>
           <Button
-            onClick={() => (window.location.href = '/')}
+            onClick={() => router.push('/')}
             variant="outline"
             className="w-full sm:w-auto"
           >

@@ -27,7 +27,7 @@ import {
   Upload,
   XCircle
 } from 'lucide-react';
-import React, { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 
 interface QrCodeDecoderProps {
   className?: string;
@@ -37,34 +37,27 @@ interface QrCodeDecoderProps {
 }
 
 export function QrCodeDecoder({ className, instanceId, onResult, onError }: QrCodeDecoderProps) {
+  const { toolState, updateToolState } = useToolState('qr-code-decoder', instanceId);
+
   // State management
   const [files, setFiles] = useState<File[]>([]);
-  const [results, setResults] = useState<QrDecoderResult[]>([]);
-  const [error, setError] = useState<string | null>(null);
-  const [state, setState] = useState<string>('idle');
-  const [options, setOptions] = useState<QrDecoderOptions>(DEFAULT_QR_DECODER_OPTIONS);
+  const [results, setResults] = useState<QrDecoderResult[]>(() => (toolState?.results as QrDecoderResult[] | undefined) ?? []);
+  const [error, setError] = useState<string | null>(() => (toolState?.error as string | undefined) ?? null);
+  const [state, setState] = useState<string>(() => (toolState?.state as string | undefined) ?? 'idle');
+  const [options] = useState<QrDecoderOptions>(() => (toolState?.options as QrDecoderOptions | undefined) ?? DEFAULT_QR_DECODER_OPTIONS);
 
   // UI state
   const [isProcessing, setIsProcessing] = useState(false);
   const [displayedImage, setDisplayedImage] = useState<string | null>(null);
-  const [forceUpdate, setForceUpdate] = useState(0);
-  const [isHydrated, setIsHydrated] = useState(false);
 
   // Refs
   const fileInputRef = useRef<HTMLInputElement>(null);
   const dropZoneRef = useRef<HTMLDivElement>(null);
-  const prevStateRef = useRef<any>(null);
+  const prevStateRef = useRef<string | null>(null);
   const displayedImageRef = useRef<string | null>(null);
   const filesRef = useRef<File[]>([]);
   const onResultRef = useRef<((result: QrDecoderResult) => void) | undefined>(undefined);
   const onErrorRef = useRef<((error: string) => void) | undefined>(undefined);
-
-  // Tool state management
-  const { toolState, updateToolState, clearToolState } = useToolState('qr-code-decoder', instanceId);
-
-  useEffect(() => {
-    setIsHydrated(true);
-  }, []);
 
   // Update refs when props change
   useEffect(() => {
@@ -72,59 +65,16 @@ export function QrCodeDecoder({ className, instanceId, onResult, onError }: QrCo
     onErrorRef.current = onError;
   }, [onResult, onError]);
 
-  // Force UI update when results change
-  useLayoutEffect(() => {
-    if (results.length > 0) {
-      setForceUpdate(prev => prev + 1);
-    }
-  }, [results]);
-
-  // Force UI update when displayed image changes
-  useLayoutEffect(() => {
-    if (displayedImage) {
-      setForceUpdate(prev => prev + 1);
-    }
-  }, [displayedImage]);
-
-  // Handle tool state updates
-  useEffect(() => {
-    if (toolState && Object.keys(toolState).length > 0) {
-      const { options: savedOptions, results: savedResults, state: savedState } = toolState;
-      if (savedOptions) setOptions(savedOptions as QrDecoderOptions);
-      if (savedResults) setResults(savedResults as QrDecoderResult[]);
-      if (savedState) setState(savedState as string);
-    }
-  }, [toolState]);
-
   // Update tool state when state changes
   useEffect(() => {
-    if (!isHydrated) return;
     const currentState = { options, results, error: error || undefined, state };
-    const prevState = prevStateRef.current;
+    const serializedState = JSON.stringify(currentState);
 
-    if (!prevState || JSON.stringify(currentState) !== JSON.stringify(prevState)) {
+    if (prevStateRef.current !== serializedState) {
       updateToolState(currentState);
-      prevStateRef.current = currentState;
+      prevStateRef.current = serializedState;
     }
-  }, [options, results, error, state, updateToolState, isHydrated]);
-
-  // Clear tool state when switching tools
-  useEffect(() => {
-    if (!toolState || Object.keys(toolState).length === 0) {
-      if (displayedImageRef.current) {
-        URL.revokeObjectURL(displayedImageRef.current);
-        displayedImageRef.current = null;
-        setDisplayedImage(null);
-      }
-      setOptions(DEFAULT_QR_DECODER_OPTIONS);
-      setResults([]);
-      setError(null);
-      setState('idle');
-      filesRef.current = [];
-      setFiles([]);
-      prevStateRef.current = null;
-    }
-  }, [toolState, clearToolState]);
+  }, [options, results, error, state, updateToolState]);
 
   // Cleanup displayed image on unmount
   useEffect(() => {
@@ -172,20 +122,18 @@ export function QrCodeDecoder({ className, instanceId, onResult, onError }: QrCo
 
       displayedImageRef.current = imageUrl;
       setDisplayedImage(imageUrl);
-      setForceUpdate(prev => prev + 1);
 
       const results = await decodeQrFromImage(file);
 
       if (results && results.length > 0) {
         setResults(results);
         setState('qr detected');
-        setForceUpdate(prev => prev + 1);
         results.forEach(result => onResultRef.current?.(result));
       } else {
         setError('No QR codes found in the uploaded image');
         setState('error');
       }
-    } catch (err) {
+    } catch (err: unknown) {
       setError(getErrorMessage(err as Error));
       setState('error');
       onErrorRef.current?.(getErrorMessage(err as Error));
@@ -222,7 +170,7 @@ export function QrCodeDecoder({ className, instanceId, onResult, onError }: QrCo
   const copyToClipboard = useCallback(async (text: string) => {
     try {
       await navigator.clipboard.writeText(text);
-    } catch (err) {
+    } catch {
       setError('Failed to copy to clipboard');
     }
   }, []);
@@ -236,7 +184,7 @@ export function QrCodeDecoder({ className, instanceId, onResult, onError }: QrCo
           text: result.data,
           url: result.format === 'url' ? result.data : undefined
         });
-      } catch (err) {
+      } catch {
         // User cancelled or error
       }
     } else {
@@ -449,7 +397,7 @@ export function QrCodeDecoder({ className, instanceId, onResult, onError }: QrCo
               alwaysShowFooter={true}
             >
               {results.length > 0 ? (
-                <div key={`results-${forceUpdate}`} className="space-y-3">
+                <div className="space-y-3">
                   {results.map((result) => (
                     <div key={result.id} className="space-y-3">
                       <div className="flex items-center gap-2">

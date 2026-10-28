@@ -11,6 +11,12 @@ import { getShikiHighlighter, initializeShiki, isShikiInitialized } from '@/libs
 import type * as Monaco from 'monaco-editor';
 import { useEffect, useRef, useState } from 'react';
 
+declare global {
+  interface Window {
+    monaco?: typeof Monaco;
+  }
+}
+
 export interface UseMonacoEditorOptions {
   language?: string;
   theme?: CodeEditorTheme;
@@ -47,6 +53,7 @@ export function useMonacoEditor(
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
   const [isMonacoLoaded, setIsMonacoLoaded] = useState(false);
+  const [editorInstance, setEditorInstance] = useState<Monaco.editor.IStandaloneCodeEditor | null>(null);
 
   // Keep refs updated
   useEffect(() => {
@@ -70,7 +77,7 @@ export function useMonacoEditor(
 
           // Store Monaco in window for @monaco-editor/react
           if (typeof window !== 'undefined') {
-            (window as any).monaco = monaco;
+            window.monaco = monaco as typeof Monaco;
           }
 
           setIsMonacoLoaded(true);
@@ -95,7 +102,7 @@ export function useMonacoEditor(
 
         // Step 4: Get Monaco instance
         const monacoModule = await import('monaco-editor');
-        const monaco = (window as any).monaco || monacoModule.default || monacoModule;
+        const monaco = window.monaco || (monacoModule.default || monacoModule) as typeof Monaco;
 
         // Step 5: Destroy existing editor if it exists
         if (editorInstanceRef.current) {
@@ -134,6 +141,7 @@ export function useMonacoEditor(
         });
 
         editorInstanceRef.current = editor;
+        setEditorInstance(editor);
         setIsLoading(false);
       } catch (err) {
         if (isMounted) {
@@ -152,6 +160,7 @@ export function useMonacoEditor(
       if (editorInstanceRef.current) {
         editorInstanceRef.current.dispose();
         editorInstanceRef.current = null;
+        setEditorInstance(null);
       }
     };
     // value is handled by a separate useEffect below, so we don't include it here
@@ -198,7 +207,7 @@ export function useMonacoEditor(
       const model = editorInstanceRef.current.getModel();
       if (model) {
         // Get Monaco instance from window or import
-        const monaco = (window as any).monaco;
+        const monaco = window.monaco;
         if (monaco && monaco.editor) {
           monaco.editor.setModelLanguage(model, languageId);
         }
@@ -210,7 +219,7 @@ export function useMonacoEditor(
     editorRef,
     isLoading,
     error,
-    editorInstance: editorInstanceRef.current,
+    editorInstance,
   };
 }
 

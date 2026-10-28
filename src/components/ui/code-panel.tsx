@@ -12,6 +12,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/comp
 import { type CodeEditorTheme } from '@/config/code-editor-themes';
 import { useAppToast } from '@/components/providers/AppToastProvider';
 import { cn } from '@/libs/utils';
+import type { OnMount } from '@monaco-editor/react';
 import { Check, Copy, Trash2 } from 'lucide-react';
 import type * as Monaco from 'monaco-editor';
 import React, { useEffect, useState } from 'react';
@@ -65,7 +66,7 @@ export interface CodePanelProps {
   alwaysShowFooter?: boolean; // Whether to always show footer even if no content
 
   // Editor mount callback
-  onEditorMount?: (editor: any, monaco: any) => void;
+  onEditorMount?: OnMount;
 
   // Styling
   className?: string;
@@ -123,6 +124,11 @@ export function CodePanel({
   const [renderWhitespace, setRenderWhitespace] = useState(false);
   const [renderControlCharacters, setRenderControlCharacters] = useState(false);
   const [lineNumbers, setLineNumbers] = useState(showLineNumbers);
+  const [previousShowLineNumbers, setPreviousShowLineNumbers] = useState(showLineNumbers);
+  if (showLineNumbers !== previousShowLineNumbers) {
+    setPreviousShowLineNumbers(showLineNumbers);
+    setLineNumbers(showLineNumbers);
+  }
   const [autoComplete, setAutoComplete] = useState(false); // Disabled by default
   // For tabbed mode: store editors by tab ID. For single mode: use 'single' as key
   const [editorInstances, setEditorInstances] = useState<Map<string, Monaco.editor.IStandaloneCodeEditor>>(new Map());
@@ -193,7 +199,7 @@ export function CodePanel({
   };
 
   // Editor mount handler
-  const handleEditorMount = (editor: any, monaco: any) => {
+  const handleEditorMount: OnMount = (editor, monaco) => {
     // Calculate the editor key based on current mode (tab ID or 'single')
     const editorKey = isTabbedMode ? (activeTab || tabs?.[0]?.id || '') : 'single';
     // Store editor instance for the current key (tab ID or 'single')
@@ -218,11 +224,6 @@ export function CodePanel({
     // Call the original onEditorMount if provided
     onEditorMount?.(editor, monaco);
   };
-
-  // Sync lineNumbers state with prop changes
-  useEffect(() => {
-    setLineNumbers(showLineNumbers);
-  }, [showLineNumbers]);
 
   // Update editor options when state changes (for all editors in tabbed mode, or single editor)
   useEffect(() => {

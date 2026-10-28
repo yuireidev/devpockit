@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-require-imports: off -- Jest loads this config as CommonJS. */
 const nextJest = require('next/jest')
 
 const createJestConfig = nextJest({

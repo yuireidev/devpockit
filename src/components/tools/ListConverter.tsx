@@ -16,7 +16,6 @@ import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
 import {
   convertListFormat,
   getLanguageForFormat,
-  type ConversionResult,
 } from '@/libs/list-converter';
 import { cn } from '@/libs/utils';
 import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
@@ -31,94 +30,38 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
   const { toolState, updateToolState } = useToolState('list-converter', instanceId);
 
   // State
-  const [input, setInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
-  const [options, setOptions] = useState<ListConverterOptions>(DEFAULT_LIST_CONVERTER_OPTIONS);
-  const [error, setError] = useState<string>('');
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [conversionStats, setConversionStats] = useState<ConversionResult['stats'] | null>(null);
-
-  // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [inputWrapText, setInputWrapText] = useState(true);
-  const [outputWrapText, setOutputWrapText] = useState(true);
-
-  // Hydrate state from toolState after mount
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.options) setOptions(toolState.options as ListConverterOptions);
-      if (toolState.error) setError(toolState.error as string);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  // Update persistent state
-  useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
-        input,
-        output,
-        options,
-        error,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, output, options, error, isHydrated]);
-
-  // Reset state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setInput('');
-      setOutput('');
-      setOptions(DEFAULT_LIST_CONVERTER_OPTIONS);
-      setError('');
-      setConversionStats(null);
-    }
-
-  }, [toolState, isHydrated]);
-
-  // Auto-convert when input or options change
-  useEffect(() => {
-    if (isHydrated && input.trim()) {
-      handleConvert();
-    } else {
-      setOutput('');
-      setError('');
-      setConversionStats(null);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, options, isHydrated]);
-
-  // Handlers
-  const handleConvert = () => {
-    if (!input.trim()) {
-      setOutput('');
-      setError('');
-      setConversionStats(null);
-      return;
-    }
-
-    setError('');
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
+  const [options, setOptions] = useState<ListConverterOptions>((toolState?.options as ListConverterOptions) ?? (DEFAULT_LIST_CONVERTER_OPTIONS));
+  const { output, error, conversionStats } = useMemo(() => {
+    if (!input.trim()) return { output: '', error: '', conversionStats: null };
     const result = convertListFormat(input, options.inputFormat, options.outputFormat, {
       preserveTypes: options.preserveTypes,
       removeEmpty: options.removeEmpty,
       removeDuplicates: options.removeDuplicates,
       sortOrder: options.sortOrder,
     });
+    return result.success
+      ? { output: result.output, error: '', conversionStats: result.stats }
+      : { output: '', error: result.error || 'Conversion failed', conversionStats: result.stats };
+  }, [input, options]);
 
-    if (result.success) {
-      setOutput(result.output);
-      setConversionStats(result.stats);
-    } else {
-      setOutput('');
-      setError(result.error || 'Conversion failed');
-      setConversionStats(result.stats);
-    }
-  };
+  // Editor settings
+  const [theme] = useCodeEditorTheme('basicDark');
+  const [inputWrapText, setInputWrapText] = useState(true);
+  const [outputWrapText, setOutputWrapText] = useState(true);
 
+  // Update persistent state
+  useEffect(() => {
+    updateToolState({
+        input,
+        output,
+        options,
+        error,
+      });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [input, output, options, error]);
+
+  // Handlers
   const handleLoadExample = (format: typeof options.inputFormat) => {
     setInput(LIST_CONVERTER_EXAMPLES[format]);
     setOptions(prev => ({ ...prev, inputFormat: format }));
@@ -131,42 +74,11 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
       outputFormat: prev.inputFormat,
     }));
     // Swap input and output
-    const tempInput = input;
     setInput(output);
-    setOutput(tempInput);
   };
 
   const getCharacterCount = (text: string): number => {
     return text.length;
-  };
-
-  const getLineCount = (text: string): number => {
-    if (!text) return 0;
-    return text.split('\n').length;
-  };
-
-  const getItemCount = (text: string): number => {
-    if (!text.trim()) return 0;
-    try {
-      // Use a simple split approach for quick count
-      const format = options.inputFormat;
-      switch (format) {
-        case 'line-by-line':
-          return text.split('\n').filter(line => line.trim().length > 0).length;
-        case 'comma-separated':
-          return text.split(',').filter(item => item.trim().length > 0).length;
-        case 'space-separated':
-          return text.split(/\s+/).filter(item => item.trim().length > 0).length;
-        case 'pipe-separated':
-          return text.split('|').filter(item => item.trim().length > 0).length;
-        case 'tab-separated':
-          return text.split('\t').filter(item => item.trim().length > 0).length;
-        default:
-          return 0;
-      }
-    } catch {
-      return 0;
-    }
   };
 
   const inputLanguage = useMemo(() => getLanguageForFormat(options.inputFormat), [options.inputFormat]);

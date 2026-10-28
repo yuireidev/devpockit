@@ -40,35 +40,19 @@ interface HttpStatusCheatsheetProps {
 export function HttpStatusCheatsheet({ className, instanceId }: HttpStatusCheatsheetProps) {
   const { toolState, updateToolState } = useToolState('http-status-cheatsheet', instanceId);
 
-  const [searchQuery, setSearchQuery] = useState('');
-  const [category, setCategory] = useState<HttpStatusCategoryFilter>('all');
+  const [searchQuery, setSearchQuery] = useState((toolState?.searchQuery as string) ?? (''));
+  const [category, setCategory] = useState<HttpStatusCategoryFilter>((toolState?.category as HttpStatusCategoryFilter) ?? ('all'));
   const [detailEntry, setDetailEntry] = useState<HttpStatusEntry | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
+
+
+
 
   useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.searchQuery !== undefined && toolState.searchQuery !== null) {
-        setSearchQuery(toolState.searchQuery as string);
-      }
-      if (toolState.category) setCategory(toolState.category as HttpStatusCategoryFilter);
-    }
+    updateToolState({ searchQuery, category });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [searchQuery, category]);
 
-  useEffect(() => {
-    if (isHydrated) {
-      updateToolState({ searchQuery, category });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [searchQuery, category, isHydrated]);
 
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setSearchQuery('');
-      setCategory('all');
-    }
-  }, [toolState, isHydrated]);
 
   const filtered = useMemo(
     () => filterHttpStatuses(searchQuery, category),

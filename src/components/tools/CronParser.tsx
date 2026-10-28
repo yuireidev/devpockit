@@ -32,39 +32,27 @@ export function CronParser({ className, instanceId }: CronParserProps) {
   const { toolState, updateToolState } = useToolState('cron-parser', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<CronParserOptions>(DEFAULT_CRON_PARSER_OPTIONS);
-  const [expression, setExpression] = useState<string>('');
-  const [preview, setPreview] = useState<string>('');
+  const [options, setOptions] = useState<CronParserOptions>((toolState?.options as CronParserOptions) ?? (DEFAULT_CRON_PARSER_OPTIONS));
+  const [expression, setExpression] = useState<string>((toolState?.expression as string) ?? (''));
+  const [preview, setPreview] = useState<string>((toolState?.preview as string) ?? (''));
   const [isValidating, setIsValidating] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+
   const [copied, setCopied] = useState(false);
   const [exportFormat, setExportFormat] = useState<string>('plain');
-  const [compareTimezone, setCompareTimezone] = useState<string>('UTC');
-  const [nextRunCount, setNextRunCount] = useState<number>(5);
+  const [compareTimezone, setCompareTimezone] = useState<string>((toolState?.compareTimezone as string) ?? ('UTC'));
+  const [nextRunCount, setNextRunCount] = useState<number>((toolState?.nextRunCount as number) ?? (5));
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
   const [wrapText, setWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) setOptions(toolState.options as CronParserOptions);
-      if (toolState.expression) setExpression(toolState.expression as string);
-      if (toolState.preview) setPreview(toolState.preview as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.compareTimezone) setCompareTimezone(toolState.compareTimezone as string);
-      if (toolState.nextRunCount) setNextRunCount(toolState.nextRunCount as number);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         expression,
         preview,
@@ -72,33 +60,18 @@ export function CronParser({ className, instanceId }: CronParserProps) {
         compareTimezone,
         nextRunCount
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, expression, preview, error, compareTimezone, nextRunCount, isHydrated]);
+  }, [options, expression, preview, error, compareTimezone, nextRunCount]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_CRON_PARSER_OPTIONS);
-      setExpression('');
-      setPreview('');
-      setError('');
-      setCompareTimezone('UTC');
-      setNextRunCount(5);
-    }
-  }, [toolState, isHydrated]);
 
-  // Build expression and preview when options change
-  useEffect(() => {
-    if (isHydrated) {
-      const newExpression = buildCronExpression(options);
-      setExpression(newExpression);
-      updatePreview(newExpression);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, compareTimezone, nextRunCount, isHydrated]);
 
-  const updatePreview = async (expr: string) => {
+  const updatePreview = async (
+    expr: string,
+    previewOptions: CronParserOptions = options,
+    previewTimezone: string = compareTimezone,
+    previewRunCount: number = nextRunCount
+  ) => {
     if (!expr.trim()) {
       setPreview('');
       setError('');
@@ -118,27 +91,27 @@ export function CronParser({ className, instanceId }: CronParserProps) {
         return;
       }
 
-      const timezone = options.timezone === 'local' ? undefined : options.timezone;
-      const runCount = nextRunCount === 0 ? 0 : nextRunCount;
+      const timezone = previewOptions.timezone === 'local' ? undefined : previewOptions.timezone;
+      const runCount = previewRunCount === 0 ? 0 : previewRunCount;
       const result = parseCronExpression(expr, runCount > 0 ? runCount : 1, timezone);
       if (result.isValid) {
         let previewText = `📅 Human Readable:\n${result.humanReadable}\n\n`;
 
         if (result.nextRuns.length > 0 && runCount > 0) {
-          const cronTzLabel = options.timezone === 'local'
+          const cronTzLabel = previewOptions.timezone === 'local'
             ? Intl.DateTimeFormat().resolvedOptions().timeZone
-            : options.timezone || 'UTC';
-          const compareTzLabel = compareTimezone === 'local'
+            : previewOptions.timezone || 'UTC';
+          const compareTzLabel = previewTimezone === 'local'
             ? Intl.DateTimeFormat().resolvedOptions().timeZone
-            : compareTimezone || 'UTC';
+            : previewTimezone || 'UTC';
 
           // Check if timezones are the same
-          const cronTzValue = options.timezone === 'local'
+          const cronTzValue = previewOptions.timezone === 'local'
             ? Intl.DateTimeFormat().resolvedOptions().timeZone
-            : options.timezone || 'UTC';
-          const compareTzValue = compareTimezone === 'local'
+            : previewOptions.timezone || 'UTC';
+          const compareTzValue = previewTimezone === 'local'
             ? Intl.DateTimeFormat().resolvedOptions().timeZone
-            : compareTimezone || 'UTC';
+            : previewTimezone || 'UTC';
           const timezonesMatch = cronTzValue === compareTzValue;
 
           previewText += `⏰ Next ${result.nextRuns.length} Execution Times:\n\n`;
@@ -162,7 +135,7 @@ export function CronParser({ className, instanceId }: CronParserProps) {
 
             // Only show comparison if timezones are different
             if (!timezonesMatch) {
-              const compareTz = compareTimezone === 'local' ? undefined : compareTimezone;
+              const compareTz = previewTimezone === 'local' ? undefined : previewTimezone;
               const compareFormatted = date.toLocaleString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
@@ -194,8 +167,15 @@ export function CronParser({ className, instanceId }: CronParserProps) {
     }
   };
 
+  const updateBuilderOptions = (nextOptions: CronParserOptions) => {
+    setOptions(nextOptions);
+    const nextExpression = buildCronExpression(nextOptions);
+    setExpression(nextExpression);
+    void updatePreview(nextExpression, nextOptions);
+  };
+
   const handleLoadPreset = (preset: typeof CRON_PRESETS[0]) => {
-    setOptions(preset.options);
+    updateBuilderOptions(preset.options);
     setError('');
   };
 
@@ -224,10 +204,7 @@ export function CronParser({ className, instanceId }: CronParserProps) {
   };
 
   const updateField = (fieldName: keyof CronParserOptions, value: CronFieldValue) => {
-    setOptions(prev => ({
-      ...prev,
-      [fieldName]: value
-    }));
+    updateBuilderOptions({ ...options, [fieldName]: value });
   };
 
   const handleExpressionInput = (value: string) => {
@@ -236,7 +213,7 @@ export function CronParser({ className, instanceId }: CronParserProps) {
     if (parsed) {
       setOptions(parsed);
     }
-    updatePreview(value);
+    void updatePreview(value, parsed ?? options);
   };
 
   return (
@@ -353,8 +330,11 @@ export function CronParser({ className, instanceId }: CronParserProps) {
               onValueChange={(value) => {
                 if (value === 'none') {
                   setNextRunCount(0);
+                  void updatePreview(expression, options, compareTimezone, 0);
                 } else {
-                  setNextRunCount(parseInt(value));
+                  const count = parseInt(value);
+                  setNextRunCount(count);
+                  void updatePreview(expression, options, compareTimezone, count);
                 }
               }}
             >
@@ -372,9 +352,7 @@ export function CronParser({ className, instanceId }: CronParserProps) {
             </Select>
             <Select
               value={options.timezone || 'UTC'}
-              onValueChange={(value) => {
-                setOptions(prev => ({ ...prev, timezone: value }));
-              }}
+              onValueChange={(value) => updateBuilderOptions({ ...options, timezone: value })}
             >
               <SelectTrigger label="Cron Timezone:" className="w-[280px]" valueAlign="center">
                 <SelectValue />
@@ -389,7 +367,10 @@ export function CronParser({ className, instanceId }: CronParserProps) {
             </Select>
             <Select
               value={compareTimezone}
-              onValueChange={setCompareTimezone}
+              onValueChange={(value) => {
+                setCompareTimezone(value);
+                void updatePreview(expression, options, value);
+              }}
             >
               <SelectTrigger label="Compare Timezone:" className="w-[310px]" valueAlign="center">
                 <SelectValue />

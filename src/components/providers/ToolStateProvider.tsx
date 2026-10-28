@@ -4,11 +4,11 @@ import { createContext, ReactNode, useCallback, useContext, useMemo, useState } 
 
 // Define the structure for tool state
 export interface ToolState {
-  options: Record<string, any>;
-  output: string;
-  error: string;
-  stats?: Record<string, any>;
-  [key: string]: any;
+  options?: unknown;
+  output?: string;
+  error?: string;
+  stats?: unknown;
+  [key: string]: unknown;
 }
 
 // Define the context type

@@ -10,7 +10,7 @@ import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
 import { generateLoremIpsum, validateLoremOptions, type LoremOptions } from '@/libs/lorem-ipsum';
 import { cn } from '@/libs/utils';
 import { ArrowPathIcon } from '@heroicons/react/24/outline';
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 interface LoremIpsumGeneratorProps {
   className?: string;
@@ -21,73 +21,41 @@ export function LoremIpsumGenerator({ className, instanceId }: LoremIpsumGenerat
   const { toolState, updateToolState } = useToolState('lorem-ipsum', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<LoremOptions>(DEFAULT_OPTIONS);
-  const [outputPlain, setOutputPlain] = useState<string>('');
-  const [outputHtml, setOutputHtml] = useState<string>('');
+  const [options, setOptions] = useState<LoremOptions>(((toolState?.options as LoremOptions)) ?? (DEFAULT_OPTIONS));
+  const [outputPlain, setOutputPlain] = useState<string>((toolState?.outputPlain as string) ?? (''));
+  const [outputHtml, setOutputHtml] = useState<string>((toolState?.outputHtml as string) ?? (''));
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'plain' | 'html'>('plain');
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [activeTab, setActiveTab] = useState<'plain' | 'html'>(((toolState?.options as LoremOptions).format) ?? ('plain'));
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
   const [wrapText, setWrapText] = useState(true);
 
   // Track if we've already hydrated to prevent re-hydration on toolState changes
-  const hasHydratedRef = useRef(false);
+
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    if (!hasHydratedRef.current && toolState) {
-      hasHydratedRef.current = true;
-      setIsHydrated(true);
-      if (toolState.options) {
-        const opts = toolState.options as LoremOptions;
-        setOptions(opts);
-      }
-      if (toolState.outputPlain) setOutputPlain(toolState.outputPlain as string);
-      if (toolState.outputHtml) setOutputHtml(toolState.outputHtml as string);
-      if (toolState.error) setError(toolState.error as string);
-      if ((toolState.options as LoremOptions)?.format) {
-        setActiveTab((toolState.options as LoremOptions).format);
-      }
-    } else if (!hasHydratedRef.current) {
-      // Still mark as hydrated even if no toolState exists
-      hasHydratedRef.current = true;
-      setIsHydrated(true);
-    }
-  }, [toolState]);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         outputPlain,
         outputHtml,
         error
       });
-    }
-  }, [options, outputPlain, outputHtml, error, isHydrated, updateToolState]);
+  }, [options, outputPlain, outputHtml, error, updateToolState]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_OPTIONS);
-      setOutputPlain('');
-      setOutputHtml('');
-      setError('');
-      setActiveTab('plain');
-    }
-  }, [toolState, isHydrated]);
 
-  // Sync format with active tab
-  useEffect(() => {
-    setOptions(prev => ({ ...prev, format: activeTab }));
-  }, [activeTab]);
 
   const handleTabChange = (tabId: string) => {
-    setActiveTab(tabId as 'plain' | 'html');
+    const format = tabId as 'plain' | 'html';
+    setActiveTab(format);
+    setOptions(prev => ({ ...prev, format }));
   };
 
   const convertPlainToHtml = (plainText: string, unit: 'words' | 'sentences' | 'paragraphs'): string => {

@@ -29,11 +29,11 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
   const { toolState, updateToolState } = useToolState('hash-generator', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<HashGenerationOptions>(DEFAULT_HASH_OPTIONS);
-  const [input, setInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
+  const [options, setOptions] = useState<HashGenerationOptions>(((toolState?.options as HashGenerationOptions)) ?? (DEFAULT_HASH_OPTIONS));
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string>('');
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
   const [result, setResult] = useState<{
     hash: string;
     algorithm: HashAlgorithm;
@@ -41,8 +41,15 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
     hashLength: number;
     saltUsed: boolean;
     outputFormat: 'hex' | 'base64';
-  } | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
+  } | null>((toolState?.result as {
+    hash: string;
+    algorithm: HashAlgorithm;
+    inputLength: number;
+    hashLength: number;
+    saltUsed: boolean;
+    outputFormat: 'hex' | 'base64';
+  } | undefined) ?? null);
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
@@ -50,45 +57,22 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
   const [outputWrapText, setOutputWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) {
-        const opts = toolState.options as HashGenerationOptions;
-        setOptions(opts);
-      }
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.result) setResult(toolState.result as typeof result);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         input,
         output,
         error,
         result: result || undefined,
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, input, output, error, result, isHydrated]);
+  }, [options, input, output, error, result]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_HASH_OPTIONS);
-      setInput('');
-      setOutput('');
-      setError('');
-      setResult(null);
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleGenerate = async () => {
     if (!input.trim()) {

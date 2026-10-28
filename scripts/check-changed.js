@@ -1,3 +1,4 @@
+/* eslint @typescript-eslint/no-require-imports: off -- This Node script runs as CommonJS. */
 const { execFileSync, spawnSync } = require('node:child_process')
 const { existsSync } = require('node:fs')
 const path = require('node:path')

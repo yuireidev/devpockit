@@ -26,6 +26,59 @@ interface IntermediateSchema {
   name?: string;
 }
 
+interface SchemaNode {
+  [key: string]: unknown;
+  type?: string | SchemaNode | Array<string | SchemaNode>;
+  name?: string;
+  title?: string;
+  syntax?: string;
+  org?: string;
+  body?: string;
+  columns?: string;
+  column?: string;
+  bsonType?: string | string[];
+  description?: string;
+  default?: unknown;
+  enum?: string[];
+  required?: string[];
+  nullable?: boolean;
+  mode?: string;
+  doc?: string;
+  dtype?: string;
+  nestedFields?: string;
+  containsNull?: boolean;
+  number?: number;
+  elementType?: string | SchemaNode;
+  repeated?: boolean;
+  optional?: boolean;
+  properties?: Record<string, SchemaNode>;
+  items?: SchemaNode | string;
+  fields?: SchemaNode[];
+  messages?: SchemaNode;
+}
+
+function schemaType(value: SchemaNode['type']): string {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) {
+    const primaryType = value.find(type => type !== 'null');
+    return typeof primaryType === 'string' ? primaryType : 'string';
+  }
+  return typeof value?.type === 'string' ? value.type : 'string';
+}
+
+function schemaName(value: SchemaNode['name']): string {
+  return typeof value === 'string' ? value : 'field';
+}
+
+function mongoBsonType(value: SchemaNode['bsonType'] | SchemaNode['type']): string | string[] {
+  if (typeof value === 'string') return value;
+  if (Array.isArray(value)) {
+    const strings = value.filter(item => typeof item === 'string');
+    return strings as string[];
+  }
+  return schemaType(value);
+}
+
 /**
  * Convert field name based on naming convention
  */
@@ -62,7 +115,7 @@ function convertFieldName(name: string, convention: SchemaConverterOptions['fiel
 /**
  * Convert JSON Schema to intermediate representation
  */
-function jsonSchemaToIntermediate(schema: any): IntermediateSchema {
+function jsonSchemaToIntermediate(schema: SchemaNode): IntermediateSchema {
   if (schema.type === 'array') {
     return {
       type: 'array',
@@ -75,7 +128,7 @@ function jsonSchemaToIntermediate(schema: any): IntermediateSchema {
   const required = schema.required || [];
 
   if (schema.properties) {
-    for (const [key, value] of Object.entries(schema.properties as Record<string, any>)) {
+    for (const [key, value] of Object.entries(schema.properties as Record<string, SchemaNode>)) {
       const field: SchemaField = {
         name: key,
         type: mapJsonSchemaType(value),
@@ -90,16 +143,17 @@ function jsonSchemaToIntermediate(schema: any): IntermediateSchema {
       }
 
       if (value.type === 'array' && value.items) {
+        const itemSchema = typeof value.items === 'string' ? { type: value.items } : value.items;
         field.items = {
           name: 'item',
-          type: mapJsonSchemaType(value.items),
+          type: mapJsonSchemaType(itemSchema),
           nullable: true
         };
       }
 
       if (value.type === 'object' && value.properties) {
         field.properties = {};
-        for (const [propKey, propValue] of Object.entries(value.properties as Record<string, any>)) {
+        for (const [propKey, propValue] of Object.entries(value.properties as Record<string, SchemaNode>)) {
           field.properties[propKey] = {
             name: propKey,
             type: mapJsonSchemaType(propValue),
@@ -122,7 +176,7 @@ function jsonSchemaToIntermediate(schema: any): IntermediateSchema {
 /**
  * Map JSON Schema type to common type
  */
-function mapJsonSchemaType(schema: any): string {
+function mapJsonSchemaType(schema: SchemaNode): string {
   if (schema.type === 'integer') return 'integer';
   if (schema.type === 'number') return 'number';
   if (schema.type === 'string') return 'string';
@@ -142,12 +196,12 @@ function intermediateToJsonSchema(
 ): string {
   const fields = Object.values(intermediate.fields);
   const required: string[] = [];
-  const properties: Record<string, any> = {};
+  const properties: Record<string, SchemaNode> = {};
 
   for (const field of fields) {
     const name = convertFieldName(field.name, options.fieldNaming);
     const jsonType = mapCommonTypeToJsonSchema(field.type);
-    const fieldDef: any = {
+    const fieldDef: SchemaNode = {
       type: jsonType,
       description: field.description
     };
@@ -191,7 +245,7 @@ function intermediateToJsonSchema(
     }
   }
 
-  const jsonSchema: any = {
+  const jsonSchema: SchemaNode = {
     $schema: 'http://json-schema.org/draft-07/schema#',
     type: 'object',
     properties
@@ -516,13 +570,13 @@ function intermediateToSpark(
   options: SchemaConverterOptions
 ): string {
   const fields = Object.values(intermediate.fields);
-  const sparkFields: any[] = [];
+  const sparkFields: SchemaNode[] = [];
 
   for (const field of fields) {
     const name = convertFieldName(field.name, options.fieldNaming);
-    const sparkField: any = {
+    const sparkField: SchemaNode = {
       name,
-      type: mapTypeToSpark(field.type, field),
+      type: mapTypeToSpark(field.type),
       nullable: field.nullable,
       metadata: {}
     };
@@ -530,17 +584,17 @@ function intermediateToSpark(
     if (field.type === 'array' && field.items) {
       sparkField.type = {
         type: 'array',
-        elementType: mapTypeToSpark(field.items.type, field.items),
+        elementType: mapTypeToSpark(field.items.type),
         containsNull: field.items.nullable !== false
       };
     }
 
     if (field.type === 'object' && field.properties) {
-      const nestedFields: any[] = [];
+      const nestedFields: SchemaNode[] = [];
       for (const [propKey, propValue] of Object.entries(field.properties)) {
         nestedFields.push({
           name: convertFieldName(propKey, options.fieldNaming),
-          type: mapTypeToSpark(propValue.type, propValue),
+          type: mapTypeToSpark(propValue.type),
           nullable: propValue.nullable,
           metadata: {}
         });
@@ -565,7 +619,7 @@ function intermediateToSpark(
 /**
  * Map type to Spark type
  */
-function mapTypeToSpark(type: string, field: SchemaField): string {
+function mapTypeToSpark(type: string): string {
   if (type === 'integer') return 'integer';
   if (type === 'number') return 'double';
   if (type === 'string') return 'string';
@@ -578,9 +632,9 @@ function mapTypeToSpark(type: string, field: SchemaField): string {
 /**
  * Parse JSON Schema
  */
-function parseJsonSchema(schemaString: string): any {
+function parseJsonSchema(schemaString: string): SchemaNode {
   try {
-    return JSON.parse(schemaString);
+    return JSON.parse(schemaString) as SchemaNode;
   } catch (error) {
     throw new Error(`Invalid JSON Schema: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
@@ -589,9 +643,9 @@ function parseJsonSchema(schemaString: string): any {
 /**
  * Parse Spark Schema
  */
-function parseSparkSchema(schemaString: string): any {
+function parseSparkSchema(schemaString: string): SchemaNode {
   try {
-    const schema = JSON.parse(schemaString);
+    const schema = JSON.parse(schemaString) as SchemaNode;
     if (schema.type !== 'struct' || !schema.fields) {
       throw new Error('Invalid Spark Schema: must have type "struct" and "fields" array');
     }
@@ -604,32 +658,32 @@ function parseSparkSchema(schemaString: string): any {
 /**
  * Convert Spark Schema to intermediate representation
  */
-function sparkToIntermediate(schema: any): IntermediateSchema {
+function sparkToIntermediate(schema: SchemaNode): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
 
   if (schema.fields && Array.isArray(schema.fields)) {
     for (const field of schema.fields) {
-      const fieldType = typeof field.type === 'string' ? field.type : field.type.type;
+      const fieldType = schemaType(field.type);
       const schemaField: SchemaField = {
-        name: field.name,
+        name: schemaName(field.name),
         type: mapSparkTypeToCommon(fieldType),
         nullable: field.nullable !== false
       };
 
-      if (field.type && typeof field.type === 'object') {
+      if (field.type && typeof field.type === 'object' && !Array.isArray(field.type)) {
         if (field.type.type === 'array' && field.type.elementType) {
           schemaField.items = {
             name: 'item',
-            type: mapSparkTypeToCommon(field.type.elementType),
+            type: mapSparkTypeToCommon(schemaType(field.type.elementType)),
             nullable: field.type.containsNull !== false
           };
         }
         if (field.type.type === 'struct' && field.type.fields) {
           schemaField.properties = {};
           for (const nestedField of field.type.fields) {
-            const nestedType = typeof nestedField.type === 'string' ? nestedField.type : nestedField.type.type;
-            schemaField.properties[nestedField.name] = {
-              name: nestedField.name,
+            const nestedType = schemaType(nestedField.type);
+            schemaField.properties[schemaName(nestedField.name)] = {
+              name: schemaName(nestedField.name),
               type: mapSparkTypeToCommon(nestedType),
               nullable: nestedField.nullable !== false
             };
@@ -637,7 +691,7 @@ function sparkToIntermediate(schema: any): IntermediateSchema {
         }
       }
 
-      fields[field.name] = schemaField;
+      fields[schemaName(field.name)] = schemaField;
     }
   }
 
@@ -665,9 +719,9 @@ function mapSparkTypeToCommon(sparkType: string): string {
 /**
  * Parse MongoDB Schema
  */
-function parseMongoSchema(schemaString: string): any {
+function parseMongoSchema(schemaString: string): SchemaNode {
   try {
-    const schema = JSON.parse(schemaString);
+    const schema = JSON.parse(schemaString) as SchemaNode;
     // MongoDB schema can be either a JSON Schema object or an array
     if (Array.isArray(schema)) {
       throw new Error('MongoDB schema should be a JSON Schema object, not an array');
@@ -684,13 +738,13 @@ function parseMongoSchema(schemaString: string): any {
 /**
  * Convert MongoDB Schema to intermediate representation
  */
-function mongoToIntermediate(schema: any): IntermediateSchema {
+function mongoToIntermediate(schema: SchemaNode): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
   const required = schema.required || [];
 
   if (schema.properties) {
-    for (const [key, value] of Object.entries(schema.properties as Record<string, any>)) {
-      const bsonType = value.bsonType || value.type;
+    for (const [key, value] of Object.entries(schema.properties as Record<string, SchemaNode>)) {
+      const bsonType = mongoBsonType(value.bsonType || value.type);
       const schemaField: SchemaField = {
         name: key,
         type: mapMongoTypeToCommon(bsonType),
@@ -704,7 +758,9 @@ function mongoToIntermediate(schema: any): IntermediateSchema {
       }
 
       if (bsonType === 'array' && value.items) {
-        const itemBsonType = value.items.bsonType || value.items.type;
+        const itemBsonType = typeof value.items === 'string'
+          ? value.items
+          : mongoBsonType(value.items.bsonType || value.items.type);
         schemaField.items = {
           name: 'item',
           type: mapMongoTypeToCommon(itemBsonType),
@@ -715,8 +771,8 @@ function mongoToIntermediate(schema: any): IntermediateSchema {
       if (bsonType === 'object' && value.properties) {
         schemaField.properties = {};
         const nestedRequired = value.required || [];
-        for (const [propKey, propValue] of Object.entries(value.properties as Record<string, any>)) {
-          const propBsonType = propValue.bsonType || propValue.type;
+        for (const [propKey, propValue] of Object.entries(value.properties as Record<string, SchemaNode>)) {
+          const propBsonType = mongoBsonType(propValue.bsonType || propValue.type);
           schemaField.properties[propKey] = {
             name: propKey,
             type: mapMongoTypeToCommon(propBsonType),
@@ -759,9 +815,9 @@ function mapMongoTypeToCommon(bsonType: string | string[]): string {
 /**
  * Parse BigQuery Schema
  */
-function parseBigQuerySchema(schemaString: string): any {
+function parseBigQuerySchema(schemaString: string): SchemaNode[] {
   try {
-    const schema = JSON.parse(schemaString);
+    const schema = JSON.parse(schemaString) as SchemaNode[];
     if (!Array.isArray(schema)) {
       throw new Error('BigQuery schema must be an array of field definitions');
     }
@@ -774,13 +830,13 @@ function parseBigQuerySchema(schemaString: string): any {
 /**
  * Convert BigQuery Schema to intermediate representation
  */
-function bigQueryToIntermediate(schema: any[]): IntermediateSchema {
+function bigQueryToIntermediate(schema: SchemaNode[]): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
 
   for (const field of schema) {
     const schemaField: SchemaField = {
-      name: field.name,
-      type: mapBigQueryTypeToCommon(field.type),
+      name: schemaName(field.name),
+      type: mapBigQueryTypeToCommon(schemaType(field.type)),
       nullable: field.mode !== 'REQUIRED',
       required: field.mode === 'REQUIRED',
       description: field.description
@@ -791,7 +847,7 @@ function bigQueryToIntermediate(schema: any[]): IntermediateSchema {
       schemaField.type = 'array';
       schemaField.items = {
         name: 'item',
-        type: mapBigQueryTypeToCommon(field.type),
+        type: mapBigQueryTypeToCommon(schemaType(field.type)),
         nullable: true
       };
     }
@@ -801,18 +857,18 @@ function bigQueryToIntermediate(schema: any[]): IntermediateSchema {
       schemaField.type = 'object';
       schemaField.properties = {};
       for (const nestedField of field.fields) {
-        schemaField.properties[nestedField.name] = {
-          name: nestedField.name,
-          type: mapBigQueryTypeToCommon(nestedField.type),
+        schemaField.properties[schemaName(nestedField.name)] = {
+          name: schemaName(nestedField.name),
+          type: mapBigQueryTypeToCommon(schemaType(nestedField.type)),
           nullable: nestedField.mode !== 'REQUIRED'
         };
         if (nestedField.mode === 'REPEATED') {
-          schemaField.properties[nestedField.name].type = 'array';
+          schemaField.properties[schemaName(nestedField.name)].type = 'array';
         }
       }
     }
 
-    fields[field.name] = schemaField;
+    fields[schemaName(field.name)] = schemaField;
   }
 
   return {
@@ -845,12 +901,12 @@ function intermediateToMongo(
 ): string {
   const fields = Object.values(intermediate.fields);
   const required: string[] = [];
-  const properties: Record<string, any> = {};
+  const properties: Record<string, SchemaNode> = {};
 
   for (const field of fields) {
     const name = convertFieldName(field.name, options.fieldNaming);
-    const bsonType = mapCommonTypeToMongo(field.type, field);
-    const fieldDef: any = {
+    const bsonType = mapCommonTypeToMongo(field.type);
+    const fieldDef: SchemaNode = {
       bsonType: bsonType,
       description: field.description
     };
@@ -862,7 +918,7 @@ function intermediateToMongo(
     if (field.type === 'array' && field.items) {
       fieldDef.bsonType = 'array';
       fieldDef.items = {
-        bsonType: mapCommonTypeToMongo(field.items.type, field.items)
+        bsonType: mapCommonTypeToMongo(field.items.type)
       };
     }
 
@@ -873,7 +929,7 @@ function intermediateToMongo(
       for (const [propKey, propValue] of Object.entries(field.properties)) {
         const propName = convertFieldName(propKey, options.fieldNaming);
         fieldDef.properties[propName] = {
-          bsonType: mapCommonTypeToMongo(propValue.type, propValue)
+          bsonType: mapCommonTypeToMongo(propValue.type)
         };
         if (!propValue.nullable) {
           nestedRequired.push(propName);
@@ -890,7 +946,7 @@ function intermediateToMongo(
     }
   }
 
-  const mongoSchema: any = {
+  const mongoSchema: SchemaNode = {
     bsonType: 'object',
     properties
   };
@@ -905,7 +961,7 @@ function intermediateToMongo(
 /**
  * Map common type to MongoDB BSON type
  */
-function mapCommonTypeToMongo(type: string, field: SchemaField): string {
+function mapCommonTypeToMongo(type: string): string {
   if (type === 'integer') return 'int';
   if (type === 'number') return 'double';
   if (type === 'string') return 'string';
@@ -923,12 +979,12 @@ function intermediateToBigQuery(
   options: SchemaConverterOptions
 ): string {
   const fields = Object.values(intermediate.fields);
-  const bigQueryFields: any[] = [];
+  const bigQueryFields: SchemaNode[] = [];
 
   for (const field of fields) {
     const name = convertFieldName(field.name, options.fieldNaming);
-    const bigQueryType = mapCommonTypeToBigQuery(field.type, field);
-    const fieldDef: any = {
+    const bigQueryType = mapCommonTypeToBigQuery(field.type);
+    const fieldDef: SchemaNode = {
       name,
       type: bigQueryType,
       mode: field.required || !field.nullable ? 'REQUIRED' : 'NULLABLE',
@@ -939,7 +995,7 @@ function intermediateToBigQuery(
     if (field.type === 'array') {
       fieldDef.mode = 'REPEATED';
       if (field.items) {
-        fieldDef.type = mapCommonTypeToBigQuery(field.items.type, field.items);
+        fieldDef.type = mapCommonTypeToBigQuery(field.items.type);
       }
     }
 
@@ -949,18 +1005,18 @@ function intermediateToBigQuery(
       fieldDef.fields = [];
       for (const [propKey, propValue] of Object.entries(field.properties)) {
         const propName = convertFieldName(propKey, options.fieldNaming);
-        let propType = mapCommonTypeToBigQuery(propValue.type, propValue);
+        let propType = mapCommonTypeToBigQuery(propValue.type);
         let propMode = propValue.nullable ? 'NULLABLE' : 'REQUIRED';
 
         // Handle arrays in nested objects
         if (propValue.type === 'array') {
           propMode = 'REPEATED';
           if (propValue.items) {
-            propType = mapCommonTypeToBigQuery(propValue.items.type, propValue.items);
+            propType = mapCommonTypeToBigQuery(propValue.items.type);
           }
         }
 
-        const nestedField: any = {
+        const nestedField: SchemaNode = {
           name: propName,
           type: propType,
           mode: propMode
@@ -972,7 +1028,7 @@ function intermediateToBigQuery(
           nestedField.fields = [];
           for (const [nestedPropKey, nestedPropValue] of Object.entries(propValue.properties)) {
             const nestedPropName = convertFieldName(nestedPropKey, options.fieldNaming);
-            const nestedPropType = mapCommonTypeToBigQuery(nestedPropValue.type, nestedPropValue);
+            const nestedPropType = mapCommonTypeToBigQuery(nestedPropValue.type);
             nestedField.fields.push({
               name: nestedPropName,
               type: nestedPropType,
@@ -994,7 +1050,7 @@ function intermediateToBigQuery(
 /**
  * Map common type to BigQuery type
  */
-function mapCommonTypeToBigQuery(type: string, field: SchemaField): string {
+function mapCommonTypeToBigQuery(type: string): string {
   if (type === 'integer') return 'INTEGER';
   if (type === 'number') return 'FLOAT';
   if (type === 'string') return 'STRING';
@@ -1006,7 +1062,7 @@ function mapCommonTypeToBigQuery(type: string, field: SchemaField): string {
 /**
  * Parse TypeScript interface/type/class
  */
-function parseTypeScript(input: string): any {
+function parseTypeScript(input: string): SchemaNode {
   // Remove comments
   const cleaned = input.replace(/\/\*[\s\S]*?\*\/|\/\/.*/g, '').trim();
 
@@ -1030,9 +1086,9 @@ function parseTypeScript(input: string): any {
 /**
  * Convert TypeScript to intermediate representation
  */
-function typescriptToIntermediate(parsed: any): IntermediateSchema {
+function typescriptToIntermediate(parsed: SchemaNode): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
-  const body = parsed.body;
+  const body = parsed.body ?? '';
 
   // Parse field definitions: name?: type; or name: type;
   const fieldRegex = /(\w+)(\??)\s*:\s*([^;]+);/g;
@@ -1094,7 +1150,7 @@ function typescriptToIntermediate(parsed: any): IntermediateSchema {
   return {
     type: 'object',
     fields,
-    name: parsed.name || 'Root'
+    name: parsed.name ?? 'Root'
   };
 }
 
@@ -1116,7 +1172,7 @@ function mapTypeScriptTypeToCommon(typeStr: string): string {
 /**
  * Parse Python class/dataclass/pydantic
  */
-function parsePython(input: string): any {
+function parsePython(input: string): SchemaNode {
   // Remove comments
   const cleaned = input.replace(/#.*/g, '').trim();
 
@@ -1143,9 +1199,9 @@ function parsePython(input: string): any {
 /**
  * Convert Python to intermediate representation
  */
-function pythonToIntermediate(parsed: any): IntermediateSchema {
+function pythonToIntermediate(parsed: SchemaNode): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
-  const body = parsed.body;
+  const body = parsed.body ?? '';
 
   // Parse field definitions: name: type = default or name: Optional[type] = None
   const fieldRegex = /(\w+)\s*:\s*([^=]+?)(?:\s*=\s*([^\n]+))?/g;
@@ -1198,7 +1254,7 @@ function pythonToIntermediate(parsed: any): IntermediateSchema {
   return {
     type: 'object',
     fields,
-    name: parsed.name || 'Root'
+    name: parsed.name ?? 'Root'
   };
 }
 
@@ -1238,7 +1294,7 @@ function parsePythonValue(value: string): unknown {
 /**
  * Parse SQL CREATE TABLE statement
  */
-function parseSQL(input: string): any {
+function parseSQL(input: string): SchemaNode {
   // Remove comments
   const cleaned = input.replace(/--.*/g, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
 
@@ -1260,9 +1316,9 @@ function parseSQL(input: string): any {
 /**
  * Convert SQL to intermediate representation
  */
-function sqlToIntermediate(parsed: any): IntermediateSchema {
+function sqlToIntermediate(parsed: SchemaNode): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
-  const columns = parsed.columns;
+  const columns = parsed.columns ?? '';
 
   // Parse column definitions: name TYPE constraints
   const columnRegex = /(\w+)\s+(\w+(?:\([^)]+\))?)\s*([^,]*)/g;
@@ -1292,7 +1348,7 @@ function sqlToIntermediate(parsed: any): IntermediateSchema {
   return {
     type: 'object',
     fields,
-    name: parsed.name || 'Root'
+    name: parsed.name ?? 'Root'
   };
 }
 
@@ -1329,23 +1385,23 @@ function parseSQLValue(value: string): unknown {
  * Parse Pandas Schema
  * Format: {"column1": "int64", "column2": "object"} or [{"name": "column1", "type": "int64"}, ...]
  */
-function parsePandasSchema(schemaString: string): any {
+function parsePandasSchema(schemaString: string): SchemaNode[] {
   try {
-    const schema = JSON.parse(schemaString);
+    const schema = JSON.parse(schemaString) as SchemaNode | SchemaNode[];
 
     // Handle dictionary format: {"column1": "int64", "column2": "object"}
     if (!Array.isArray(schema) && typeof schema === 'object') {
       return Object.entries(schema).map(([name, dtype]) => ({
         name,
-        type: dtype as string
+        type: typeof dtype === 'string' ? dtype : 'unknown'
       }));
     }
 
     // Handle array format: [{"name": "column1", "type": "int64"}, ...]
     if (Array.isArray(schema)) {
       return schema.map(field => ({
-        name: field.name || field.column,
-        type: field.type || field.dtype
+        name: schemaName(field.name || field.column),
+        type: schemaType(field.type || field.dtype)
       }));
     }
 
@@ -1358,17 +1414,17 @@ function parsePandasSchema(schemaString: string): any {
 /**
  * Convert Pandas Schema to intermediate representation
  */
-function pandasToIntermediate(schema: any[]): IntermediateSchema {
+function pandasToIntermediate(schema: SchemaNode[]): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
 
   for (const field of schema) {
     const schemaField: SchemaField = {
-      name: field.name,
-      type: mapPandasTypeToCommon(field.type),
+      name: schemaName(field.name),
+      type: mapPandasTypeToCommon(schemaType(field.type)),
       nullable: true // Pandas allows NaN/null by default
     };
 
-    fields[field.name] = schemaField;
+    fields[schemaName(field.name)] = schemaField;
   }
 
   return {
@@ -1428,23 +1484,23 @@ function mapCommonTypeToPandas(type: string): string {
  * Parse Polars Schema
  * Format: {"column1": "Int64", "column2": "Utf8"} or [{"name": "column1", "type": "Int64"}, ...]
  */
-function parsePolarsSchema(schemaString: string): any {
+function parsePolarsSchema(schemaString: string): SchemaNode[] {
   try {
-    const schema = JSON.parse(schemaString);
+    const schema = JSON.parse(schemaString) as SchemaNode | SchemaNode[];
 
     // Handle dictionary format: {"column1": "Int64", "column2": "Utf8"}
     if (!Array.isArray(schema) && typeof schema === 'object') {
       return Object.entries(schema).map(([name, type]) => ({
         name,
-        type: type as string
+        type: typeof type === 'string' ? type : 'unknown'
       }));
     }
 
     // Handle array format: [{"name": "column1", "type": "Int64"}, ...]
     if (Array.isArray(schema)) {
       return schema.map(field => ({
-        name: field.name || field.column,
-        type: field.type || field.dtype
+        name: schemaName(field.name || field.column),
+        type: schemaType(field.type || field.dtype)
       }));
     }
 
@@ -1457,17 +1513,17 @@ function parsePolarsSchema(schemaString: string): any {
 /**
  * Convert Polars Schema to intermediate representation
  */
-function polarsToIntermediate(schema: any[]): IntermediateSchema {
+function polarsToIntermediate(schema: SchemaNode[]): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
 
   for (const field of schema) {
     const schemaField: SchemaField = {
-      name: field.name,
-      type: mapPolarsTypeToCommon(field.type),
+      name: schemaName(field.name),
+      type: mapPolarsTypeToCommon(schemaType(field.type)),
       nullable: true // Polars allows null by default unless specified
     };
 
-    fields[field.name] = schemaField;
+    fields[schemaName(field.name)] = schemaField;
   }
 
   return {
@@ -1527,7 +1583,7 @@ function mapCommonTypeToPolars(type: string): string {
 /**
  * Parse Protocol Buffers schema (.proto)
  */
-function parseProtobufSchema(protoString: string): any {
+function parseProtobufSchema(protoString: string): SchemaNode {
   try {
     // Remove comments
     const cleaned = protoString
@@ -1541,13 +1597,13 @@ function parseProtobufSchema(protoString: string): any {
 
     // Extract message definitions
     const messageRegex = /message\s+(\w+)\s*\{([\s\S]*?)\}/g;
-    const messages: any[] = [];
+    const messages: SchemaNode[] = [];
     let match;
 
     while ((match = messageRegex.exec(cleaned)) !== null) {
       const messageName = match[1];
       const messageBody = match[2];
-      const fields: any[] = [];
+      const fields: SchemaNode[] = [];
 
       // Parse fields: type name = number [options];
       const fieldRegex = /(repeated\s+)?(optional\s+)?(\w+)\s+(\w+)\s*=\s*(\d+)(\s*\[[^\]]*\])?;/g;
@@ -1586,15 +1642,15 @@ function parseProtobufSchema(protoString: string): any {
 /**
  * Convert Protocol Buffers schema to intermediate representation
  */
-function protobufToIntermediate(parsed: any): IntermediateSchema {
+function protobufToIntermediate(parsed: SchemaNode): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
   const message = parsed.messages || parsed;
 
   if (message.fields && Array.isArray(message.fields)) {
     for (const field of message.fields) {
       const schemaField: SchemaField = {
-        name: field.name,
-        type: mapProtobufTypeToCommon(field.type),
+        name: schemaName(field.name),
+        type: mapProtobufTypeToCommon(schemaType(field.type)),
         nullable: field.optional || parsed.syntax === 'proto3',
         required: !field.optional && parsed.syntax === 'proto2'
       };
@@ -1604,12 +1660,12 @@ function protobufToIntermediate(parsed: any): IntermediateSchema {
         schemaField.type = 'array';
         schemaField.items = {
           name: 'item',
-          type: mapProtobufTypeToCommon(field.type),
+          type: mapProtobufTypeToCommon(schemaType(field.type)),
           nullable: true
         };
       }
 
-      fields[field.name] = schemaField;
+      fields[schemaName(field.name)] = schemaField;
     }
   }
 
@@ -1644,9 +1700,9 @@ function mapProtobufTypeToCommon(protoType: string): string {
 /**
  * Parse Apache Avro schema (JSON format)
  */
-function parseAvroSchema(schemaString: string): any {
+function parseAvroSchema(schemaString: string): SchemaNode {
   try {
-    const schema = JSON.parse(schemaString);
+    const schema = JSON.parse(schemaString) as SchemaNode;
 
     // Avro schema must have type "record" for object schemas
     if (schema.type === 'record' && schema.fields && Array.isArray(schema.fields)) {
@@ -1662,7 +1718,7 @@ function parseAvroSchema(schemaString: string): any {
 /**
  * Convert Apache Avro schema to intermediate representation
  */
-function avroToIntermediate(schema: any): IntermediateSchema {
+function avroToIntermediate(schema: SchemaNode): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
 
   if (schema.fields && Array.isArray(schema.fields)) {
@@ -1674,8 +1730,8 @@ function avroToIntermediate(schema: any): IntermediateSchema {
         : avroType;
 
       const schemaField: SchemaField = {
-        name: field.name,
-        type: mapAvroTypeToCommon(actualType),
+        name: schemaName(field.name),
+        type: mapAvroTypeToCommon(schemaType(actualType)),
         nullable: isNullable,
         required: !isNullable,
         description: field.doc,
@@ -1688,7 +1744,7 @@ function avroToIntermediate(schema: any): IntermediateSchema {
         const itemType = actualType.items;
         schemaField.items = {
           name: 'item',
-          type: mapAvroTypeToCommon(itemType),
+          type: mapAvroTypeToCommon(schemaType(itemType)),
           nullable: true
         };
       }
@@ -1709,15 +1765,15 @@ function avroToIntermediate(schema: any): IntermediateSchema {
             ? nestedAvroType.find(t => t !== 'null') || nestedAvroType[0]
             : nestedAvroType;
 
-          schemaField.properties[nestedField.name] = {
-            name: nestedField.name,
-            type: mapAvroTypeToCommon(nestedActualType),
+          schemaField.properties[schemaName(nestedField.name)] = {
+            name: schemaName(nestedField.name),
+            type: mapAvroTypeToCommon(schemaType(nestedActualType)),
             nullable: nestedIsNullable
           };
         }
       }
 
-      fields[field.name] = schemaField;
+      fields[schemaName(field.name)] = schemaField;
     }
   }
 
@@ -1731,7 +1787,7 @@ function avroToIntermediate(schema: any): IntermediateSchema {
 /**
  * Map Avro type to common type
  */
-function mapAvroTypeToCommon(avroType: string | any): string {
+function mapAvroTypeToCommon(avroType: string | SchemaNode): string {
   if (typeof avroType === 'string') {
     if (avroType === 'int' || avroType === 'long') return 'integer';
     if (avroType === 'float' || avroType === 'double') return 'number';
@@ -1753,7 +1809,7 @@ function mapAvroTypeToCommon(avroType: string | any): string {
 /**
  * Parse DuckDB Schema (SQL CREATE TABLE)
  */
-function parseDuckDBSchema(schemaString: string): any {
+function parseDuckDBSchema(schemaString: string): SchemaNode {
   try {
     // Remove comments
     const cleaned = schemaString.replace(/--.*/g, '').replace(/\/\*[\s\S]*?\*\//g, '').trim();
@@ -1779,9 +1835,9 @@ function parseDuckDBSchema(schemaString: string): any {
 /**
  * Convert DuckDB Schema to intermediate representation
  */
-function duckdbToIntermediate(parsed: any): IntermediateSchema {
+function duckdbToIntermediate(parsed: SchemaNode): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
-  const columns = parsed.columns;
+  const columns = parsed.columns ?? '';
 
   // Parse column definitions: name TYPE constraints
   const columnRegex = /(\w+)\s+(\w+(?:\([^)]+\))?(?:\[\])?)\s*([^,]*)/g;
@@ -1822,7 +1878,7 @@ function duckdbToIntermediate(parsed: any): IntermediateSchema {
   return {
     type: 'object',
     fields,
-    name: parsed.name || 'Root'
+    name: parsed.name ?? 'Root'
   };
 }
 
@@ -1847,7 +1903,7 @@ function mapDuckDBTypeToCommon(duckdbType: string): string {
 /**
  * Parse PySpark Schema (Python StructType code)
  */
-function parsePySparkSchema(pythonString: string): any {
+function parsePySparkSchema(pythonString: string): SchemaNode {
   try {
     // Remove comments
     const cleaned = pythonString.replace(/#.*/g, '').trim();
@@ -1859,7 +1915,7 @@ function parsePySparkSchema(pythonString: string): any {
     }
 
     const fieldsBody = structTypeMatch[1];
-    const fields: any[] = [];
+    const fields: SchemaNode[] = [];
 
     // Parse StructField definitions: StructField("name", Type(), nullable)
     const fieldRegex = /StructField\s*\(\s*["'](\w+)["']\s*,\s*(\w+Type)\(\)\s*,\s*(True|False)\s*\)/g;
@@ -1908,14 +1964,14 @@ function parsePySparkSchema(pythonString: string): any {
 /**
  * Convert PySpark Schema to intermediate representation
  */
-function pysparkToIntermediate(parsed: any): IntermediateSchema {
+function pysparkToIntermediate(parsed: SchemaNode): IntermediateSchema {
   const fields: Record<string, SchemaField> = {};
 
   if (parsed.fields && Array.isArray(parsed.fields)) {
     for (const field of parsed.fields) {
       const schemaField: SchemaField = {
-        name: field.name,
-        type: mapPySparkTypeToCommon(field.type),
+        name: schemaName(field.name),
+        type: mapPySparkTypeToCommon(schemaType(field.type)),
         nullable: field.nullable !== false
       };
 
@@ -1924,7 +1980,7 @@ function pysparkToIntermediate(parsed: any): IntermediateSchema {
         schemaField.type = 'array';
         schemaField.items = {
           name: 'item',
-          type: mapPySparkTypeToCommon(field.elementType),
+          type: mapPySparkTypeToCommon(schemaType(field.elementType)),
           nullable: true
         };
       }
@@ -1945,7 +2001,7 @@ function pysparkToIntermediate(parsed: any): IntermediateSchema {
         }
       }
 
-      fields[field.name] = schemaField;
+      fields[schemaName(field.name)] = schemaField;
     }
   }
 
@@ -2061,13 +2117,13 @@ function intermediateToAvro(
 ): string {
   const recordName = intermediate.name || 'Root';
   const fields = Object.values(intermediate.fields);
-  const avroFields: any[] = [];
+  const avroFields: SchemaNode[] = [];
 
   for (const field of fields) {
     const name = convertFieldName(field.name, options.fieldNaming);
-    const avroType = mapCommonTypeToAvro(field.type, field);
+    const avroType = mapCommonTypeToAvro(field.type);
 
-    const fieldDef: any = {
+    const fieldDef: SchemaNode = {
       name,
       type: field.nullable ? ['null', avroType] : avroType
     };
@@ -2085,16 +2141,16 @@ function intermediateToAvro(
     // Handle arrays
     if (field.type === 'array' && field.items) {
       fieldDef.type = field.nullable
-        ? ['null', { type: 'array', items: mapCommonTypeToAvro(field.items.type, field.items) }]
-        : { type: 'array', items: mapCommonTypeToAvro(field.items.type, field.items) };
+        ? ['null', { type: 'array', items: mapCommonTypeToAvro(field.items.type) }]
+        : { type: 'array', items: mapCommonTypeToAvro(field.items.type) };
     }
 
     // Handle nested objects
     if (field.type === 'object' && field.properties) {
-      const nestedFields: any[] = [];
+      const nestedFields: SchemaNode[] = [];
       for (const [propKey, propValue] of Object.entries(field.properties)) {
         const propName = convertFieldName(propKey, options.fieldNaming);
-        const propAvroType = mapCommonTypeToAvro(propValue.type, propValue);
+        const propAvroType = mapCommonTypeToAvro(propValue.type);
         nestedFields.push({
           name: propName,
           type: propValue.nullable ? ['null', propAvroType] : propAvroType
@@ -2120,7 +2176,7 @@ function intermediateToAvro(
 /**
  * Map common type to Avro type
  */
-function mapCommonTypeToAvro(type: string, field: SchemaField): string {
+function mapCommonTypeToAvro(type: string): string {
   if (type === 'integer') return 'int';
   if (type === 'number') return 'double';
   if (type === 'string') return 'string';
@@ -2229,20 +2285,20 @@ function intermediateToPySpark(
     const nullable = field.nullable ? 'True' : 'False';
 
     if (field.type === 'array' && field.items) {
-      const itemType = mapCommonTypeToPySpark(field.items.type, field.items);
+      const itemType = mapCommonTypeToPySpark(field.items.type);
       structFields.push(`${indent}StructField("${name}", ArrayType(${itemType}()), ${nullable})`);
     } else if (field.type === 'object' && field.properties) {
       // Handle nested StructType
       const nestedFields: string[] = [];
       for (const [propKey, propValue] of Object.entries(field.properties)) {
         const propName = convertFieldName(propKey, options.fieldNaming);
-        const propType = mapCommonTypeToPySpark(propValue.type, propValue);
+        const propType = mapCommonTypeToPySpark(propValue.type);
         const propNullable = propValue.nullable ? 'True' : 'False';
         nestedFields.push(`${indent}${indent}StructField("${propName}", ${propType}(), ${propNullable})`);
       }
       structFields.push(`${indent}StructField("${name}", StructType([\n${nestedFields.join(',\n')}\n${indent}]), ${nullable})`);
     } else {
-      const pysparkType = mapCommonTypeToPySpark(field.type, field);
+      const pysparkType = mapCommonTypeToPySpark(field.type);
       structFields.push(`${indent}StructField("${name}", ${pysparkType}(), ${nullable})`);
     }
   }
@@ -2255,7 +2311,7 @@ function intermediateToPySpark(
 /**
  * Map common type to PySpark type
  */
-function mapCommonTypeToPySpark(type: string, field: SchemaField): string {
+function mapCommonTypeToPySpark(type: string): string {
   if (type === 'integer') return 'IntegerType';
   if (type === 'number') return 'DoubleType';
   if (type === 'string') return 'StringType';

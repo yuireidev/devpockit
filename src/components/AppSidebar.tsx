@@ -60,6 +60,18 @@ import Image from "next/image"
 import { usePathname, useRouter } from "next/navigation"
 import * as React from "react"
 
+const subscribeToHydration = () => () => {}
+const getClientHydrationSnapshot = () => true
+const getServerHydrationSnapshot = () => false
+
+const getExpandedCategoryIds = (selectedTool?: string) => {
+  if (!selectedTool) return []
+  const category = toolCategories.find(cat =>
+    cat.tools.some(tool => tool.id === selectedTool)
+  )
+  return category ? [category.id] : []
+}
+
 // Map category IDs to lucide icons
 const getCategoryIcon = (categoryId: string): LucideIcon => {
   const iconMap: Record<string, LucideIcon> = {
@@ -101,27 +113,18 @@ export function AppSidebar({
   const sidebarShortcut = useKeyboardShortcut('sidebar')
   const { hydrated: pinsHydrated, isPinned, togglePinnedTool } = useToolActivity()
   const [codeEditorTheme, setCodeEditorTheme] = useCodeEditorTheme('basicDark')
-  const [mounted, setMounted] = React.useState(false)
-  const [openCategories, setOpenCategories] = React.useState<Set<string>>(new Set())
+  const mounted = React.useSyncExternalStore(
+    subscribeToHydration,
+    getClientHydrationSnapshot,
+    getServerHydrationSnapshot
+  )
+  const [openCategories, setOpenCategories] = React.useState<Set<string>>(() => new Set(getExpandedCategoryIds(selectedTool)))
+  const [previousSelectedTool, setPreviousSelectedTool] = React.useState(selectedTool)
   const [isLogoHovered, setIsLogoHovered] = React.useState(false)
 
-  // Avoid hydration mismatch by waiting for client-side mount
-  React.useEffect(() => {
-    setMounted(true)
-  }, [])
-
-  // Determine which category contains the selected tool and auto-expand it
-  const getExpandedCategories = React.useMemo(() => {
-    if (!selectedTool) return []
-    const category = toolCategories.find(cat =>
-      cat.tools.some(tool => tool.id === selectedTool)
-    )
-    return category ? [category.id] : []
-  }, [selectedTool])
-
-  // Update open categories when selectedTool changes
-  React.useEffect(() => {
-    const expandedCategories = getExpandedCategories
+  if (selectedTool !== previousSelectedTool) {
+    setPreviousSelectedTool(selectedTool)
+    const expandedCategories = getExpandedCategoryIds(selectedTool)
     if (expandedCategories.length > 0) {
       setOpenCategories(prev => {
         const newSet = new Set(prev)
@@ -129,7 +132,7 @@ export function AppSidebar({
         return newSet
       })
     }
-  }, [getExpandedCategories])
+  }
 
   const handleToolSelect = (toolId: string) => {
     if (onToolSelect) {

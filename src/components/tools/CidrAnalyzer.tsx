@@ -39,62 +39,38 @@ const CIDR_EXAMPLES = [
 
 export function CidrAnalyzer({ className, instanceId }: CidrAnalyzerProps) {
   const { toolState, updateToolState } = useToolState('cidr-analyzer', instanceId);
+  const savedOptions = toolState?.options as Record<string, unknown> | undefined;
 
   // Initialize with defaults
-  const [input, setInput] = useState('');
-  const [output, setOutput] = useState('');
-  const [error, setError] = useState('');
+  const [input, setInput] = useState((toolState?.input as string) ?? (''));
+  const [output, setOutput] = useState((toolState?.output as string) ?? (''));
+  const [error, setError] = useState((toolState?.error as string) ?? (''));
   const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showNetworkInfo, setShowNetworkInfo] = useState(true);
-  const [showStatistics, setShowStatistics] = useState(false);
-  const [maxSubnets, setMaxSubnets] = useState(0); // 0 means None
-  const [isHydrated, setIsHydrated] = useState(false);
+  const [showNetworkInfo, setShowNetworkInfo] = useState(() => (savedOptions?.showNetworkInfo as boolean | undefined) ?? true);
+  const [showStatistics, setShowStatistics] = useState(() => (savedOptions?.showStatistics as boolean | undefined) ?? false);
+  const [maxSubnets, setMaxSubnets] = useState(() => (savedOptions?.maxSubnets as number | undefined) ?? 0); // 0 means None
+
 
   // Editor settings
   const [theme] = useCodeEditorTheme('basicDark');
   const [wrapText, setWrapText] = useState(true);
 
   // Hydrate state from toolState after mount
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.input) setInput(toolState.input as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.options) {
-        const opts = toolState.options as Record<string, unknown>;
-        if (opts.showNetworkInfo !== undefined) setShowNetworkInfo(opts.showNetworkInfo as boolean);
-        if (opts.showStatistics !== undefined) setShowStatistics(opts.showStatistics as boolean);
-        if (opts.maxSubnets !== undefined) setMaxSubnets(opts.maxSubnets as number);
-      }
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         input,
         output,
         error,
         options: { showNetworkInfo, showStatistics, maxSubnets }
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, output, error, showNetworkInfo, showStatistics, maxSubnets, isHydrated]);
+  }, [input, output, error, showNetworkInfo, showStatistics, maxSubnets]);
 
   // Reset state when tool is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setInput('');
-      setOutput('');
-      setError('');
-      setShowNetworkInfo(true);
-      setShowStatistics(false);
-      setMaxSubnets(0);
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleAnalyze = async () => {
     if (!input.trim()) {

@@ -101,7 +101,7 @@ export function ToolCard({
             )}
           >
             {React.isValidElement(icon)
-              ? React.cloneElement(icon as React.ReactElement<any>, {
+              ? React.cloneElement(icon as React.ReactElement<{ strokeWidth?: number }>, {
                   strokeWidth: 1.5,
                 })
               : icon}

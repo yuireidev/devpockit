@@ -15,7 +15,7 @@ import {
 } from '@heroicons/react/24/outline';
 import { CheckIcon } from '@heroicons/react/24/solid';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { List, useListRef } from 'react-window';
+import { List, useListRef, type RowComponentProps } from 'react-window';
 
 export interface XmlTreeViewProps {
   xmlString: string;
@@ -114,7 +114,6 @@ interface TreeNodeItemProps {
   onToggle: (path: string) => void;
   onCopy: (node: XmlTreeNode) => void;
   searchTerm: string;
-  itemHeight: number;
   isCopied: boolean;
 }
 
@@ -125,14 +124,12 @@ function TreeNodeItem({
   onToggle,
   onCopy,
   searchTerm,
-  itemHeight,
   isCopied,
 }: TreeNodeItemProps) {
   const hasChildren = node.children && node.children.length > 0;
   // Calculate indent from XPath depth (count path segments, excluding root)
   const pathDepth = node.xpath === '/' ? 0 : node.xpath.split('/').filter(p => p).length - 1;
   const indent = pathDepth * 20;
-  const isRoot = node.xpath === '/' || pathDepth === 0;
 
   // Format display name
   let displayName = node.name;
@@ -266,7 +263,6 @@ export function XmlTreeView({
   className,
   height = '500px',
 }: XmlTreeViewProps) {
-  const [expandedPaths, setExpandedPaths] = useState<Set<string>>(new Set());
   const [searchTerm, setSearchTerm] = useState('');
   const [copiedPath, setCopiedPath] = useState<string | null>(null);
   const listRef = useListRef(null);
@@ -286,9 +282,7 @@ export function XmlTreeView({
     return [root];
   }, [root]);
 
-  // Initialize expanded paths based on maxDepth
-  useEffect(() => {
-    if (!root) return;
+  const initialExpandedPaths = useMemo(() => {
     const initialExpanded = new Set<string>();
     function markExpanded(node: XmlTreeNode, depth: number) {
       if (depth < maxDepth && node.children && node.children.length > 0) {
@@ -298,9 +292,17 @@ export function XmlTreeView({
         });
       }
     }
-    markExpanded(root, 0);
-    setExpandedPaths(initialExpanded);
+    if (root) markExpanded(root, 0);
+    return initialExpanded;
   }, [root, maxDepth]);
+  const [expandedPaths, setExpandedPaths] = useState(initialExpandedPaths);
+  const [previousRoot, setPreviousRoot] = useState(root);
+  const [previousMaxDepth, setPreviousMaxDepth] = useState(maxDepth);
+  if (root !== previousRoot || maxDepth !== previousMaxDepth) {
+    setPreviousRoot(root);
+    setPreviousMaxDepth(maxDepth);
+    setExpandedPaths(initialExpandedPaths);
+  }
 
   // Flatten tree for virtual scrolling
   const flattenedNodes = useMemo(() => {
@@ -489,7 +491,7 @@ export function XmlTreeView({
   const listHeight = Math.max(containerHeight - 60, 100);
 
   // Row component for react-window v2
-  const RowComponent = useCallback(({ index, style, ariaAttributes }: { index: number; style: React.CSSProperties; ariaAttributes: any }) => {
+  const RowComponent = useCallback(({ index, style, ariaAttributes }: RowComponentProps) => {
     const node = filteredNodes[index];
     if (!node) {
       return <div style={style} />;
@@ -504,12 +506,11 @@ export function XmlTreeView({
           onToggle={handleToggle}
           onCopy={handleCopy}
           searchTerm={searchTerm}
-          itemHeight={itemHeight}
           isCopied={copiedPath === node.xpath}
         />
       </div>
     );
-  }, [filteredNodes, highlightedPathSet, expandedPaths, handleToggle, handleCopy, searchTerm, copiedPath, itemHeight]);
+  }, [filteredNodes, highlightedPathSet, expandedPaths, handleToggle, handleCopy, searchTerm, copiedPath]);
 
   if (parseError) {
     return (

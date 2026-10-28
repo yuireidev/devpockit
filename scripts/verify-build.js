@@ -1,4 +1,5 @@
 #!/usr/bin/env node
+/* eslint @typescript-eslint/no-require-imports: off -- This Node script runs as CommonJS. */
 
 /**
  * DevPockit Build Verification Script
@@ -45,7 +46,7 @@ function getFileSize(filePath) {
   try {
     const stats = fs.statSync(filePath);
     return (stats.size / 1024).toFixed(2) + ' KB';
-  } catch (error) {
+  } catch {
     return 'Unknown';
   }
 }

@@ -4,15 +4,38 @@
  * Supports YAML-specific features: anchors, aliases, tags, and multi-document YAML
  */
 
-import { parse, parseAllDocuments, parseDocument, stringify } from 'yaml';
+import { parse, parseAllDocuments, parseDocument, stringify, type Document, type Node } from 'yaml';
+
+interface YamlAstNode {
+  anchor?: string;
+  type?: string;
+  source?: string;
+  tag?: string;
+  items?: unknown[];
+  key?: unknown;
+  value?: unknown;
+  toJS?: (doc?: Document<Node, boolean>) => unknown;
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value);
+}
+
+function asYamlAstNode(value: unknown): YamlAstNode | null {
+  return isRecord(value) ? (value as YamlAstNode) : null;
+}
+
+function getProperty(value: unknown, key: string): unknown {
+  return isRecord(value) ? value[key] : undefined;
+}
 
 export interface YamlPathResult {
   success: boolean;
-  matches: any[];
+  matches: unknown[];
   paths: string[];
   count: number;
   error?: string;
-  anchors?: Map<string, any>; // YAML-specific: anchor definitions
+  anchors?: Map<string, unknown>; // YAML-specific: anchor definitions
   aliases?: Map<string, string>; // YAML-specific: alias references
 }
 
@@ -26,15 +49,15 @@ export interface YamlPathOptions {
 }
 
 export interface YamlDocument {
-  content: any;
-  anchors: Map<string, any>;
+  content: unknown;
+  anchors: Map<string, unknown>;
   aliases: Map<string, string>;
   tags: Map<string, string>;
   lineNumber?: number; // For multi-document support
 }
 
 export interface YamlMetadata {
-  anchors: Map<string, any>;
+  anchors: Map<string, unknown>;
   aliases: Map<string, string>;
   tags: Map<string, string>;
 }
@@ -59,14 +82,6 @@ interface Token {
   type: TokenType;
   value: string;
   position: number;
-}
-
-interface PathNode {
-  type: 'root' | 'property' | 'index' | 'wildcard' | 'slice' | 'anchor' | 'alias' | 'tag' | 'recursive';
-  value?: string | number;
-  children?: PathNode[];
-  start?: number;
-  end?: number;
 }
 
 /**
@@ -102,7 +117,7 @@ export function parseYamlWithMetadata(yamlString: string): {
           }
 
           const content = doc.toJS();
-          const anchors = new Map<string, any>();
+          const anchors = new Map<string, unknown>();
           const aliases = new Map<string, string>();
           const tags = new Map<string, string>();
 
@@ -122,10 +137,10 @@ export function parseYamlWithMetadata(yamlString: string): {
             lineNumber: doc.range ? doc.range[0] : undefined
           });
         });
-      } catch (multiDocError) {
+    } catch {
         // Fallback: try parsing as single document
         const content = parse(yamlString);
-        const anchors = new Map<string, any>();
+        const anchors = new Map<string, unknown>();
         const aliases = new Map<string, string>();
         const tags = new Map<string, string>();
 
@@ -149,7 +164,7 @@ export function parseYamlWithMetadata(yamlString: string): {
         }
 
         const content = doc.toJS();
-        const anchors = new Map<string, any>();
+        const anchors = new Map<string, unknown>();
         const aliases = new Map<string, string>();
         const tags = new Map<string, string>();
 
@@ -168,10 +183,10 @@ export function parseYamlWithMetadata(yamlString: string): {
           aliases,
           tags
         });
-      } catch (docError) {
+    } catch {
         // Fallback: use simple parse
         const content = parse(yamlString);
-        const anchors = new Map<string, any>();
+        const anchors = new Map<string, unknown>();
         const aliases = new Map<string, string>();
         const tags = new Map<string, string>();
 
@@ -203,10 +218,10 @@ export function parseYamlWithMetadata(yamlString: string): {
  * Uses the document's internal structure to find anchors and aliases
  */
 function extractMetadataFromDocument(
-  doc: any,
-  content: any,
+  doc: Document<Node, boolean>,
+  content: unknown,
   currentPath: string,
-  anchors: Map<string, any>,
+  anchors: Map<string, unknown>,
   aliases: Map<string, string>,
   tags: Map<string, string>
 ): void {
@@ -231,60 +246,63 @@ function extractMetadataFromDocument(
  * This is a helper to work with yaml library's internal structure
  */
 function traverseDocumentNode(
-  node: any,
-  data: any,
+  node: unknown,
+  data: unknown,
   currentPath: string,
-  anchors: Map<string, any>,
+  anchors: Map<string, unknown>,
   aliases: Map<string, string>,
   tags: Map<string, string>,
-  doc: any
+  doc: Document<Node, boolean>
 ): void {
-  if (!node || typeof node !== 'object') {
+  const astNode = asYamlAstNode(node);
+  if (!astNode) {
     return;
   }
 
   // FIRST: Check for anchor - this must be done before type checking
-  if (node.anchor && typeof node.anchor === 'string') {
+  if (astNode.anchor) {
     let nodeValue;
     try {
       // toJS() requires the document as argument in yaml v2
-      nodeValue = node.toJS ? node.toJS(doc) : (data !== undefined ? data : node);
-    } catch (e) {
+      nodeValue = astNode.toJS ? astNode.toJS(doc) : (data !== undefined ? data : node);
+      } catch {
       nodeValue = data !== undefined ? data : node;
     }
-    anchors.set(node.anchor, nodeValue);
+    anchors.set(astNode.anchor, nodeValue);
   }
 
   // Check for alias (yaml library v2 uses type 'ALIAS' or source property)
-  if ((node.type === 'ALIAS' || node.source === 'ALIAS') && node.anchor) {
-    aliases.set(currentPath, node.anchor);
+  if ((astNode.type === 'ALIAS' || astNode.source === 'ALIAS') && astNode.anchor) {
+    aliases.set(currentPath, astNode.anchor);
   }
 
   // Check for tag
-  if (node.tag && node.tag !== '?' && node.tag !== '!') {
-    tags.set(currentPath, node.tag);
+  if (astNode.tag && astNode.tag !== '?' && astNode.tag !== '!') {
+    tags.set(currentPath, astNode.tag);
   }
 
   // THEN: Traverse based on structure
-  if (node.items && Array.isArray(node.items)) {
+  if (astNode.items) {
     // Check if it's a MAP (key-value pairs) or sequence (array)
-    if (node.items.length > 0 && node.items[0] && node.items[0].key !== undefined) {
+    if (astNode.items.length > 0 && asYamlAstNode(astNode.items[0])?.key !== undefined) {
       // It's a MAP with key-value pairs
-      node.items.forEach((kv: any) => {
-        if (kv && kv.key && kv.value) {
-          const key = kv.key.value !== undefined ? kv.key.value : (kv.key.toJS ? kv.key.toJS(doc) : kv.key);
+      astNode.items.forEach(item => {
+        const pair = asYamlAstNode(item);
+        const keyNode = asYamlAstNode(pair?.key);
+        if (pair?.key && pair.value && keyNode) {
+          const key = keyNode.value !== undefined ? keyNode.value : (keyNode.toJS ? keyNode.toJS(doc) : pair.key);
           const keyStr = typeof key === 'string' ? key : String(key);
           const newPath = `${currentPath}.${keyStr}`;
 
           // Get the value from data if available
-          const valueData = data && typeof data === 'object' ? data[keyStr] : undefined;
+          const valueData = getProperty(data, keyStr);
 
-          traverseDocumentNode(kv.value, valueData, newPath, anchors, aliases, tags, doc);
+          traverseDocumentNode(pair.value, valueData, newPath, anchors, aliases, tags, doc);
         }
       });
     } else {
       // It's a sequence (array)
-      node.items.forEach((item: any, index: number) => {
+      astNode.items.forEach((item, index) => {
         const itemData = Array.isArray(data) ? data[index] : undefined;
         traverseDocumentNode(item, itemData, `${currentPath}[${index}]`, anchors, aliases, tags, doc);
       });
@@ -297,43 +315,46 @@ function traverseDocumentNode(
  * Recursively searches the AST for nodes with anchor property
  */
 function extractAnchorsFromAST(
-  node: any,
-  data: any,
+  node: unknown,
+  data: unknown,
   currentPath: string,
-  anchors: Map<string, any>,
-  doc: any
+  anchors: Map<string, unknown>,
+  doc: Document<Node, boolean>
 ): void {
-  if (!node || typeof node !== 'object') {
+  const astNode = asYamlAstNode(node);
+  if (!astNode) {
     return;
   }
 
   // Check if this node has an anchor
-  if (node.anchor && typeof node.anchor === 'string') {
+  if (astNode.anchor) {
     let value;
     try {
-      value = node.toJS ? node.toJS(doc) : data;
-    } catch (e) {
+      value = astNode.toJS ? astNode.toJS(doc) : data;
+      } catch {
       value = data;
     }
-    anchors.set(node.anchor, value);
+    anchors.set(astNode.anchor, value);
   }
 
   // Recursively traverse
-  if (node.items && Array.isArray(node.items)) {
+  if (astNode.items) {
     // Check if it's a MAP (key-value pairs) or sequence
-    if (node.items.length > 0 && node.items[0] && node.items[0].key !== undefined) {
+    if (astNode.items.length > 0 && asYamlAstNode(astNode.items[0])?.key !== undefined) {
       // For maps, items are key-value pairs
-      node.items.forEach((kv: any) => {
-        if (kv && kv.key && kv.value) {
-          const key = kv.key.value !== undefined ? kv.key.value : (kv.key.toJS ? kv.key.toJS(doc) : kv.key);
+      astNode.items.forEach(item => {
+        const pair = asYamlAstNode(item);
+        const keyNode = asYamlAstNode(pair?.key);
+        if (pair?.key && pair.value && keyNode) {
+          const key = keyNode.value !== undefined ? keyNode.value : (keyNode.toJS ? keyNode.toJS(doc) : pair.key);
           const keyStr = typeof key === 'string' ? key : String(key);
-          const valueData = data && typeof data === 'object' ? data[keyStr] : undefined;
-          extractAnchorsFromAST(kv.value, valueData, `${currentPath}.${keyStr}`, anchors, doc);
+          const valueData = getProperty(data, keyStr);
+          extractAnchorsFromAST(pair.value, valueData, `${currentPath}.${keyStr}`, anchors, doc);
         }
       });
     } else {
       // For sequences, items are array elements
-      node.items.forEach((item: any, index: number) => {
+      astNode.items.forEach((item, index) => {
         const itemData = Array.isArray(data) ? data[index] : undefined;
         extractAnchorsFromAST(item, itemData, `${currentPath}[${index}]`, anchors, doc);
       });
@@ -348,9 +369,9 @@ function extractAnchorsFromAST(
  * but it can help identify some patterns
  */
 function extractMetadataFromData(
-  data: any,
+  data: unknown,
   currentPath: string,
-  anchors: Map<string, any>,
+  anchors: Map<string, unknown>,
   aliases: Map<string, string>,
   tags: Map<string, string>
 ): void {
@@ -366,7 +387,7 @@ function extractMetadataFromData(
     data.forEach((item, index) => {
       extractMetadataFromData(item, `${currentPath}[${index}]`, anchors, aliases, tags);
     });
-  } else if (typeof data === 'object') {
+  } else if (isRecord(data)) {
     Object.keys(data).forEach(key => {
       const value = data[key];
       const newPath = `${currentPath}.${key}`;
@@ -390,7 +411,7 @@ function extractMetadataFromData(
  * @returns Evaluation result with matches and paths
  */
 export function evaluateYamlPath(
-  yamlData: any,
+  yamlData: unknown,
   path: string,
   options?: YamlPathOptions,
   metadata?: YamlMetadata
@@ -463,12 +484,12 @@ export function evaluateYamlPath(
 }
 
 interface PathEvaluationResult {
-  values: any[];
+  values: unknown[];
   paths: string[];
 }
 
 function evaluatePath(
-  data: any,
+  data: unknown,
   path: string,
   currentPath: string,
   metadata?: YamlMetadata
@@ -512,7 +533,7 @@ function evaluatePath(
     if (tagMatch) {
       const tagName = tagMatch[1];
       const remainingPath = cleanPath.substring(tagMatch[0].length);
-      return evaluateTag(data, tagName, remainingPath, currentPath, metadata);
+      return evaluateTag(data, tagName, remainingPath, currentPath);
     }
   }
 
@@ -540,7 +561,7 @@ function evaluatePath(
   }
 
   // Navigate to property
-  if (data && typeof data === 'object') {
+  if (data !== null && typeof data === 'object') {
     if (Array.isArray(data)) {
       if (firstPart && firstPart !== '*') {
         const results: PathEvaluationResult = { values: [], paths: [] };
@@ -566,7 +587,7 @@ function evaluatePath(
         });
         return results;
       }
-    } else if (firstPart in data) {
+    } else if (isRecord(data) && firstPart in data) {
       const newPath = `${currentPath}.${firstPart}`;
       return evaluatePath(data[firstPart], remainingParts, newPath, metadata);
     }
@@ -576,7 +597,7 @@ function evaluatePath(
 }
 
 function evaluateBracketNotation(
-  data: any,
+  data: unknown,
   path: string,
   currentPath: string,
   metadata?: YamlMetadata
@@ -649,7 +670,7 @@ function evaluateBracketNotation(
     }
   }
 
-  if (!data || typeof data !== 'object') {
+  if (!isRecord(data)) {
     return { values: [], paths: [] };
   }
 
@@ -677,7 +698,7 @@ function evaluateBracketNotation(
         results.paths.push(...itemResults.paths);
       });
       return results;
-    } else if (typeof data === 'object' && data !== null) {
+    } else if (isRecord(data)) {
       const results: PathEvaluationResult = { values: [], paths: [] };
       Object.keys(data).forEach(key => {
         const itemPath = `${currentPath}['${key}']`;
@@ -700,14 +721,14 @@ function evaluateBracketNotation(
 }
 
 function evaluateWildcard(
-  data: any,
+  data: unknown,
   remainingPath: string,
   currentPath: string,
   metadata?: YamlMetadata
 ): PathEvaluationResult {
   const results: PathEvaluationResult = { values: [], paths: [] };
 
-  if (!data || typeof data !== 'object') {
+  if (data === null || typeof data !== 'object') {
     return results;
   }
 
@@ -718,7 +739,7 @@ function evaluateWildcard(
       results.values.push(...itemResults.values);
       results.paths.push(...itemResults.paths);
     });
-  } else {
+  } else if (isRecord(data)) {
     Object.keys(data).forEach(key => {
       const itemPath = `${currentPath}.${key}`;
       const itemResults = evaluatePath(data[key], remainingPath, itemPath, metadata);
@@ -731,7 +752,7 @@ function evaluateWildcard(
 }
 
 function collectRecursive(
-  data: any,
+  data: unknown,
   path: string,
   currentPath: string,
   results: PathEvaluationResult,
@@ -748,12 +769,12 @@ function collectRecursive(
     }
   }
 
-  if (data && typeof data === 'object') {
+  if (data !== null && typeof data === 'object') {
     if (Array.isArray(data)) {
       data.forEach((item, index) => {
         collectRecursive(item, path, `${currentPath}[${index}]`, results, metadata);
       });
-    } else {
+    } else if (isRecord(data)) {
       Object.keys(data).forEach(key => {
         collectRecursive(data[key], path, `${currentPath}.${key}`, results, metadata);
       });
@@ -765,11 +786,11 @@ function collectRecursive(
  * Handle anchor references (YAML-specific)
  */
 function evaluateAnchor(
-  data: any,
+  data: unknown,
   anchorName: string,
   remainingPath: string,
   currentPath: string,
-  anchors: Map<string, any>
+  anchors: Map<string, unknown>
 ): PathEvaluationResult {
   const anchorValue = anchors.get(anchorName);
   if (anchorValue === undefined) {
@@ -788,51 +809,18 @@ function evaluateAnchor(
 }
 
 /**
- * Handle alias references (YAML-specific)
- */
-function evaluateAlias(
-  data: any,
-  aliasName: string,
-  remainingPath: string,
-  currentPath: string,
-  aliases: Map<string, string>,
-  anchors: Map<string, any>
-): PathEvaluationResult {
-  const anchorName = aliases.get(aliasName);
-  if (!anchorName) {
-    return { values: [], paths: [] };
-  }
-
-  const anchorValue = anchors.get(anchorName);
-  if (anchorValue === undefined) {
-    return { values: [], paths: [] };
-  }
-
-  const aliasPath = `${currentPath}.*${aliasName}`;
-  if (remainingPath && remainingPath !== '') {
-    return evaluatePath(anchorValue, remainingPath, aliasPath);
-  } else {
-    return {
-      values: [anchorValue],
-      paths: [aliasPath]
-    };
-  }
-}
-
-/**
  * Handle tag selectors (YAML-specific)
  */
 function evaluateTag(
-  data: any,
+  data: unknown,
   tagName: string,
   remainingPath: string,
-  currentPath: string,
-  metadata?: YamlMetadata
+  currentPath: string
 ): PathEvaluationResult {
   const results: PathEvaluationResult = { values: [], paths: [] };
 
   // Recursively find all nodes with the specified tag
-  function findTaggedNodes(node: any, path: string): void {
+  function findTaggedNodes(node: unknown, path: string): void {
     // Check if current node has the tag (this would require metadata)
     // For now, we'll do a basic type check based on tag name
     if (tagName === '!!str' && typeof node === 'string') {
@@ -870,7 +858,7 @@ function evaluateTag(
         node.forEach((item, index) => {
           findTaggedNodes(item, `${path}[${index}]`);
         });
-      } else {
+      } else if (isRecord(node)) {
         Object.keys(node).forEach(key => {
           findTaggedNodes(node[key], `${path}.${key}`);
         });
@@ -1129,7 +1117,7 @@ export function formatYamlPathResults(
     return 'No matches found';
   }
 
-  const output: any = {
+  const output: Record<string, unknown> = {
     count: result.count,
     matches: result.matches.map((match, index) => ({
       path: result.paths[index] || `$[${index}]`,
@@ -1160,8 +1148,8 @@ export function formatYamlPathResults(
  * @returns Path to the value or null if not found
  */
 export function findYamlPath(
-  data: any,
-  targetValue: any,
+  data: unknown,
+  targetValue: unknown,
   currentPath: string = '$'
 ): string | null {
   // Use strict equality for primitives
@@ -1169,13 +1157,13 @@ export function findYamlPath(
     return currentPath;
   }
 
-  if (data && typeof data === 'object') {
+  if (data !== null && typeof data === 'object') {
     if (Array.isArray(data)) {
       for (let i = 0; i < data.length; i++) {
         const path = findYamlPath(data[i], targetValue, `${currentPath}[${i}]`);
         if (path) return path;
       }
-    } else {
+    } else if (isRecord(data)) {
       for (const key in data) {
         const path = findYamlPath(data[key], targetValue, `${currentPath}.${key}`);
         if (path) return path;
@@ -1192,15 +1180,15 @@ export function findYamlPath(
  * @param currentPath - Current path in the tree (default: '$')
  * @returns Array of all paths in the document
  */
-export function getAllYamlPaths(data: any, currentPath: string = '$'): string[] {
+export function getAllYamlPaths(data: unknown, currentPath: string = '$'): string[] {
   const paths: string[] = [currentPath];
 
-  if (data && typeof data === 'object') {
+  if (data !== null && typeof data === 'object') {
     if (Array.isArray(data)) {
       data.forEach((item, index) => {
         paths.push(...getAllYamlPaths(item, `${currentPath}[${index}]`));
       });
-    } else {
+    } else if (isRecord(data)) {
       Object.keys(data).forEach(key => {
         paths.push(...getAllYamlPaths(data[key], `${currentPath}.${key}`));
       });
@@ -1216,7 +1204,7 @@ export function getAllYamlPaths(data: any, currentPath: string = '$'): string[] 
  * @param path - The path to check
  * @returns True if path exists, false otherwise
  */
-export function yamlPathExists(data: any, path: string): boolean {
+export function yamlPathExists(data: unknown, path: string): boolean {
   try {
     const result = evaluateYamlPath(data, path);
     return result.success && result.count > 0;

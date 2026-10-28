@@ -228,16 +228,6 @@ export function NumberBaseConverter({ className, instanceId }: NumberBaseConvert
     }
   };
 
-  const getBaseOption = (base: NumberBase) => {
-    return ALL_BASES.find(b => b.value === base) || {
-      value: base,
-      label: `Base ${base}`,
-      symbol: '🔣',
-      prefix: '',
-      description: `Base ${base}`,
-    };
-  };
-
   // Create output tabs
   const outputTabs: CodeOutputTab[] = useMemo(() => [
     {

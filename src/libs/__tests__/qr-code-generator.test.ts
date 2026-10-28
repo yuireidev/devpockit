@@ -6,6 +6,7 @@ import {
     validateQrCodeInput,
     validateQrCodeOptions
 } from '@/libs/qr-code-generator';
+import type { QrCodeOptions } from '@/libs/qr-code-generator';
 
 // Mock the QRCode library
 jest.mock('qrcode', () => ({
@@ -217,12 +218,12 @@ describe('QR Code Generator Utility Functions', () => {
     });
 
     it('should reject invalid error correction', () => {
-      const options = { ...validOptions, errorCorrection: 'X' as any };
+      const options = { ...validOptions, errorCorrection: 'X' as unknown as QrCodeOptions['errorCorrection'] };
       expect(() => validateQrCodeOptions(options)).toThrow('Error correction must be L, M, Q, or H');
     });
 
     it('should reject invalid format', () => {
-      const options = { ...validOptions, format: 'jpg' as any };
+      const options = { ...validOptions, format: 'jpg' as unknown as QrCodeOptions['format'] };
       expect(() => validateQrCodeOptions(options)).toThrow('Format must be png or svg');
     });
 

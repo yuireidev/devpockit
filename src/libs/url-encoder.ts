@@ -63,7 +63,7 @@ export function validateUrl(url: string): UrlValidationResult {
         hash: parsedUrl.hash
       }
     };
-  } catch (error) {
+  } catch {
     return {
       isValid: false,
       error: 'Invalid URL format'
@@ -84,7 +84,7 @@ export function encodeUrlComponent(url: string): string {
 export function decodeUrlComponent(encodedUrl: string): string {
   try {
     return decodeURIComponent(encodedUrl);
-  } catch (error) {
+  } catch {
     throw new Error('Invalid encoded URL');
   }
 }
@@ -102,7 +102,7 @@ export function encodeUri(url: string): string {
 export function decodeUri(encodedUrl: string): string {
   try {
     return decodeURI(encodedUrl);
-  } catch (error) {
+  } catch {
     throw new Error('Invalid encoded URI');
   }
 }

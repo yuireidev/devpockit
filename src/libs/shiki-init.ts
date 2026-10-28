@@ -4,7 +4,7 @@
  */
 
 import type { CodeEditorTheme } from '@/config/code-editor-themes';
-import { createHighlighter, type Highlighter } from 'shiki';
+import { createHighlighter, type BundledLanguage, type BundledTheme, type Highlighter } from 'shiki';
 
 /**
  * Cached highlighter instance (singleton pattern)
@@ -16,27 +16,12 @@ let isInitializing = false;
 /**
  * Required languages for the application
  */
-const REQUIRED_LANGUAGES = ['json', 'xml', 'javascript', 'plaintext'] as const;
+const REQUIRED_LANGUAGES: BundledLanguage[] = ['json', 'xml', 'javascript'];
 
 /**
  * Required themes for the application
  * Based on theme mapping strategy
  */
-const REQUIRED_THEMES = [
-  'github-light',
-  'github-dark',
-  'light-plus', // VS Code light
-  'dark-plus', // VS Code dark
-  'monokai',
-  'solarized-light',
-  'solarized-dark',
-  'catppuccin-mocha', // Catppuccin dark variant
-  'nord',
-  // Material themes - will try these, fallback if they don't exist
-  'material-theme-lighter',
-  'material-theme-darker',
-] as const;
-
 /**
  * Map CodeEditorTheme to Shiki theme name
  * @param theme - CodeEditorTheme from config
@@ -84,7 +69,7 @@ export async function initializeShiki(): Promise<Highlighter> {
   initializationPromise = (async () => {
     try {
       // Start with core themes that are guaranteed to exist
-      const coreThemes = [
+      const coreThemes: BundledTheme[] = [
         'github-light',
         'github-dark',
         'light-plus',
@@ -94,8 +79,8 @@ export async function initializeShiki(): Promise<Highlighter> {
 
       // Initialize highlighter with core themes first
       const highlighter = await createHighlighter({
-        themes: coreThemes as any,
-        langs: REQUIRED_LANGUAGES as any,
+        themes: coreThemes,
+        langs: REQUIRED_LANGUAGES,
       });
 
       // Try to load additional themes one by one
@@ -110,7 +95,7 @@ export async function initializeShiki(): Promise<Highlighter> {
 
       for (const theme of additionalThemes) {
         try {
-          await highlighter.loadTheme(theme as any);
+          await highlighter.loadTheme(theme as BundledTheme);
         } catch (themeError) {
           // Theme doesn't exist or failed to load - skip it
           console.warn(`Theme ${theme} not available, skipping`, themeError);
@@ -182,14 +167,14 @@ export async function loadShikiTheme(themeName: string): Promise<void> {
 
   // Check if theme is already loaded
   const loadedThemes = highlighterInstance.getLoadedThemes();
-  if (loadedThemes.includes(themeName as any)) {
+  if (loadedThemes.includes(themeName as BundledTheme)) {
     return;
   }
 
   // Load the theme
   try {
-    await highlighterInstance.loadTheme(themeName as any);
-  } catch (error) {
+    await highlighterInstance.loadTheme(themeName as BundledTheme);
+  } catch {
     // Re-throw the error so caller can handle it (e.g., use fallback)
     throw new Error(`Theme ${themeName} not found, you may need to load it first`);
   }
@@ -211,13 +196,13 @@ export async function loadShikiLanguage(language: string): Promise<void> {
 
   // Check if language is already loaded
   const loadedLanguages = highlighterInstance.getLoadedLanguages();
-  if (loadedLanguages.includes(language as any)) {
+  if (loadedLanguages.includes(language as BundledLanguage)) {
     return;
   }
 
   // Load the language
   try {
-    await highlighterInstance.loadLanguage(language as any);
+    await highlighterInstance.loadLanguage(language as BundledLanguage);
   } catch (error) {
     console.warn(`Failed to load Shiki language: ${language}`, error);
     // Don't throw - language loading failure shouldn't break the app
@@ -282,7 +267,10 @@ export function getThemeColors(themeName: string): EditorThemeColors | null {
   const highlighter = getShikiHighlighter();
   if (!highlighter) return null;
 
-  const shikiTheme = (highlighter as any).getTheme(themeName);
+  const themeRegistry = highlighter as unknown as {
+    getTheme(name: string): { colors?: Record<string, string> } | undefined;
+  };
+  const shikiTheme = themeRegistry.getTheme(themeName);
   if (!shikiTheme) return null;
 
   const colors = shikiTheme.colors || {};

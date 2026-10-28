@@ -64,7 +64,7 @@ export function isMonacoThemeAvailable(monaco: typeof Monaco, themeName: string)
     // Monaco doesn't have a direct API to check theme availability
     // We'll try to get the theme definition
     // If it throws, the theme doesn't exist
-    monaco.editor.defineTheme(themeName, {} as any);
+    monaco.editor.defineTheme(themeName, {} as Monaco.editor.IStandaloneThemeData);
     return true;
   } catch {
     // Theme might already be defined, which is fine
@@ -118,7 +118,7 @@ export function isMonacoBuiltInTheme(themeName: string): boolean {
  * @param monaco - Monaco Editor instance (optional, for future use)
  * @returns Array of available theme names
  */
-export function getAvailableMonacoThemes(monaco?: typeof Monaco): string[] {
+export function getAvailableMonacoThemes(): string[] {
   // Built-in themes are always available
   const builtInThemes = getMonacoBuiltInThemes();
 

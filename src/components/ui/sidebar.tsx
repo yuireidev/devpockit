@@ -32,6 +32,9 @@ const SIDEBAR_WIDTH = "18rem"
 const SIDEBAR_WIDTH_MOBILE = "20rem"
 const SIDEBAR_WIDTH_ICON = "3.5rem"
 const SIDEBAR_KEYBOARD_SHORTCUT = "b"
+const subscribeToHydration = () => () => {}
+const getClientHydrationSnapshot = () => true
+const getServerHydrationSnapshot = () => false
 
 type SidebarContextProps = {
   state: "expanded" | "collapsed"
@@ -569,11 +572,11 @@ const SidebarMenuButton = React.forwardRef<
   ) => {
     const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
-    const [isMounted, setIsMounted] = React.useState(false)
-
-    React.useEffect(() => {
-      setIsMounted(true)
-    }, [])
+    const isMounted = React.useSyncExternalStore(
+      subscribeToHydration,
+      getClientHydrationSnapshot,
+      getServerHydrationSnapshot
+    )
 
     const button = (
       <Comp

@@ -24,9 +24,12 @@ import {
   downloadQrCode,
   generateQrCode,
   getQrCodeStats,
+  type QrCodeErrorCorrection,
   type QrCodeInput,
   type QrCodeOptions,
-  type QrCodeResult
+  type QrCodeOutputFormat,
+  type QrCodeResult,
+  type QrCodeType,
 } from '@/libs/qr-code-generator';
 import { cn } from '@/libs/utils';
 import { ArrowDownTrayIcon, ArrowPathIcon, ChevronDownIcon, ClipboardDocumentIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
@@ -71,58 +74,24 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
   );
   const [copySuccess, setCopySuccess] = useState(false);
   const [downloadSuccess, setDownloadSuccess] = useState(false);
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [sizeInput, setSizeInput] = useState<string>('');
+  const [sizeInput, setSizeInput] = useState<string>(() => ((toolState?.options as QrCodeOptions | undefined)?.size ?? DEFAULT_QR_OPTIONS.size).toString());
   const [showWifiPassword, setShowWifiPassword] = useState(false);
 
   const optionsRef = useRef(options);
-  optionsRef.current = options;
-
-  // Track if we've already hydrated to prevent re-hydration on toolState changes
-  const hasHydratedRef = useRef(false);
+  useEffect(() => {
+    optionsRef.current = options;
+  }, [options]);
 
   useEffect(() => {
-    if (!hasHydratedRef.current) {
-      hasHydratedRef.current = true;
-      setIsHydrated(true);
-      if (toolState?.options) {
-        const opts = toolState.options as QrCodeOptions;
-        setSizeInput(opts.size.toString());
-      } else {
-        setSizeInput(DEFAULT_QR_OPTIONS.size.toString());
-      }
-    }
-  }, [toolState]);
-
-  useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
-        options,
-        input,
-        output,
-        error,
-        qrCodeResult: qrCodeResult || undefined,
-        stats: stats || undefined
-      });
-    }
-  }, [options, input, output, error, qrCodeResult, stats, isHydrated, updateToolState]);
-
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_QR_OPTIONS);
-      setSizeInput(DEFAULT_QR_OPTIONS.size.toString());
-      setInput({ text: '' });
-      setOutput('');
-      setQrCodeResult(null);
-      setError('');
-      setStats(null);
-    }
-  }, [toolState, isHydrated]);
-
-  // Sync sizeInput when options.size changes externally
-  useEffect(() => {
-    setSizeInput(options.size.toString());
-  }, [options.size]);
+    updateToolState({
+      options,
+      input,
+      output,
+      error,
+      qrCodeResult: qrCodeResult || undefined,
+      stats: stats || undefined
+    });
+  }, [options, input, output, error, qrCodeResult, stats, updateToolState]);
 
   const handleGenerateQrCode = async () => {
     setIsGenerating(true);
@@ -189,7 +158,7 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
     }
   };
 
-  const handleOptionChange = (key: keyof QrCodeOptions, value: any) => {
+  const handleOptionChange = <Key extends keyof QrCodeOptions>(key: Key, value: QrCodeOptions[Key]) => {
     setOptions(prev => ({ ...prev, [key]: value }));
   };
 
@@ -224,11 +193,11 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
     }
   };
 
-  const handleInputChange = (key: keyof QrCodeInput, value: any) => {
+  const handleInputChange = <Key extends keyof QrCodeInput>(key: Key, value: QrCodeInput[Key]) => {
     setInput(prev => ({ ...prev, [key]: value }));
   };
 
-  const handleContactChange = (key: string, value: string) => {
+  const handleContactChange = <Key extends keyof NonNullable<QrCodeInput['contact']>>(key: Key, value: NonNullable<QrCodeInput['contact']>[Key]) => {
     setInput(prev => ({
       ...prev,
       contact: {
@@ -239,7 +208,7 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
     }));
   };
 
-  const handleWifiChange = (key: string, value: any) => {
+  const handleWifiChange = <Key extends keyof NonNullable<QrCodeInput['wifi']>>(key: Key, value: NonNullable<QrCodeInput['wifi']>[Key]) => {
     setInput(prev => ({
       ...prev,
       wifi: {
@@ -425,7 +394,7 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
                 <Label htmlFor="wifi-security">Security Type</Label>
                 <Select
                   value={input.wifi?.security || 'WPA'}
-                  onValueChange={(value) => handleWifiChange('security', value)}
+                  onValueChange={(value) => handleWifiChange('security', value as NonNullable<QrCodeInput['wifi']>['security'])}
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -538,7 +507,7 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
             {/* QR Code Type */}
             <Select
               value={options.type}
-              onValueChange={(value) => handleOptionChange('type', value)}
+              onValueChange={(value) => handleOptionChange('type', value as QrCodeType)}
             >
               <SelectTrigger label="QR Type:" className="w-[240px]">
                 <SelectValue />
@@ -572,7 +541,7 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
             {/* Error Correction */}
             <Select
               value={options.errorCorrection}
-              onValueChange={(value) => handleOptionChange('errorCorrection', value)}
+              onValueChange={(value) => handleOptionChange('errorCorrection', value as QrCodeErrorCorrection)}
             >
               <SelectTrigger label="Error Correction:" className="w-[280px]">
                 <SelectValue />
@@ -589,7 +558,7 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
             {/* Format */}
             <Select
               value={options.format}
-              onValueChange={(value) => handleOptionChange('format', value)}
+              onValueChange={(value) => handleOptionChange('format', value as QrCodeOutputFormat)}
             >
               <SelectTrigger label="Format:" className="w-[140px]">
                 <SelectValue />

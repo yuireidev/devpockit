@@ -34,15 +34,15 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
   const { toolState, updateToolState } = useToolState('xml-path-finder', instanceId);
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<XmlPathFinderOptions>(DEFAULT_XML_PATH_OPTIONS);
-  const [xmlInput, setXmlInput] = useState<string>('');
-  const [pathInput, setPathInput] = useState<string>('');
-  const [output, setOutput] = useState<string>('');
+  const [options] = useState<XmlPathFinderOptions>((toolState?.options as XmlPathFinderOptions) ?? (DEFAULT_XML_PATH_OPTIONS));
+  const [xmlInput, setXmlInput] = useState<string>((toolState?.xmlInput as string) ?? (''));
+  const [pathInput, setPathInput] = useState<string>((toolState?.pathInput as string) ?? (''));
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
   const [isEvaluating, setIsEvaluating] = useState(false);
-  const [error, setError] = useState<string>('');
-  const [result, setResult] = useState<XmlPathResult | null>(null);
-  const [isHydrated, setIsHydrated] = useState(false);
-  const [activeTab, setActiveTab] = useState<string>('tree');
+  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [result, setResult] = useState<XmlPathResult | null>((toolState?.result as XmlPathResult) ?? (null));
+
+  const [activeTab, setActiveTab] = useState<string>((toolState?.activeTab as string) ?? ('tree'));
   const [getExpandedXml, setGetExpandedXml] = useState<(() => string) | null>(null);
 
   // Editor settings
@@ -51,24 +51,11 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
   const [outputWrapText, setOutputWrapText] = useState(true);
 
   // Hydrate state from toolState after mount (client-side only)
-  useEffect(() => {
-    setIsHydrated(true);
-    if (toolState) {
-      if (toolState.options) setOptions(toolState.options as XmlPathFinderOptions);
-      if (toolState.xmlInput) setXmlInput(toolState.xmlInput as string);
-      if (toolState.pathInput) setPathInput(toolState.pathInput as string);
-      if (toolState.output) setOutput(toolState.output as string);
-      if (toolState.error) setError(toolState.error as string);
-      if (toolState.result) setResult(toolState.result as XmlPathResult);
-      if (toolState.activeTab) setActiveTab(toolState.activeTab as string);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+
 
   // Update persistent state whenever local state changes
   useEffect(() => {
-    if (isHydrated) {
-      updateToolState({
+    updateToolState({
         options,
         xmlInput,
         pathInput,
@@ -77,22 +64,11 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
         result: result || undefined,
         activeTab
       });
-    }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, xmlInput, pathInput, output, error, result, activeTab, isHydrated]);
+  }, [options, xmlInput, pathInput, output, error, result, activeTab]);
 
   // Reset local state when tool state is cleared
-  useEffect(() => {
-    if (isHydrated && (!toolState || Object.keys(toolState).length === 0)) {
-      setOptions(DEFAULT_XML_PATH_OPTIONS);
-      setXmlInput('');
-      setPathInput('');
-      setOutput('');
-      setError('');
-      setResult(null);
-      setActiveTab('tree');
-    }
-  }, [toolState, isHydrated]);
+
 
   const handleEvaluate = async () => {
     if (!xmlInput.trim()) {
@@ -206,19 +182,10 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
     return tabs;
   }, [output]);
 
-  // Ensure activeTab is valid when outputTabs change
-  // Default to 'tree' if available, otherwise use first available tab
-  useEffect(() => {
-    if (outputTabs.length > 0) {
-      const treeTab = outputTabs.find(tab => tab.id === 'tree');
-      const currentTab = outputTabs.find(tab => tab.id === activeTab);
-
-      if (!currentTab) {
-        // If current tab is not available, switch to tree if available, otherwise first tab
-        setActiveTab(treeTab ? 'tree' : outputTabs[0].id);
-      }
-    }
-  }, [outputTabs, activeTab]);
+  const selectedOutputTab = outputTabs.find(tab => tab.id === activeTab)?.id
+    ?? outputTabs.find(tab => tab.id === 'tree')?.id
+    ?? outputTabs[0]?.id
+    ?? activeTab;
 
   // Custom tab content renderer
   const renderCustomTabContent = (tabId: string): React.ReactNode => {
@@ -255,7 +222,7 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
 
   // Custom copy handler for tree view
   const handleTreeViewCopy = useCallback(async (): Promise<string | null> => {
-    if (activeTab === 'tree') {
+    if (selectedOutputTab === 'tree') {
       if (getExpandedXml) {
         try {
           const xml = getExpandedXml();
@@ -268,7 +235,7 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
       return '';
     }
     return null; // Use default copy behavior for other tabs
-  }, [activeTab, getExpandedXml]);
+  }, [selectedOutputTab, getExpandedXml]);
 
   return (
     <div className={cn('flex flex-col h-full', className)}>
@@ -403,7 +370,7 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
             {/* Output Panel */}
             <CodePanel fillHeight={true}
               tabs={outputTabs}
-              activeTab={activeTab}
+              activeTab={selectedOutputTab}
               onTabChange={setActiveTab}
               customTabContent={renderCustomTabContent}
               onCopy={handleTreeViewCopy}
@@ -412,10 +379,10 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
               theme={theme}
               wrapText={outputWrapText}
               onWrapTextChange={setOutputWrapText}
-              showWrapToggle={activeTab === 'results'}
+              showWrapToggle={selectedOutputTab === 'results'}
               footerLeftContent={
                 <>
-                  {activeTab === 'tree' && result && (
+                  {selectedOutputTab === 'tree' && result && (
                     <span
                       className={cn(
                         'px-2.5 py-1 rounded-full text-xs font-semibold',
@@ -433,7 +400,7 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
                         : ''}
                     </span>
                   )}
-                  {activeTab === 'results' && output && result && (
+                  {selectedOutputTab === 'results' && output && result && (
                     <>
                       <span>{result.count} match{result.count !== 1 ? 'es' : ''}</span>
                       <span>{getCharacterCount(output)} characters</span>
