@@ -5,6 +5,7 @@ This document lists all third-party dependencies and their licenses. DevPockit i
 ## License Compatibility
 
 All dependencies use licenses that are compatible with MIT:
+
 - **MIT**: Fully compatible
 - **Apache-2.0**: Compatible with MIT
 - **BSD-2-Clause**: Compatible with MIT
@@ -15,12 +16,14 @@ All dependencies use licenses that are compatible with MIT:
 ## Production Dependencies
 
 ### Core Framework
+
 - **next** (^16.1.0) - MIT License
 - **react** (^19.2.3) - MIT License
 - **react-dom** (^19.2.3) - MIT License
 - **typescript** (^5.1.0) - Apache-2.0 License
 
 ### UI Components
+
 - **@radix-ui/react-accordion** (^1.2.12) - MIT License
 - **@radix-ui/react-avatar** (^1.1.11) - MIT License
 - **@radix-ui/react-collapsible** (^1.1.12) - MIT License
@@ -38,12 +41,14 @@ All dependencies use licenses that are compatible with MIT:
 - **next-themes** (^0.4.6) - MIT License
 
 ### Code Editor
+
 - **@monaco-editor/react** (^4.7.0) - MIT License
 - **monaco-editor** (^0.45.0) - MIT License
 - **@shikijs/monaco** (^1.29.2) - MIT License
 - **shiki** (^1.29.2) - MIT License
 
 ### Utilities
+
 - **class-variance-authority** (^0.7.1) - Apache-2.0 License
 - **clsx** (^2.1.1) - MIT License
 - **tailwind-merge** (^3.3.1) - MIT License
@@ -52,6 +57,7 @@ All dependencies use licenses that are compatible with MIT:
 - **yaml** (^2.8.1) - ISC License
 
 ### Tool-Specific Libraries
+
 - **jose** (^6.1.3) - MIT License (JWT encoding/decoding)
 - **cron-parser** (^5.4.0) - MIT License
 - **diff** (^8.0.2) - BSD-3-Clause License
@@ -63,6 +69,7 @@ All dependencies use licenses that are compatible with MIT:
 - **canvas** (^3.2.0) - MIT License
 
 ### Type Definitions
+
 - **@types/qrcode** (^1.5.5) - MIT License
 - **@types/react-window** (^2.0.0) - MIT License
 - **@types/uuid** (^11.0.0) - MIT License
@@ -70,6 +77,7 @@ All dependencies use licenses that are compatible with MIT:
 ## Development Dependencies
 
 ### Testing
+
 - **jest** (^30.1.3) - MIT License
 - **jest-environment-jsdom** (^30.1.2) - MIT License
 - **@testing-library/react** (^16.3.0) - MIT License
@@ -77,6 +85,7 @@ All dependencies use licenses that are compatible with MIT:
 - **@testing-library/user-event** (^14.6.1) - MIT License
 
 ### Code Quality
+
 - **eslint** (^9.39.2) - MIT License
 - **eslint-config-next** (^16.1.0) - MIT License
 - **@typescript-eslint/eslint-plugin** (^8.44.0) - MIT License
@@ -86,12 +95,14 @@ All dependencies use licenses that are compatible with MIT:
 - **prettier-plugin-tailwindcss** (^0.5.0) - MIT License
 
 ### Build Tools
+
 - **typescript** (^5.1.0) - Apache-2.0 License
 - **autoprefixer** (^10.4.0) - MIT License
 - **postcss** (^8.4.0) - MIT License
 - **tailwindcss** (^3.4.0) - MIT License
 
 ### Type Definitions (Dev)
+
 - **@types/diff** (^8.0.0) - MIT License
 - **@types/jest** (^29.5.0) - MIT License
 - **@types/node** (^20.0.0) - MIT License
@@ -100,14 +111,14 @@ All dependencies use licenses that are compatible with MIT:
 
 ## License Summary
 
-| License Type | Count | Compatibility |
-|-------------|-------|---------------|
-| MIT | ~80% | ✅ Fully Compatible |
-| Apache-2.0 | ~15% | ✅ Compatible |
-| BSD-2-Clause | ~3% | ✅ Compatible |
-| BSD-3-Clause | ~1% | ✅ Compatible |
-| ISC | ~1% | ✅ Compatible |
-| 0BSD | <1% | ✅ Compatible |
+| License Type | Count | Compatibility       |
+| ------------ | ----- | ------------------- |
+| MIT          | ~80%  | ✅ Fully Compatible |
+| Apache-2.0   | ~15%  | ✅ Compatible       |
+| BSD-2-Clause | ~3%   | ✅ Compatible       |
+| BSD-3-Clause | ~1%   | ✅ Compatible       |
+| ISC          | ~1%   | ✅ Compatible       |
+| 0BSD         | <1%   | ✅ Compatible       |
 
 ## License Compatibility Verification
 
@@ -124,6 +135,7 @@ All dependencies use licenses that are compatible with MIT:
 ### No Incompatible Licenses Found
 
 The following license types would be incompatible but are **NOT** present:
+
 - ❌ GPL (any version) - Not found
 - ❌ AGPL - Not found
 - ❌ LGPL - Not found
@@ -134,14 +146,17 @@ The following license types would be incompatible but are **NOT** present:
 While all licenses are compatible, some require attribution:
 
 ### MIT License
+
 - Include copyright notice and license text
 - ✅ Satisfied: All MIT-licensed packages are in `node_modules/` with their license files
 
 ### Apache-2.0 License
+
 - Include copyright notice, license text, and state changes
 - ✅ Satisfied: Apache-2.0 packages include their license files
 
 ### BSD Licenses
+
 - Include copyright notice and license text
 - ✅ Satisfied: BSD-licensed packages include their license files
 
@@ -163,6 +178,7 @@ cat node_modules/<package-name>/package.json | grep license
 ## License Files Location
 
 All license files are located in:
+
 - `node_modules/<package-name>/LICENSE`
 - `node_modules/<package-name>/LICENSE.txt`
 - `node_modules/<package-name>/package.json` (license field)
@@ -170,6 +186,7 @@ All license files are located in:
 ## Updates
 
 This document should be updated when:
+
 - Adding new dependencies
 - Updating major dependencies
 - Before each release
@@ -177,6 +194,7 @@ This document should be updated when:
 ## Questions?
 
 If you have questions about license compatibility:
+
 - Check the [SPDX License List](https://spdx.org/licenses/)
 - Review [Choose a License](https://choosealicense.com/)
 - Consult with legal counsel for commercial use
@@ -185,4 +203,3 @@ If you have questions about license compatibility:
 
 **Last Updated**: 2026-01-05
 **Verified**: All dependencies compatible with MIT License ✅
-

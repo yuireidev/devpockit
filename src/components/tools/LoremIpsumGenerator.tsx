@@ -1,118 +1,114 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import { CodePanel, type CodeOutputTab } from '@/components/ui/code-panel';
-import { NumberInput } from '@/components/ui/number-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DEFAULT_OPTIONS, LOREM_OPTIONS } from '@/config/lorem-ipsum-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import { generateLoremIpsum, validateLoremOptions, type LoremOptions } from '@/libs/lorem-ipsum';
-import { cn } from '@/libs/utils';
-import { ArrowPathIcon } from '@heroicons/react/24/outline';
-import { useEffect, useMemo, useState } from 'react';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import { CodePanel, type CodeOutputTab } from '@/components/ui/code-panel'
+import { NumberInput } from '@/components/ui/number-input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DEFAULT_OPTIONS, LOREM_OPTIONS } from '@/config/lorem-ipsum-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { generateLoremIpsum, validateLoremOptions, type LoremOptions } from '@/libs/lorem-ipsum'
+import { cn } from '@/libs/utils'
+import { ArrowPathIcon } from '@heroicons/react/24/outline'
+import { useEffect, useMemo, useState } from 'react'
 
 interface LoremIpsumGeneratorProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function LoremIpsumGenerator({ className, instanceId }: LoremIpsumGeneratorProps) {
-  const { toolState, updateToolState } = useToolState('lorem-ipsum', instanceId);
+  const { toolState, updateToolState } = useToolState('lorem-ipsum', instanceId)
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<LoremOptions>(((toolState?.options as LoremOptions)) ?? (DEFAULT_OPTIONS));
-  const [outputPlain, setOutputPlain] = useState<string>((toolState?.outputPlain as string) ?? (''));
-  const [outputHtml, setOutputHtml] = useState<string>((toolState?.outputHtml as string) ?? (''));
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
-  const [activeTab, setActiveTab] = useState<'plain' | 'html'>(((toolState?.options as LoremOptions).format) ?? ('plain'));
-
+  const [options, setOptions] = useState<LoremOptions>((toolState?.options as LoremOptions) ?? DEFAULT_OPTIONS)
+  const [outputPlain, setOutputPlain] = useState<string>((toolState?.outputPlain as string) ?? '')
+  const [outputHtml, setOutputHtml] = useState<string>((toolState?.outputHtml as string) ?? '')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [error, setError] = useState<string>((toolState?.error as string) ?? '')
+  const [activeTab, setActiveTab] = useState<'plain' | 'html'>((toolState?.options as LoremOptions).format ?? 'plain')
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [wrapText, setWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [wrapText, setWrapText] = useState(true)
 
   // Track if we've already hydrated to prevent re-hydration on toolState changes
 
-
   // Hydrate state from toolState after mount (client-side only)
-
 
   // Update persistent state whenever local state changes
   useEffect(() => {
     updateToolState({
-        options,
-        outputPlain,
-        outputHtml,
-        error
-      });
-  }, [options, outputPlain, outputHtml, error, updateToolState]);
+      options,
+      outputPlain,
+      outputHtml,
+      error,
+    })
+  }, [options, outputPlain, outputHtml, error, updateToolState])
 
   // Reset local state when tool state is cleared
 
-
   const handleTabChange = (tabId: string) => {
-    const format = tabId as 'plain' | 'html';
-    setActiveTab(format);
-    setOptions(prev => ({ ...prev, format }));
-  };
+    const format = tabId as 'plain' | 'html'
+    setActiveTab(format)
+    setOptions((prev) => ({ ...prev, format }))
+  }
 
   const convertPlainToHtml = (plainText: string, unit: 'words' | 'sentences' | 'paragraphs'): string => {
-    if (!plainText) return '';
+    if (!plainText) return ''
 
     switch (unit) {
       case 'words':
       case 'sentences':
         // Wrap entire content in a single <p> tag
-        return `<p>${plainText}</p>`;
+        return `<p>${plainText}</p>`
 
       case 'paragraphs':
         // Split by double newlines and wrap each paragraph in <p> tags
-        const paragraphs = plainText.split('\n\n').filter(p => p.trim().length > 0);
-        return paragraphs.map(p => `<p>${p.trim()}</p>`).join('\n');
+        const paragraphs = plainText.split('\n\n').filter((p) => p.trim().length > 0)
+        return paragraphs.map((p) => `<p>${p.trim()}</p>`).join('\n')
 
       default:
-        return plainText;
+        return plainText
     }
-  };
+  }
 
   const handleGenerate = async () => {
-    setIsGenerating(true);
-    setError('');
+    setIsGenerating(true)
+    setError('')
 
     try {
       // Validate options before generation
-      const validationErrors = validateLoremOptions(options);
+      const validationErrors = validateLoremOptions(options)
       if (validationErrors.length > 0) {
-        setError(validationErrors.join(', '));
-        return;
+        setError(validationErrors.join(', '))
+        return
       }
 
       // Simulate async operation for better UX
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
       // Generate plain text once (same content)
-      const plainOptions = { ...options, format: 'plain' as const };
-      const plainResult = generateLoremIpsum(plainOptions);
+      const plainOptions = { ...options, format: 'plain' as const }
+      const plainResult = generateLoremIpsum(plainOptions)
 
       // Convert the same plain text to HTML format
-      const htmlResult = convertPlainToHtml(plainResult, options.unit);
+      const htmlResult = convertPlainToHtml(plainResult, options.unit)
 
-      setOutputPlain(plainResult);
-      setOutputHtml(htmlResult);
+      setOutputPlain(plainResult)
+      setOutputHtml(htmlResult)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate text');
-      setOutputPlain('');
-      setOutputHtml('');
+      setError(err instanceof Error ? err.message : 'Failed to generate text')
+      setOutputPlain('')
+      setOutputHtml('')
     } finally {
-      setIsGenerating(false);
+      setIsGenerating(false)
     }
-  };
+  }
 
   const handleQuantityChange = (quantity: number) => {
-    setOptions(prev => ({ ...prev, quantity }));
-  };
+    setOptions((prev) => ({ ...prev, quantity }))
+  }
 
   // Prepare tabs for CodePanel
   const outputTabs: CodeOutputTab[] = useMemo(
@@ -131,13 +127,13 @@ export function LoremIpsumGenerator({ className, instanceId }: LoremIpsumGenerat
       },
     ],
     [outputPlain, outputHtml]
-  );
+  )
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           Lorem Ipsum Generator
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -146,17 +142,17 @@ export function LoremIpsumGenerator({ className, instanceId }: LoremIpsumGenerat
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Main Controls Row */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Type Select */}
               <Select
                 value={options.type}
                 onValueChange={(value: 'latin' | 'bacon' | 'gen-alpha' | 'tech-bro' | 'wibu' | 'climber-bro') =>
-                  setOptions(prev => ({ ...prev, type: value }))
+                  setOptions((prev) => ({ ...prev, type: value }))
                 }
               >
                 <SelectTrigger label="Ipsum Type:" className="min-w-[300px]">
@@ -175,7 +171,7 @@ export function LoremIpsumGenerator({ className, instanceId }: LoremIpsumGenerat
               <Select
                 value={options.unit}
                 onValueChange={(value: 'words' | 'sentences' | 'paragraphs') =>
-                  setOptions(prev => ({ ...prev, unit: value }))
+                  setOptions((prev) => ({ ...prev, unit: value }))
                 }
               >
                 <SelectTrigger label="Unit:" className="min-w-[180px]">
@@ -191,20 +187,10 @@ export function LoremIpsumGenerator({ className, instanceId }: LoremIpsumGenerat
               </Select>
 
               {/* Quantity Input */}
-              <NumberInput
-                value={options.quantity}
-                onChange={handleQuantityChange}
-                min={1}
-                max={100}
-              />
+              <NumberInput value={options.quantity} onChange={handleQuantityChange} min={1} max={100} />
 
               {/* Generate Button */}
-              <Button
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                variant="default"
-                size="default"
-              >
+              <Button onClick={handleGenerate} disabled={isGenerating} variant="default" size="default">
                 {isGenerating ? (
                   <>
                     <ArrowPathIcon className="h-4 w-4 animate-spin" />
@@ -219,13 +205,12 @@ export function LoremIpsumGenerator({ className, instanceId }: LoremIpsumGenerat
 
           {/* Results */}
           {error ? (
-            <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+            <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+              <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           ) : (
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               tabs={outputTabs}
               activeTab={activeTab}
               onTabChange={handleTabChange}
@@ -240,5 +225,5 @@ export function LoremIpsumGenerator({ className, instanceId }: LoremIpsumGenerat
         </div>
       </div>
     </div>
-  );
+  )
 }

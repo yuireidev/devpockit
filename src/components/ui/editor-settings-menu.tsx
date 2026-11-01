@@ -4,7 +4,7 @@
  * Includes: Text Wrap, Sticky Scroll, Render Whitespace, Render Control Characters, Auto-complete, Zoom controls
  */
 
-'use client';
+'use client'
 
 import {
   DropdownMenu,
@@ -13,46 +13,46 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu';
-import { cn } from '@/libs/utils';
-import { ChevronUp, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react';
-import type * as Monaco from 'monaco-editor';
+} from '@/components/ui/dropdown-menu'
+import { cn } from '@/libs/utils'
+import { ChevronUp, RotateCcw, ZoomIn, ZoomOut } from 'lucide-react'
+import type * as Monaco from 'monaco-editor'
 
 export interface EditorSettingsMenuProps {
   // Editor instance (nullable - menu should handle when editor is not yet mounted)
-  editorInstance: Monaco.editor.IStandaloneCodeEditor | null;
+  editorInstance: Monaco.editor.IStandaloneCodeEditor | null
 
   // Text Wrap
-  wrapText: boolean;
-  onWrapTextChange: (enabled: boolean) => void;
+  wrapText: boolean
+  onWrapTextChange: (enabled: boolean) => void
 
   // Sticky Scroll
-  stickyScroll: boolean;
-  onStickyScrollChange: (enabled: boolean) => void;
+  stickyScroll: boolean
+  onStickyScrollChange: (enabled: boolean) => void
 
   // Render Whitespace
-  renderWhitespace: boolean;
-  onRenderWhitespaceChange: (enabled: boolean) => void;
+  renderWhitespace: boolean
+  onRenderWhitespaceChange: (enabled: boolean) => void
 
   // Render Control Characters
-  renderControlCharacters: boolean;
-  onRenderControlCharactersChange: (enabled: boolean) => void;
+  renderControlCharacters: boolean
+  onRenderControlCharactersChange: (enabled: boolean) => void
 
   // Line Numbers
-  showLineNumbers: boolean;
-  onShowLineNumbersChange: (enabled: boolean) => void;
+  showLineNumbers: boolean
+  onShowLineNumbersChange: (enabled: boolean) => void
 
   // Auto-complete
-  autoComplete: boolean;
-  onAutoCompleteChange: (enabled: boolean) => void;
+  autoComplete: boolean
+  onAutoCompleteChange: (enabled: boolean) => void
 
   // Zoom actions
-  onZoomIn: () => void;
-  onZoomOut: () => void;
-  onResetZoom: () => void;
+  onZoomIn: () => void
+  onZoomOut: () => void
+  onResetZoom: () => void
 
   // Optional styling
-  className?: string;
+  className?: string
 }
 
 export function EditorSettingsMenu({
@@ -78,10 +78,10 @@ export function EditorSettingsMenu({
     if (editorInstance) {
       editorInstance.updateOptions({
         wordWrap: checked ? 'on' : 'off',
-      });
+      })
     }
-    onWrapTextChange(checked);
-  };
+    onWrapTextChange(checked)
+  }
 
   const handleStickyScrollChange = (checked: boolean) => {
     if (editorInstance) {
@@ -89,37 +89,37 @@ export function EditorSettingsMenu({
         stickyScroll: {
           enabled: checked,
         },
-      });
+      })
     }
-    onStickyScrollChange(checked);
-  };
+    onStickyScrollChange(checked)
+  }
 
   const handleRenderWhitespaceChange = (checked: boolean) => {
     if (editorInstance) {
       editorInstance.updateOptions({
         renderWhitespace: checked ? 'all' : 'none',
-      });
+      })
     }
-    onRenderWhitespaceChange(checked);
-  };
+    onRenderWhitespaceChange(checked)
+  }
 
   const handleRenderControlCharactersChange = (checked: boolean) => {
     if (editorInstance) {
       editorInstance.updateOptions({
         renderControlCharacters: checked,
-      });
+      })
     }
-    onRenderControlCharactersChange(checked);
-  };
+    onRenderControlCharactersChange(checked)
+  }
 
   const handleShowLineNumbersChange = (checked: boolean) => {
     if (editorInstance) {
       editorInstance.updateOptions({
         lineNumbers: checked ? 'on' : 'off',
-      });
+      })
     }
-    onShowLineNumbersChange(checked);
-  };
+    onShowLineNumbersChange(checked)
+  }
 
   const handleAutoCompleteChange = (checked: boolean) => {
     if (editorInstance) {
@@ -128,41 +128,41 @@ export function EditorSettingsMenu({
         suggestOnTriggerCharacters: checked,
         acceptSuggestionOnCommitCharacter: checked,
         tabCompletion: checked ? 'on' : 'off',
-      });
+      })
     }
-    onAutoCompleteChange(checked);
-  };
+    onAutoCompleteChange(checked)
+  }
 
   const handleZoomIn = () => {
     if (editorInstance) {
-      editorInstance.getAction('editor.action.fontZoomIn')?.run();
+      editorInstance.getAction('editor.action.fontZoomIn')?.run()
     }
-    onZoomIn();
-  };
+    onZoomIn()
+  }
 
   const handleZoomOut = () => {
     if (editorInstance) {
-      editorInstance.getAction('editor.action.fontZoomOut')?.run();
+      editorInstance.getAction('editor.action.fontZoomOut')?.run()
     }
-    onZoomOut();
-  };
+    onZoomOut()
+  }
 
   const handleResetZoom = () => {
     if (editorInstance) {
-      editorInstance.getAction('editor.action.fontZoomReset')?.run();
+      editorInstance.getAction('editor.action.fontZoomReset')?.run()
     }
-    onResetZoom();
-  };
+    onResetZoom()
+  }
 
-  const isEditorAvailable = editorInstance !== null;
+  const isEditorAvailable = editorInstance !== null
 
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <button
           className={cn(
-            'flex items-center justify-center h-6 w-6 rounded-md border border-neutral-300 dark:border-neutral-600 bg-white dark:bg-neutral-900 text-muted-foreground hover:text-foreground hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors',
-            'disabled:opacity-50 disabled:cursor-not-allowed',
+            'text-muted-foreground hover:text-foreground flex h-6 w-6 items-center justify-center rounded-md border border-neutral-300 bg-white transition-colors hover:border-neutral-400 dark:border-neutral-600 dark:bg-neutral-900 dark:hover:border-neutral-500',
+            'disabled:cursor-not-allowed disabled:opacity-50',
             className
           )}
           disabled={!isEditorAvailable}
@@ -172,12 +172,7 @@ export function EditorSettingsMenu({
           <ChevronUp className="h-3.5 w-3.5" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        side="top"
-        align="start"
-        sideOffset={8}
-        className="min-w-[200px]"
-      >
+      <DropdownMenuContent side="top" align="start" sideOffset={8} className="min-w-[200px]">
         {/* Line Numbers */}
         <DropdownMenuCheckboxItem
           checked={showLineNumbers}
@@ -236,36 +231,23 @@ export function EditorSettingsMenu({
         <DropdownMenuSeparator />
 
         {/* Zoom In */}
-        <DropdownMenuItem
-          onSelect={handleZoomIn}
-          disabled={!isEditorAvailable}
-          className="flex items-center gap-2"
-        >
+        <DropdownMenuItem onSelect={handleZoomIn} disabled={!isEditorAvailable} className="flex items-center gap-2">
           <ZoomIn className="h-4 w-4" />
           <span>Zoom In</span>
         </DropdownMenuItem>
 
         {/* Zoom Out */}
-        <DropdownMenuItem
-          onSelect={handleZoomOut}
-          disabled={!isEditorAvailable}
-          className="flex items-center gap-2"
-        >
+        <DropdownMenuItem onSelect={handleZoomOut} disabled={!isEditorAvailable} className="flex items-center gap-2">
           <ZoomOut className="h-4 w-4" />
           <span>Zoom Out</span>
         </DropdownMenuItem>
 
         {/* Reset Zoom */}
-        <DropdownMenuItem
-          onSelect={handleResetZoom}
-          disabled={!isEditorAvailable}
-          className="flex items-center gap-2"
-        >
+        <DropdownMenuItem onSelect={handleResetZoom} disabled={!isEditorAvailable} className="flex items-center gap-2">
           <RotateCcw className="h-4 w-4" />
           <span>Reset Zoom</span>
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
-  );
+  )
 }
-

@@ -1,134 +1,131 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Label } from '@/components/ui/label';
-import { Switch } from '@/components/ui/switch';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Label } from '@/components/ui/label'
+import { Switch } from '@/components/ui/switch'
 import {
   DEFAULT_SCHEMA_OPTIONS,
   SCHEMA_GENERATOR_EXAMPLES,
-  type JsonSchemaGeneratorOptions
-} from '@/config/json-schema-generator-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import {
-  formatSchema,
-  generateSchema,
-  type JsonSchemaResult
-} from '@/libs/json-schema-generator';
-import { detectFormat } from '@/libs/json-yaml';
-import { cn } from '@/libs/utils';
-import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useMemo, useState } from 'react';
+  type JsonSchemaGeneratorOptions,
+} from '@/config/json-schema-generator-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { formatSchema, generateSchema, type JsonSchemaResult } from '@/libs/json-schema-generator'
+import { detectFormat } from '@/libs/json-yaml'
+import { cn } from '@/libs/utils'
+import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { useEffect, useMemo, useState } from 'react'
 
 interface JsonSchemaGeneratorProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGeneratorProps) {
-  const { toolState, updateToolState } = useToolState('json-schema-generator', instanceId);
+  const { toolState, updateToolState } = useToolState('json-schema-generator', instanceId)
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<JsonSchemaGeneratorOptions>((toolState?.options as JsonSchemaGeneratorOptions) ?? (DEFAULT_SCHEMA_OPTIONS));
-  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
-  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
-  const [schemaResult, setSchemaResult] = useState<JsonSchemaResult | null>((toolState?.schemaResult as JsonSchemaResult) ?? (null));
-
+  const [options, setOptions] = useState<JsonSchemaGeneratorOptions>(
+    (toolState?.options as JsonSchemaGeneratorOptions) ?? DEFAULT_SCHEMA_OPTIONS
+  )
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? '')
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? '')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [error, setError] = useState<string>((toolState?.error as string) ?? '')
+  const [schemaResult, setSchemaResult] = useState<JsonSchemaResult | null>(
+    (toolState?.schemaResult as JsonSchemaResult) ?? null
+  )
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [inputWrapText, setInputWrapText] = useState(true);
-  const [outputWrapText, setOutputWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [inputWrapText, setInputWrapText] = useState(true)
+  const [outputWrapText, setOutputWrapText] = useState(true)
 
   // Hydrate state from toolState after mount (client-side only)
-
 
   // Update persistent state whenever local state changes
   useEffect(() => {
     updateToolState({
-        options,
-        input,
-        output,
-        error,
-        schemaResult: schemaResult || undefined
-      });
+      options,
+      input,
+      output,
+      error,
+      schemaResult: schemaResult || undefined,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, input, output, error, schemaResult]);
+  }, [options, input, output, error, schemaResult])
 
   // Reset local state when tool state is cleared
 
-
   const handleGenerateSchema = async () => {
     if (!input.trim()) {
-      setError('Please enter JSON or YAML data');
-      setOutput('');
-      setSchemaResult(null);
-      return;
+      setError('Please enter JSON or YAML data')
+      setOutput('')
+      setSchemaResult(null)
+      return
     }
 
-    setIsGenerating(true);
-    setError('');
+    setIsGenerating(true)
+    setError('')
 
     try {
       // Simulate async operation for better UX
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
       // Generate schema
-      const result = generateSchema(input, options);
+      const result = generateSchema(input, options)
 
       if (result.success) {
-        setSchemaResult(result);
-        setOutput(formatSchema(result.schema));
+        setSchemaResult(result)
+        setOutput(formatSchema(result.schema))
       } else {
-        setError(result.error || 'Schema generation failed');
-        setOutput('');
-        setSchemaResult(null);
+        setError(result.error || 'Schema generation failed')
+        setOutput('')
+        setSchemaResult(null)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Schema generation failed');
-      setOutput('');
-      setSchemaResult(null);
+      setError(err instanceof Error ? err.message : 'Schema generation failed')
+      setOutput('')
+      setSchemaResult(null)
     } finally {
-      setIsGenerating(false);
+      setIsGenerating(false)
     }
-  };
+  }
 
-  const handleLoadExample = (example: typeof SCHEMA_GENERATOR_EXAMPLES[0]) => {
+  const handleLoadExample = (example: (typeof SCHEMA_GENERATOR_EXAMPLES)[0]) => {
     if ('json' in example && example.json) {
-      setInput(example.json);
+      setInput(example.json)
     } else if ('yaml' in example && example.yaml) {
-      setInput(example.yaml);
+      setInput(example.yaml)
     }
-    setError('');
-    setOutput('');
-    setSchemaResult(null);
-  };
+    setError('')
+    setOutput('')
+    setSchemaResult(null)
+  }
 
   const getCharacterCount = (text: string): number => {
-    return text.length;
-  };
+    return text.length
+  }
 
   const getLineCount = (text: string): number => {
-    if (!text) return 0;
-    return text.split('\n').length;
-  };
+    if (!text) return 0
+    return text.split('\n').length
+  }
 
   // Auto-detect language for syntax highlighting
   const detectedLanguage = useMemo(() => {
-    if (!input.trim()) return 'json';
-    const format = detectFormat(input);
-    return format === 'yaml' ? 'yaml' : 'json';
-  }, [input]);
+    if (!input.trim()) return 'json'
+    const format = detectFormat(input)
+    return format === 'yaml' ? 'yaml' : 'json'
+  }, [input])
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           JSON/YAML Schema Generator
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -137,12 +134,12 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Main Controls Row */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
                 <Label htmlFor="strict-types" className="text-sm">
                   Strict Types:
@@ -150,9 +147,7 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
                 <Switch
                   id="strict-types"
                   checked={options.strictTypes}
-                  onCheckedChange={(checked) =>
-                    setOptions({ ...options, strictTypes: checked })
-                  }
+                  onCheckedChange={(checked) => setOptions({ ...options, strictTypes: checked })}
                   size="sm"
                 />
               </div>
@@ -163,9 +158,7 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
                 <Switch
                   id="include-examples"
                   checked={options.includeExamples}
-                  onCheckedChange={(checked) =>
-                    setOptions({ ...options, includeExamples: checked })
-                  }
+                  onCheckedChange={(checked) => setOptions({ ...options, includeExamples: checked })}
                   size="sm"
                 />
               </div>
@@ -176,9 +169,7 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
                 <Switch
                   id="include-descriptions"
                   checked={options.includeDescriptions}
-                  onCheckedChange={(checked) =>
-                    setOptions({ ...options, includeDescriptions: checked })
-                  }
+                  onCheckedChange={(checked) => setOptions({ ...options, includeDescriptions: checked })}
                   size="sm"
                 />
               </div>
@@ -189,9 +180,7 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
                 <Switch
                   id="make-required"
                   checked={options.makeRequired}
-                  onCheckedChange={(checked) =>
-                    setOptions({ ...options, makeRequired: checked })
-                  }
+                  onCheckedChange={(checked) => setOptions({ ...options, makeRequired: checked })}
                   size="sm"
                 />
               </div>
@@ -202,9 +191,7 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
                 <Switch
                   id="additional-props"
                   checked={options.additionalProperties}
-                  onCheckedChange={(checked) =>
-                    setOptions({ ...options, additionalProperties: checked })
-                  }
+                  onCheckedChange={(checked) => setOptions({ ...options, additionalProperties: checked })}
                   size="sm"
                 />
               </div>
@@ -212,9 +199,10 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
           </div>
 
           {/* Side-by-side Editor Panels */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Input Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="JSON/YAML Input"
               value={input}
               onChange={setInput}
@@ -228,13 +216,9 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
               headerActions={
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 text-xs"
-                    >
+                    <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                       Load Examples
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      <ChevronDownIcon className="ml-1 h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto">
@@ -245,17 +229,13 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
                         className="flex flex-col items-start gap-1"
                       >
                         <span className="font-medium">{example.name}</span>
-                        <span className="text-xs text-muted-foreground">
-                          {example.description}
-                        </span>
+                        <span className="text-muted-foreground text-xs">{example.description}</span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               }
-              footerLeftContent={
-                <span>{getCharacterCount(input)} characters</span>
-              }
+              footerLeftContent={<span>{getCharacterCount(input)} characters</span>}
               footerRightContent={
                 <Button
                   onClick={handleGenerateSchema}
@@ -266,7 +246,7 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
                 >
                   {isGenerating ? (
                     <>
-                      <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                      <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
                       Generating...
                     </>
                   ) : (
@@ -277,7 +257,8 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
             />
 
             {/* Output Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="JSON Schema"
               value={output}
               language="json"
@@ -298,27 +279,22 @@ export function JsonSchemaGenerator({ className, instanceId }: JsonSchemaGenerat
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+            <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+              <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           )}
 
           {/* Schema Generation Success */}
           {schemaResult && schemaResult.success && (
-            <div className="p-4 bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-800 rounded-lg">
+            <div className="rounded-lg border border-green-200 bg-green-50 p-4 dark:border-green-800 dark:bg-green-950/20">
               <div className="text-sm text-green-700 dark:text-green-300">
                 <strong>Schema generated successfully!</strong>
-                <div className="mt-2 text-xs">
-                  Format: {schemaResult.format.toUpperCase()} → JSON Schema
-                </div>
+                <div className="mt-2 text-xs">Format: {schemaResult.format.toUpperCase()} → JSON Schema</div>
               </div>
             </div>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }
-

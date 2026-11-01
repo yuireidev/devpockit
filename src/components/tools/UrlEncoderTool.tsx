@@ -1,92 +1,98 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LabeledInput } from '@/components/ui/labeled-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { DEFAULT_URL_OPTIONS, URL_ENCODING_TYPES, URL_EXAMPLES } from '@/config/url-encoder-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import { encodeUrl, type UrlEncoderOptions, type UrlEncoderResult } from '@/libs/url-encoder';
-import { cn } from '@/libs/utils';
-import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { LabeledInput } from '@/components/ui/labeled-input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { DEFAULT_URL_OPTIONS, URL_ENCODING_TYPES, URL_EXAMPLES } from '@/config/url-encoder-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { encodeUrl, type UrlEncoderOptions, type UrlEncoderResult } from '@/libs/url-encoder'
+import { cn } from '@/libs/utils'
+import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState } from 'react'
 
 interface UrlEncoderToolProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function UrlEncoderTool({ className, instanceId }: UrlEncoderToolProps) {
-  const { toolState, updateToolState } = useToolState('url-encoder-tool', instanceId);
+  const { toolState, updateToolState } = useToolState('url-encoder-tool', instanceId)
 
-  const [options, setOptions] = useState<UrlEncoderOptions>(() => (toolState?.options as UrlEncoderOptions | undefined) ?? DEFAULT_URL_OPTIONS);
-  const [input, setInput] = useState<string>(() => (toolState?.input as string | undefined) ?? '');
-  const [output, setOutput] = useState<string>(() => (toolState?.output as string | undefined) ?? '');
-  const [isProcessing, setIsProcessing] = useState(false);
-  const [error, setError] = useState<string>(() => (toolState?.error as string | undefined) ?? '');
+  const [options, setOptions] = useState<UrlEncoderOptions>(
+    () => (toolState?.options as UrlEncoderOptions | undefined) ?? DEFAULT_URL_OPTIONS
+  )
+  const [input, setInput] = useState<string>(() => (toolState?.input as string | undefined) ?? '')
+  const [output, setOutput] = useState<string>(() => (toolState?.output as string | undefined) ?? '')
+  const [isProcessing, setIsProcessing] = useState(false)
+  const [error, setError] = useState<string>(() => (toolState?.error as string | undefined) ?? '')
   const [stats, setStats] = useState<{
-    originalLength: number;
-    encodedLength: number;
-    compressionRatio: number;
-  } | null>(() => (toolState?.stats as { originalLength: number; encodedLength: number; compressionRatio: number } | undefined) ?? null);
+    originalLength: number
+    encodedLength: number
+    compressionRatio: number
+  } | null>(
+    () =>
+      (toolState?.stats as { originalLength: number; encodedLength: number; compressionRatio: number } | undefined) ??
+      null
+  )
 
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [inputWrapText, setInputWrapText] = useState(true);
-  const [outputWrapText, setOutputWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [inputWrapText, setInputWrapText] = useState(true)
+  const [outputWrapText, setOutputWrapText] = useState(true)
 
   useEffect(() => {
-    updateToolState({ options, input, output, error, stats: stats || undefined });
-  }, [options, input, output, error, stats, updateToolState]);
+    updateToolState({ options, input, output, error, stats: stats || undefined })
+  }, [options, input, output, error, stats, updateToolState])
 
   const handleEncode = async () => {
     if (!input.trim()) {
-      setError('Please enter text to encode');
-      return;
+      setError('Please enter text to encode')
+      return
     }
 
-    setIsProcessing(true);
-    setError('');
+    setIsProcessing(true)
+    setError('')
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-      const result: UrlEncoderResult = encodeUrl(input, options);
+      const result: UrlEncoderResult = encodeUrl(input, options)
 
       if (result.isValid) {
-        setOutput(result.encoded);
+        setOutput(result.encoded)
         setStats({
           originalLength: result.originalLength,
           encodedLength: result.encodedLength,
-          compressionRatio: result.compressionRatio
-        });
+          compressionRatio: result.compressionRatio,
+        })
       } else {
-        setError(result.error || 'Encoding failed');
-        setOutput('');
-        setStats(null);
+        setError(result.error || 'Encoding failed')
+        setOutput('')
+        setStats(null)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to encode');
-      setOutput('');
-      setStats(null);
+      setError(err instanceof Error ? err.message : 'Failed to encode')
+      setOutput('')
+      setStats(null)
     } finally {
-      setIsProcessing(false);
+      setIsProcessing(false)
     }
-  };
+  }
 
   const handleLoadExample = (key: keyof typeof URL_EXAMPLES) => {
-    setInput(URL_EXAMPLES[key]);
-    setError('');
-  };
+    setInput(URL_EXAMPLES[key])
+    setError('')
+  }
 
-  const getCharacterCount = (text: string): number => text.length;
+  const getCharacterCount = (text: string): number => text.length
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           URL Encoder
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -95,16 +101,16 @@ export function UrlEncoderTool({ className, instanceId }: UrlEncoderToolProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Encoding Type Select */}
               <Select
                 value={options.encodingType}
                 onValueChange={(value: 'url' | 'uri' | 'custom') =>
-                  setOptions(prev => ({ ...prev, encodingType: value }))
+                  setOptions((prev) => ({ ...prev, encodingType: value }))
                 }
               >
                 <SelectTrigger label="Encoding Type:" className="min-w-[420px]">
@@ -122,9 +128,7 @@ export function UrlEncoderTool({ className, instanceId }: UrlEncoderToolProps) {
               {/* Space Handling */}
               <Select
                 value={options.preserveSpaces ? 'preserve' : 'encode'}
-                onValueChange={(value) =>
-                  setOptions(prev => ({ ...prev, preserveSpaces: value === 'preserve' }))
-                }
+                onValueChange={(value) => setOptions((prev) => ({ ...prev, preserveSpaces: value === 'preserve' }))}
               >
                 <SelectTrigger label="Space Handling:" className="min-w-[320px]">
                   <SelectValue />
@@ -140,7 +144,7 @@ export function UrlEncoderTool({ className, instanceId }: UrlEncoderToolProps) {
                 <LabeledInput
                   label="Custom Characters:"
                   value={options.customChars}
-                  onChange={(value) => setOptions(prev => ({ ...prev, customChars: value }))}
+                  onChange={(value) => setOptions((prev) => ({ ...prev, customChars: value }))}
                   placeholder="Enter characters to encode (e.g., ' &?=#/:;,')"
                   containerClassName="w-[280px]"
                 />
@@ -149,9 +153,10 @@ export function UrlEncoderTool({ className, instanceId }: UrlEncoderToolProps) {
           </div>
 
           {/* Side-by-side Editor Panels */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Input Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="Text to Encode"
               value={input}
               onChange={setInput}
@@ -165,37 +170,25 @@ export function UrlEncoderTool({ className, instanceId }: UrlEncoderToolProps) {
               headerActions={
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 text-xs"
-                    >
+                    <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                       Load Examples
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      <ChevronDownIcon className="ml-1 h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleLoadExample('simple')}>
-                      Simple URL
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleLoadExample('simple')}>Simple URL</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleLoadExample('withParams')}>
                       URL with Parameters
                     </DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleLoadExample('specialChars')}>
                       Special Characters
                     </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleLoadExample('unicode')}>
-                      Unicode Characters
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleLoadExample('complex')}>
-                      Complex URL
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleLoadExample('unicode')}>Unicode Characters</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleLoadExample('complex')}>Complex URL</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               }
-              footerLeftContent={
-                <span>{getCharacterCount(input)} characters</span>
-              }
+              footerLeftContent={<span>{getCharacterCount(input)} characters</span>}
               footerRightContent={
                 <Button
                   onClick={handleEncode}
@@ -206,7 +199,7 @@ export function UrlEncoderTool({ className, instanceId }: UrlEncoderToolProps) {
                 >
                   {isProcessing ? (
                     <>
-                      <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                      <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
                       Encoding...
                     </>
                   ) : (
@@ -217,7 +210,8 @@ export function UrlEncoderTool({ className, instanceId }: UrlEncoderToolProps) {
             />
 
             {/* Output Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="Encoded URL"
               value={output}
               language="plaintext"
@@ -231,7 +225,8 @@ export function UrlEncoderTool({ className, instanceId }: UrlEncoderToolProps) {
                     <span>{getCharacterCount(output)} characters</span>
                     {stats && (
                       <span>
-                        {stats.compressionRatio > 0 ? '+' : ''}{stats.compressionRatio.toFixed(1)}% size change
+                        {stats.compressionRatio > 0 ? '+' : ''}
+                        {stats.compressionRatio.toFixed(1)}% size change
                       </span>
                     )}
                   </>
@@ -242,14 +237,12 @@ export function UrlEncoderTool({ className, instanceId }: UrlEncoderToolProps) {
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+            <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+              <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }

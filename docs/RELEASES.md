@@ -7,11 +7,11 @@ Pages deploy is a separate manual step. Never tag by hand.
 
 ## Branch Model
 
-| Branch | Purpose | Lifetime |
-|--------|---------|----------|
-| `main` | Integration + release ledger. Every release merge commit is tagged. | Forever |
-| `release/X.Y.Z` | Version bump + changelog curation only. No features. | Cut from `main`, merged, deleted |
-| `feature/*`, `fix/*`, `chore/*` | One unit of work | Deleted after merge |
+| Branch                          | Purpose                                                             | Lifetime                         |
+| ------------------------------- | ------------------------------------------------------------------- | -------------------------------- |
+| `main`                          | Integration + release ledger. Every release merge commit is tagged. | Forever                          |
+| `release/X.Y.Z`                 | Version bump + changelog curation only. No features.                | Cut from `main`, merged, deleted |
+| `feature/*`, `fix/*`, `chore/*` | One unit of work                                                    | Deleted after merge              |
 
 Releases are tags, not branches. **Fork users and self-hosters should check out
 tags** (`git checkout v0.4.0`) — `main` may contain unreleased work between
@@ -63,14 +63,14 @@ a patch bump. No special path.
 
 ## Workflows
 
-| Workflow | Trigger | Action |
-|----------|---------|--------|
-| `ci.yml` | PR / push to `main` | Lint, type-check, test, build |
-| `version-check.yml` | Tag push; PR into `main` | Tag matches `package.json`; `release/*` PRs must bump |
-| `auto-tag.yml` | Push to `main` | Tag merge commit when `package.json` is newer, then run release |
-| `release.yml` | Tag push, manual dispatch, `auto-tag.yml` | Build + GitHub Release (no deploy) |
-| `deploy.yml` | Manual dispatch | Build + deploy to Pages for a chosen tag (works upstream and for forks) |
-| `preview.yml` | PR into `main` | Build + upload artifact (no Pages deploy) |
+| Workflow            | Trigger                                   | Action                                                                  |
+| ------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
+| `ci.yml`            | PR / push to `main`                       | Lint, type-check, test, build                                           |
+| `version-check.yml` | Tag push; PR into `main`                  | Tag matches `package.json`; `release/*` PRs must bump                   |
+| `auto-tag.yml`      | Push to `main`                            | Tag merge commit when `package.json` is newer, then run release         |
+| `release.yml`       | Tag push, manual dispatch, `auto-tag.yml` | Build + GitHub Release (no deploy)                                      |
+| `deploy.yml`        | Manual dispatch                           | Build + deploy to Pages for a chosen tag (works upstream and for forks) |
+| `preview.yml`       | PR into `main`                            | Build + upload artifact (no Pages deploy)                               |
 
 ## Rollback
 

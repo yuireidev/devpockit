@@ -22,6 +22,7 @@ Install dependencies with `pnpm install --frozen-lockfile`, then start the app w
 ### Typical Development Session
 
 1. **Start Development Server**:
+
    ```bash
    pnpm dev
    ```
@@ -33,6 +34,7 @@ Install dependencies with `pnpm install --frozen-lockfile`, then start the app w
 4. **Check Code Quality**: Follow the change-based verification steps in [Agent Workflow](AGENT_WORKFLOW.md), including `pnpm check:changed` and `pnpm format:check` when relevant.
 
 5. **Run Tests** (if applicable):
+
    ```bash
    pnpm test:watch
    ```
@@ -51,6 +53,7 @@ Install dependencies with `pnpm install --frozen-lockfile`, then start the app w
 ### Editor Configuration
 
 Recommended VS Code extensions:
+
 - ESLint
 - Prettier
 - TypeScript and JavaScript Language Features
@@ -95,14 +98,15 @@ npx shadcn-ui@latest add card
 ### Creating a New Hook
 
 1. Create file in `src/hooks/`:
+
    ```typescript
    // src/hooks/useYourHook.ts
-   import { useState, useEffect } from 'react';
+   import { useState, useEffect } from 'react'
 
    export function useYourHook() {
-     const [state, setState] = useState();
+     const [state, setState] = useState()
      // Hook logic
-     return { state };
+     return { state }
    }
    ```
 
@@ -111,6 +115,7 @@ npx shadcn-ui@latest add card
 ### Modifying Global Styles
 
 Edit `src/app/globals.css`:
+
 - Tailwind directives
 - CSS variables for theming
 - Global styles
@@ -128,21 +133,22 @@ Follow the [Tool Implementation Pattern](../ARCHITECTURE.md#tool-implementation-
 export function processYourTool(input: string, options: ToolOptions): string {
   // Pure function implementation
   // No React dependencies
-  return result;
+  return result
 }
 ```
 
 **Testing the Logic**:
+
 ```typescript
 // __tests__/libs/your-tool.test.ts
-import { processYourTool } from '@/libs/your-tool';
+import { processYourTool } from '@/libs/your-tool'
 
 describe('processYourTool', () => {
   it('should process input correctly', () => {
-    const result = processYourTool('input', {});
-    expect(result).toBe('expected');
-  });
-});
+    const result = processYourTool('input', {})
+    expect(result).toBe('expected')
+  })
+})
 ```
 
 #### 2. Create Tool Configuration
@@ -152,12 +158,12 @@ describe('processYourTool', () => {
 export const YOUR_TOOL_OPTIONS = {
   option1: true,
   option2: 'default',
-};
+}
 
 export const YOUR_TOOL_EXAMPLES = {
   example1: 'sample input',
   example2: 'another sample',
-};
+}
 ```
 
 #### 3. Create Tool Component
@@ -280,13 +286,13 @@ pnpm lint:fix
 
 ```typescript
 // Add console.log for debugging
-console.log('Component state:', state);
+console.log('Component state:', state)
 
 // Use React DevTools Profiler
 // Use breakpoints in browser DevTools
 
 // Check component props
-console.log('Props:', props);
+console.log('Props:', props)
 ```
 
 ### Tool-Specific Debugging
@@ -303,13 +309,13 @@ console.log('Props:', props);
 ```typescript
 // ✅ Good: Explicit types
 function formatJson(input: string): string {
-  return JSON.stringify(JSON.parse(input), null, 2);
+  return JSON.stringify(JSON.parse(input), null, 2)
 }
 
 // ✅ Good: Interface for objects
 interface ToolOptions {
-  minify: boolean;
-  indent: number;
+  minify: boolean
+  indent: number
 }
 
 // ⚠️ Acceptable: any when necessary
@@ -349,17 +355,17 @@ export function Tool({ onResult }: ToolProps) {
 
 ```typescript
 // 1. External dependencies
-import { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useState } from 'react'
+import { Button } from '@/components/ui/button'
 
 // 2. Internal absolute imports
-import { formatJson } from '@/libs/json-formatter';
+import { formatJson } from '@/libs/json-formatter'
 
 // 3. Relative imports
-import './styles.css';
+import './styles.css'
 
 // 4. Type imports
-import type { ToolResult } from '@/types/tools';
+import type { ToolResult } from '@/types/tools'
 ```
 
 ### Comments
@@ -367,7 +373,7 @@ import type { ToolResult } from '@/types/tools';
 ```typescript
 // ✅ Good: Explain "why"
 // Using Map for O(1) lookup performance
-const cache = new Map();
+const cache = new Map()
 
 // ✅ Good: JSDoc for public APIs
 /**
@@ -381,7 +387,7 @@ export function formatJson(input: string, minify: boolean): string {
 
 // ❌ Bad: Explain "what" (obvious from code)
 // Set the state to the input value
-setState(input);
+setState(input)
 ```
 
 ## Testing Guide
@@ -392,19 +398,19 @@ setState(input);
 
 ```typescript
 // __tests__/libs/json-formatter.test.ts
-import { formatJson } from '@/libs/json-formatter';
+import { formatJson } from '@/libs/json-formatter'
 
 describe('formatJson', () => {
   it('should format valid JSON', () => {
-    const input = '{"name":"test"}';
-    const result = formatJson(input, false);
-    expect(result).toContain('"name"');
-  });
+    const input = '{"name":"test"}'
+    const result = formatJson(input, false)
+    expect(result).toContain('"name"')
+  })
 
   it('should handle invalid JSON', () => {
-    expect(() => formatJson('invalid', false)).toThrow();
-  });
-});
+    expect(() => formatJson('invalid', false)).toThrow()
+  })
+})
 ```
 
 #### Component Tests
@@ -575,7 +581,7 @@ pnpm serve:build  # Serves out/ directory
 ---
 
 For more information:
+
 - [Architecture Documentation](./ARCHITECTURE.md)
 - [Contributing Guide](../CONTRIBUTING.md)
 - [README](../README.md)
-

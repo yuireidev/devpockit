@@ -1,7 +1,3 @@
-export default function ToolsLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <>{children}</>;
+export default function ToolsLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>
 }

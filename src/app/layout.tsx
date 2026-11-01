@@ -23,7 +23,7 @@ const dmSerifText = DM_Serif_Text({
   variable: '--font-dm-serif',
 })
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.yuirei.com';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.yuirei.com'
 
 const canonicalHome = absoluteSiteUrl('/')
 const ogImageUrl = absoluteAssetUrl('/og-image.png')
@@ -120,20 +120,15 @@ export const viewport: Viewport = {
   ],
 }
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" suppressHydrationWarning className={`${geistSans.variable} ${geistMono.variable} ${dmSerifText.variable}`}>
-      <body className="antialiased font-sans">
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="light"
-          enableSystem
-          disableTransitionOnChange
-        >
+    <html
+      lang="en"
+      suppressHydrationWarning
+      className={`${geistSans.variable} ${geistMono.variable} ${dmSerifText.variable}`}
+    >
+      <body className="font-sans antialiased">
+        <ThemeProvider attribute="class" defaultTheme="light" enableSystem disableTransitionOnChange>
           <AppToastProvider>
             <AppLayout>{children}</AppLayout>
           </AppToastProvider>

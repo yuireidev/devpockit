@@ -6,25 +6,25 @@
 export const JSON_FORMAT_OPTIONS = {
   formats: [
     { value: 'beautify', label: '🎨 Beautify (Pretty Print)' },
-    { value: 'minify', label: '📦 Minify (Compact)' }
+    { value: 'minify', label: '📦 Minify (Compact)' },
   ],
   indentSizes: [
     { value: 2, label: '2 spaces' },
     { value: 4, label: '4 spaces' },
-    { value: 8, label: '8 spaces' }
+    { value: 8, label: '8 spaces' },
   ],
   sortKeys: [
     { value: 'none', label: 'Keep original order' },
     { value: 'asc', label: 'Ascending (A-Z)' },
-    { value: 'desc', label: 'Descending (Z-A)' }
-  ]
-} as const;
+    { value: 'desc', label: 'Descending (Z-A)' },
+  ],
+} as const
 
 export const DEFAULT_JSON_OPTIONS = {
   format: 'beautify' as const,
   indentSize: 2,
-  sortKeys: 'none' as const
-};
+  sortKeys: 'none' as const,
+}
 
 export const JSON_EXAMPLES = {
   valid: `{
@@ -42,5 +42,5 @@ export const JSON_EXAMPLES = {
   "age": 30,
   "city": "New York"
 }`,
-  minified: `{"name":"John Doe","age":30,"city":"New York","hobbies":["reading","swimming","coding"],"address":{"street":"123 Main St","zipcode":"10001"}}`
-};
+  minified: `{"name":"John Doe","age":30,"city":"New York","hobbies":["reading","swimming","coding"],"address":{"street":"123 Main St","zipcode":"10001"}}`,
+}

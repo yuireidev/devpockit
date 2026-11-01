@@ -3,20 +3,20 @@
  * Handles Shiki highlighter initialization and theme mapping
  */
 
-import type { CodeEditorTheme } from '@/config/code-editor-themes';
-import { createHighlighter, type BundledLanguage, type BundledTheme, type Highlighter } from 'shiki';
+import type { CodeEditorTheme } from '@/config/code-editor-themes'
+import { createHighlighter, type BundledLanguage, type BundledTheme, type Highlighter } from 'shiki'
 
 /**
  * Cached highlighter instance (singleton pattern)
  */
-let highlighterInstance: Highlighter | null = null;
-let initializationPromise: Promise<Highlighter> | null = null;
-let isInitializing = false;
+let highlighterInstance: Highlighter | null = null
+let initializationPromise: Promise<Highlighter> | null = null
+let isInitializing = false
 
 /**
  * Required languages for the application
  */
-const REQUIRED_LANGUAGES: BundledLanguage[] = ['json', 'xml', 'javascript'];
+const REQUIRED_LANGUAGES: BundledLanguage[] = ['json', 'xml', 'javascript']
 
 /**
  * Required themes for the application
@@ -42,9 +42,9 @@ export function getShikiThemeName(theme: CodeEditorTheme): string {
     solarizedDark: 'solarized-dark',
     catppuccin: 'catppuccin-mocha', // Catppuccin dark variant
     nord: 'nord',
-  };
+  }
 
-  return themeMap[theme] || 'github-dark';
+  return themeMap[theme] || 'github-dark'
 }
 
 /**
@@ -56,32 +56,26 @@ export function getShikiThemeName(theme: CodeEditorTheme): string {
 export async function initializeShiki(): Promise<Highlighter> {
   // Return cached instance if available
   if (highlighterInstance) {
-    return highlighterInstance;
+    return highlighterInstance
   }
 
   // Return existing initialization promise if already initializing
   if (initializationPromise) {
-    return initializationPromise;
+    return initializationPromise
   }
 
   // Start initialization
-  isInitializing = true;
+  isInitializing = true
   initializationPromise = (async () => {
     try {
       // Start with core themes that are guaranteed to exist
-      const coreThemes: BundledTheme[] = [
-        'github-light',
-        'github-dark',
-        'light-plus',
-        'dark-plus',
-        'monokai',
-      ];
+      const coreThemes: BundledTheme[] = ['github-light', 'github-dark', 'light-plus', 'dark-plus', 'monokai']
 
       // Initialize highlighter with core themes first
       const highlighter = await createHighlighter({
         themes: coreThemes,
         langs: REQUIRED_LANGUAGES,
-      });
+      })
 
       // Try to load additional themes one by one
       const additionalThemes = [
@@ -91,29 +85,29 @@ export async function initializeShiki(): Promise<Highlighter> {
         'nord',
         'material-theme-lighter',
         'material-theme-darker',
-      ];
+      ]
 
       for (const theme of additionalThemes) {
         try {
-          await highlighter.loadTheme(theme as BundledTheme);
+          await highlighter.loadTheme(theme as BundledTheme)
         } catch (themeError) {
           // Theme doesn't exist or failed to load - skip it
-          console.warn(`Theme ${theme} not available, skipping`, themeError);
+          console.warn(`Theme ${theme} not available, skipping`, themeError)
         }
       }
 
-      highlighterInstance = highlighter;
-      isInitializing = false;
-      return highlighter;
+      highlighterInstance = highlighter
+      isInitializing = false
+      return highlighter
     } catch (error) {
-      isInitializing = false;
-      initializationPromise = null;
-      console.error('Failed to initialize Shiki highlighter:', error);
-      throw new Error('Failed to initialize Shiki highlighter');
+      isInitializing = false
+      initializationPromise = null
+      console.error('Failed to initialize Shiki highlighter:', error)
+      throw new Error('Failed to initialize Shiki highlighter')
     }
-  })();
+  })()
 
-  return initializationPromise;
+  return initializationPromise
 }
 
 /**
@@ -122,7 +116,7 @@ export async function initializeShiki(): Promise<Highlighter> {
  * @returns Highlighter instance or null
  */
 export function getShikiHighlighter(): Highlighter | null {
-  return highlighterInstance;
+  return highlighterInstance
 }
 
 /**
@@ -130,7 +124,7 @@ export function getShikiHighlighter(): Highlighter | null {
  * @returns true if highlighter is ready, false otherwise
  */
 export function isShikiInitialized(): boolean {
-  return highlighterInstance !== null;
+  return highlighterInstance !== null
 }
 
 /**
@@ -138,7 +132,7 @@ export function isShikiInitialized(): boolean {
  * @returns true if initialization is in progress, false otherwise
  */
 export function isShikiInitializing(): boolean {
-  return isInitializing;
+  return isInitializing
 }
 
 /**
@@ -146,9 +140,9 @@ export function isShikiInitializing(): boolean {
  * WARNING: This will clear the cached instance
  */
 export function resetShikiInstance(): void {
-  highlighterInstance = null;
-  initializationPromise = null;
-  isInitializing = false;
+  highlighterInstance = null
+  initializationPromise = null
+  isInitializing = false
 }
 
 /**
@@ -158,25 +152,25 @@ export function resetShikiInstance(): void {
  */
 export async function loadShikiTheme(themeName: string): Promise<void> {
   if (!highlighterInstance) {
-    await initializeShiki();
+    await initializeShiki()
   }
 
   if (!highlighterInstance) {
-    throw new Error('Shiki highlighter not initialized');
+    throw new Error('Shiki highlighter not initialized')
   }
 
   // Check if theme is already loaded
-  const loadedThemes = highlighterInstance.getLoadedThemes();
+  const loadedThemes = highlighterInstance.getLoadedThemes()
   if (loadedThemes.includes(themeName as BundledTheme)) {
-    return;
+    return
   }
 
   // Load the theme
   try {
-    await highlighterInstance.loadTheme(themeName as BundledTheme);
+    await highlighterInstance.loadTheme(themeName as BundledTheme)
   } catch {
     // Re-throw the error so caller can handle it (e.g., use fallback)
-    throw new Error(`Theme ${themeName} not found, you may need to load it first`);
+    throw new Error(`Theme ${themeName} not found, you may need to load it first`)
   }
 }
 
@@ -187,24 +181,24 @@ export async function loadShikiTheme(themeName: string): Promise<void> {
  */
 export async function loadShikiLanguage(language: string): Promise<void> {
   if (!highlighterInstance) {
-    await initializeShiki();
+    await initializeShiki()
   }
 
   if (!highlighterInstance) {
-    throw new Error('Shiki highlighter not initialized');
+    throw new Error('Shiki highlighter not initialized')
   }
 
   // Check if language is already loaded
-  const loadedLanguages = highlighterInstance.getLoadedLanguages();
+  const loadedLanguages = highlighterInstance.getLoadedLanguages()
   if (loadedLanguages.includes(language as BundledLanguage)) {
-    return;
+    return
   }
 
   // Load the language
   try {
-    await highlighterInstance.loadLanguage(language as BundledLanguage);
+    await highlighterInstance.loadLanguage(language as BundledLanguage)
   } catch (error) {
-    console.warn(`Failed to load Shiki language: ${language}`, error);
+    console.warn(`Failed to load Shiki language: ${language}`, error)
     // Don't throw - language loading failure shouldn't break the app
   }
 }
@@ -215,10 +209,10 @@ export async function loadShikiLanguage(language: string): Promise<void> {
  */
 export function getLoadedThemes(): string[] {
   if (!highlighterInstance) {
-    return [];
+    return []
   }
 
-  return highlighterInstance.getLoadedThemes() as string[];
+  return highlighterInstance.getLoadedThemes() as string[]
 }
 
 /**
@@ -227,22 +221,22 @@ export function getLoadedThemes(): string[] {
  */
 export function getLoadedLanguages(): string[] {
   if (!highlighterInstance) {
-    return [];
+    return []
   }
 
-  return highlighterInstance.getLoadedLanguages() as string[];
+  return highlighterInstance.getLoadedLanguages() as string[]
 }
 
 /**
  * Semantic editor theme colors extracted from a Shiki theme
  */
 export interface EditorThemeColors {
-  background: string;
-  foreground: string;
-  lineNumber: string;
-  findMatchBackground: string;
-  findMatchHighlightBackground: string;
-  selectionBackground: string;
+  background: string
+  foreground: string
+  lineNumber: string
+  findMatchBackground: string
+  findMatchHighlightBackground: string
+  selectionBackground: string
 }
 
 /**
@@ -256,7 +250,7 @@ export const DEFAULT_EDITOR_THEME_COLORS: EditorThemeColors = {
   findMatchBackground: '#ffff00',
   findMatchHighlightBackground: '#ffd700',
   selectionBackground: '#add6ff',
-};
+}
 
 /**
  * Extract semantic editor colors from a loaded Shiki theme
@@ -264,23 +258,23 @@ export const DEFAULT_EDITOR_THEME_COLORS: EditorThemeColors = {
  * @returns EditorThemeColors or null if highlighter/theme not available
  */
 export function getThemeColors(themeName: string): EditorThemeColors | null {
-  const highlighter = getShikiHighlighter();
-  if (!highlighter) return null;
+  const highlighter = getShikiHighlighter()
+  if (!highlighter) return null
 
   const themeRegistry = highlighter as unknown as {
-    getTheme(name: string): { colors?: Record<string, string> } | undefined;
-  };
-  const shikiTheme = themeRegistry.getTheme(themeName);
-  if (!shikiTheme) return null;
+    getTheme(name: string): { colors?: Record<string, string> } | undefined
+  }
+  const shikiTheme = themeRegistry.getTheme(themeName)
+  if (!shikiTheme) return null
 
-  const colors = shikiTheme.colors || {};
+  const colors = shikiTheme.colors || {}
   return {
     background: colors['editor.background'] || DEFAULT_EDITOR_THEME_COLORS.background,
     foreground: colors['editor.foreground'] || DEFAULT_EDITOR_THEME_COLORS.foreground,
     lineNumber: colors['editorLineNumber.foreground'] || DEFAULT_EDITOR_THEME_COLORS.lineNumber,
     findMatchBackground: colors['editor.findMatchBackground'] || DEFAULT_EDITOR_THEME_COLORS.findMatchBackground,
-    findMatchHighlightBackground: colors['editor.findMatchHighlightBackground'] || DEFAULT_EDITOR_THEME_COLORS.findMatchHighlightBackground,
+    findMatchHighlightBackground:
+      colors['editor.findMatchHighlightBackground'] || DEFAULT_EDITOR_THEME_COLORS.findMatchHighlightBackground,
     selectionBackground: colors['editor.selectionBackground'] || DEFAULT_EDITOR_THEME_COLORS.selectionBackground,
-  };
+  }
 }
-

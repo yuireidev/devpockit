@@ -2,19 +2,19 @@
  * SQL Formatter logic — validate with node-sql-parser, layout with sql-formatter.
  */
 
-import { Parser } from 'node-sql-parser';
-import { format, type FormatOptionsWithLanguage, type SqlLanguage } from 'sql-formatter';
+import { Parser } from 'node-sql-parser'
+import { format, type FormatOptionsWithLanguage, type SqlLanguage } from 'sql-formatter'
 
-export type { SqlLanguage };
+export type { SqlLanguage }
 
-export type SqlValidationMode = 'exact' | 'proxy' | 'formatOnly';
+export type SqlValidationMode = 'exact' | 'proxy' | 'formatOnly'
 
 export interface SqlDialectMeta {
-  mode: SqlValidationMode;
+  mode: SqlValidationMode
   /** node-sql-parser `database` option when mode is exact or proxy */
-  parserDatabase?: string;
+  parserDatabase?: string
   /** Shown in UI for proxy / format-only */
-  hint?: string;
+  hint?: string
 }
 
 export const SQL_DIALECT_META = {
@@ -74,62 +74,59 @@ export const SQL_DIALECT_META = {
     mode: 'formatOnly',
     hint: 'PL/SQL syntax is not validated; output is formatted only.',
   },
-} as const satisfies Record<SqlLanguage, SqlDialectMeta>;
+} as const satisfies Record<SqlLanguage, SqlDialectMeta>
 
-const parser = new Parser();
+const parser = new Parser()
 
 export interface SqlFormatOptions {
-  format: 'beautify' | 'minify';
-  indentSize: number;
-  dialect: SqlLanguage;
-  keywordCase: 'preserve' | 'upper' | 'lower';
+  format: 'beautify' | 'minify'
+  indentSize: number
+  dialect: SqlLanguage
+  keywordCase: 'preserve' | 'upper' | 'lower'
 }
 
 export interface SqlFormatResult {
-  formatted: string;
-  isValid: boolean;
-  error?: string;
-  originalSize: number;
-  formattedSize: number;
-  compressionRatio?: number;
+  formatted: string
+  isValid: boolean
+  error?: string
+  originalSize: number
+  formattedSize: number
+  compressionRatio?: number
 }
 
 export function getSqlDialectValidationHint(dialect: SqlLanguage): string | null {
-  const meta = SQL_DIALECT_META[dialect];
+  const meta = SQL_DIALECT_META[dialect]
   if (meta.mode === 'formatOnly') {
-    return meta.hint ?? null;
+    return meta.hint ?? null
   }
   if (meta.mode === 'proxy') {
-    return meta.hint ?? null;
+    return meta.hint ?? null
   }
-  return null;
+  return null
 }
 
-function validateSql(
-  sql: string,
-  dialect: SqlLanguage
-): { ok: true } | { ok: false; error: string } {
-  const meta = SQL_DIALECT_META[dialect];
+function validateSql(sql: string, dialect: SqlLanguage): { ok: true } | { ok: false; error: string } {
+  const meta = SQL_DIALECT_META[dialect]
   if (meta.mode === 'formatOnly') {
-    return { ok: true };
+    return { ok: true }
   }
-  const db = meta.parserDatabase;
+  const db = meta.parserDatabase
   if (!db) {
-    return { ok: false, error: 'No parser database configured for dialect.' };
+    return { ok: false, error: 'No parser database configured for dialect.' }
   }
   try {
-    parser.astify(sql, { database: db });
-    return { ok: true };
+    parser.astify(sql, { database: db })
+    return { ok: true }
   } catch (e) {
     return {
       ok: false,
       error: e instanceof Error ? e.message : String(e),
-    };
+    }
   }
 }
 
 function buildFormatterOptions(options: SqlFormatOptions): FormatOptionsWithLanguage {
-  const { dialect, keywordCase, format: fmt, indentSize } = options;
+  const { dialect, keywordCase, format: fmt, indentSize } = options
   if (fmt === 'minify') {
     return {
       language: dialect,
@@ -142,7 +139,7 @@ function buildFormatterOptions(options: SqlFormatOptions): FormatOptionsWithLang
       expressionWidth: 10_000,
       logicalOperatorNewline: 'after',
       indentStyle: 'standard',
-    };
+    }
   }
   return {
     language: dialect,
@@ -154,7 +151,7 @@ function buildFormatterOptions(options: SqlFormatOptions): FormatOptionsWithLang
     expressionWidth: 50,
     logicalOperatorNewline: 'before',
     indentStyle: 'standard',
-  };
+  }
 }
 
 /** Collapse formatted SQL to one line (may affect whitespace inside string literals). */
@@ -165,12 +162,12 @@ function collapseMinified(formatted: string): string {
     .filter((line) => line.length > 0)
     .join(' ')
     .replace(/\s+/g, ' ')
-    .trim();
+    .trim()
 }
 
 export function formatSql(input: string, options: SqlFormatOptions): SqlFormatResult {
-  const originalSize = input.length;
-  const trimmed = input.trim();
+  const originalSize = input.length
+  const trimmed = input.trim()
 
   if (!trimmed) {
     return {
@@ -179,10 +176,10 @@ export function formatSql(input: string, options: SqlFormatOptions): SqlFormatRe
       error: 'Please enter SQL to format',
       originalSize,
       formattedSize: 0,
-    };
+    }
   }
 
-  const validated = validateSql(trimmed, options.dialect);
+  const validated = validateSql(trimmed, options.dialect)
   if (!validated.ok) {
     return {
       formatted: trimmed,
@@ -190,18 +187,17 @@ export function formatSql(input: string, options: SqlFormatOptions): SqlFormatRe
       error: validated.error,
       originalSize,
       formattedSize: originalSize,
-    };
+    }
   }
 
   try {
-    let formatted = format(trimmed, buildFormatterOptions(options));
+    let formatted = format(trimmed, buildFormatterOptions(options))
     if (options.format === 'minify') {
-      formatted = collapseMinified(formatted);
+      formatted = collapseMinified(formatted)
     }
 
-    const formattedSize = formatted.length;
-    const compressionRatio =
-      originalSize > 0 ? ((originalSize - formattedSize) / originalSize) * 100 : 0;
+    const formattedSize = formatted.length
+    const compressionRatio = originalSize > 0 ? ((originalSize - formattedSize) / originalSize) * 100 : 0
 
     return {
       formatted,
@@ -209,7 +205,7 @@ export function formatSql(input: string, options: SqlFormatOptions): SqlFormatRe
       originalSize,
       formattedSize,
       compressionRatio: options.format === 'minify' ? compressionRatio : undefined,
-    };
+    }
   } catch (e) {
     return {
       formatted: trimmed,
@@ -217,26 +213,26 @@ export function formatSql(input: string, options: SqlFormatOptions): SqlFormatRe
       error: e instanceof Error ? e.message : 'Failed to format SQL',
       originalSize,
       formattedSize: originalSize,
-    };
+    }
   }
 }
 
 export function getSqlStats(sql: string): {
-  size: number;
-  lines: number;
-  statements: number;
+  size: number
+  lines: number
+  statements: number
 } {
-  const trimmed = sql.trim();
+  const trimmed = sql.trim()
   if (!trimmed) {
-    return { size: 0, lines: 0, statements: 0 };
+    return { size: 0, lines: 0, statements: 0 }
   }
   const statements = trimmed
     .split(';')
     .map((s) => s.trim())
-    .filter((s) => s.length > 0).length;
+    .filter((s) => s.length > 0).length
   return {
     size: sql.length,
     lines: sql.split('\n').length,
     statements,
-  };
+  }
 }

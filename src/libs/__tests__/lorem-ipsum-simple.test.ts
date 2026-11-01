@@ -7,7 +7,7 @@ describe('Lorem Ipsum Generation - Simple Tests', () => {
         type: 'latin',
         unit: 'words',
         quantity: 5,
-        format: 'plain'
+        format: 'plain',
       })
 
       const words = result.split(' ')
@@ -20,10 +20,10 @@ describe('Lorem Ipsum Generation - Simple Tests', () => {
         type: 'latin',
         unit: 'sentences',
         quantity: 2,
-        format: 'plain'
+        format: 'plain',
       })
 
-      const sentences = result.split('. ').filter(s => s.length > 0)
+      const sentences = result.split('. ').filter((s) => s.length > 0)
       expect(sentences).toHaveLength(2)
       expect(typeof result).toBe('string')
     })
@@ -33,10 +33,10 @@ describe('Lorem Ipsum Generation - Simple Tests', () => {
         type: 'latin',
         unit: 'paragraphs',
         quantity: 2,
-        format: 'plain'
+        format: 'plain',
       })
 
-      const paragraphs = result.split('\n\n').filter(p => p.length > 0)
+      const paragraphs = result.split('\n\n').filter((p) => p.length > 0)
       expect(paragraphs).toHaveLength(2)
       expect(typeof result).toBe('string')
     })
@@ -46,7 +46,7 @@ describe('Lorem Ipsum Generation - Simple Tests', () => {
         type: 'latin',
         unit: 'words',
         quantity: 3,
-        format: 'html'
+        format: 'html',
       })
 
       expect(result).toMatch(/^<p>.*<\/p>$/)
@@ -56,12 +56,12 @@ describe('Lorem Ipsum Generation - Simple Tests', () => {
     it('should handle different quantities', () => {
       const quantities = [1, 5, 10, 50, 100]
 
-      quantities.forEach(quantity => {
+      quantities.forEach((quantity) => {
         const result = generateLoremIpsum({
           type: 'latin',
           unit: 'words',
           quantity,
-          format: 'plain'
+          format: 'plain',
         })
 
         const words = result.split(' ')
@@ -75,14 +75,14 @@ describe('Lorem Ipsum Generation - Simple Tests', () => {
         type: 'latin',
         unit: 'words',
         quantity: 10,
-        format: 'plain'
+        format: 'plain',
       })
 
       const baconResult = generateLoremIpsum({
         type: 'bacon',
         unit: 'words',
         quantity: 10,
-        format: 'plain'
+        format: 'plain',
       })
 
       expect(latinResult).not.toEqual(baconResult)

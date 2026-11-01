@@ -4,8 +4,8 @@
  * Themes are independent from the website theme
  */
 
-import { getShikiThemeName } from '@/libs/shiki-init';
-import { getMonacoTheme } from './monaco-themes';
+import { getShikiThemeName } from '@/libs/shiki-init'
+import { getMonacoTheme } from './monaco-themes'
 
 export type CodeEditorTheme =
   | 'basicLight'
@@ -20,13 +20,13 @@ export type CodeEditorTheme =
   | 'solarizedLight'
   | 'solarizedDark'
   | 'catppuccin'
-  | 'nord';
+  | 'nord'
 
 export interface ThemeConfig {
-  name: string;
-  label: string;
-  monacoTheme: string; // Monaco theme name (matches Shiki theme name)
-  shikiTheme: string; // Shiki theme name
+  name: string
+  label: string
+  monacoTheme: string // Monaco theme name (matches Shiki theme name)
+  shikiTheme: string // Shiki theme name
 }
 
 /**
@@ -112,7 +112,7 @@ export const CODE_EDITOR_THEMES: Record<CodeEditorTheme, ThemeConfig> = {
     monacoTheme: getMonacoTheme('nord'),
     shikiTheme: getShikiThemeName('nord'),
   },
-};
+}
 
 /**
  * Get Monaco theme name by CodeEditorTheme
@@ -120,7 +120,7 @@ export const CODE_EDITOR_THEMES: Record<CodeEditorTheme, ThemeConfig> = {
  * @returns Monaco theme name
  */
 export function getThemeMonacoName(theme: CodeEditorTheme): string {
-  return getMonacoTheme(theme);
+  return getMonacoTheme(theme)
 }
 
 /**
@@ -129,20 +129,19 @@ export function getThemeMonacoName(theme: CodeEditorTheme): string {
  * @returns Shiki theme name
  */
 export function getThemeShikiName(theme: CodeEditorTheme): string {
-  return getShikiThemeName(theme);
+  return getShikiThemeName(theme)
 }
 
 /**
  * Get all available themes
  */
 export function getAvailableThemes(): CodeEditorTheme[] {
-  return Object.keys(CODE_EDITOR_THEMES) as CodeEditorTheme[];
+  return Object.keys(CODE_EDITOR_THEMES) as CodeEditorTheme[]
 }
 
 /**
  * Get theme configuration
  */
 export function getThemeConfig(theme: CodeEditorTheme): ThemeConfig {
-  return CODE_EDITOR_THEMES[theme] || CODE_EDITOR_THEMES.basicDark;
+  return CODE_EDITOR_THEMES[theme] || CODE_EDITOR_THEMES.basicDark
 }
-

@@ -1,97 +1,100 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LabeledInput } from '@/components/ui/labeled-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { LabeledInput } from '@/components/ui/labeled-input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import {
   DEFAULT_HASH_OPTIONS,
   HASH_ALGORITHMS,
   HASH_EXAMPLE_INPUTS,
   HASH_OUTPUT_FORMATS,
   HASH_SALT_POSITIONS,
-} from '@/config/hash-generator-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import { generateHash, type HashAlgorithm, type HashGenerationOptions } from '@/libs/hash-generator';
-import { cn } from '@/libs/utils';
-import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+} from '@/config/hash-generator-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { generateHash, type HashAlgorithm, type HashGenerationOptions } from '@/libs/hash-generator'
+import { cn } from '@/libs/utils'
+import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState } from 'react'
 
 interface HashGeneratorProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
-  const { toolState, updateToolState } = useToolState('hash-generator', instanceId);
+  const { toolState, updateToolState } = useToolState('hash-generator', instanceId)
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<HashGenerationOptions>(((toolState?.options as HashGenerationOptions)) ?? (DEFAULT_HASH_OPTIONS));
-  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
-  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [options, setOptions] = useState<HashGenerationOptions>(
+    (toolState?.options as HashGenerationOptions) ?? DEFAULT_HASH_OPTIONS
+  )
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? '')
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? '')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [error, setError] = useState<string>((toolState?.error as string) ?? '')
   const [result, setResult] = useState<{
-    hash: string;
-    algorithm: HashAlgorithm;
-    inputLength: number;
-    hashLength: number;
-    saltUsed: boolean;
-    outputFormat: 'hex' | 'base64';
-  } | null>((toolState?.result as {
-    hash: string;
-    algorithm: HashAlgorithm;
-    inputLength: number;
-    hashLength: number;
-    saltUsed: boolean;
-    outputFormat: 'hex' | 'base64';
-  } | undefined) ?? null);
-
+    hash: string
+    algorithm: HashAlgorithm
+    inputLength: number
+    hashLength: number
+    saltUsed: boolean
+    outputFormat: 'hex' | 'base64'
+  } | null>(
+    (toolState?.result as
+      | {
+          hash: string
+          algorithm: HashAlgorithm
+          inputLength: number
+          hashLength: number
+          saltUsed: boolean
+          outputFormat: 'hex' | 'base64'
+        }
+      | undefined) ?? null
+  )
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [inputWrapText, setInputWrapText] = useState(true);
-  const [outputWrapText, setOutputWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [inputWrapText, setInputWrapText] = useState(true)
+  const [outputWrapText, setOutputWrapText] = useState(true)
 
   // Hydrate state from toolState after mount (client-side only)
-
 
   // Update persistent state whenever local state changes
   useEffect(() => {
     updateToolState({
-        options,
-        input,
-        output,
-        error,
-        result: result || undefined,
-      });
+      options,
+      input,
+      output,
+      error,
+      result: result || undefined,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, input, output, error, result]);
+  }, [options, input, output, error, result])
 
   // Reset local state when tool state is cleared
 
-
   const handleGenerate = async () => {
     if (!input.trim()) {
-      setError('Please enter text to hash');
-      return;
+      setError('Please enter text to hash')
+      return
     }
 
-    setIsGenerating(true);
-    setError('');
+    setIsGenerating(true)
+    setError('')
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
       const hashResult = await generateHash({
         ...options,
         input: input.trim(),
-      });
+      })
 
-      setOutput(hashResult.hash);
+      setOutput(hashResult.hash)
       setResult({
         hash: hashResult.hash,
         algorithm: hashResult.algorithm,
@@ -99,36 +102,36 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
         hashLength: hashResult.hashLength,
         saltUsed: hashResult.saltUsed,
         outputFormat: hashResult.outputFormat,
-      });
+      })
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate hash');
-      setOutput('');
-      setResult(null);
+      setError(err instanceof Error ? err.message : 'Failed to generate hash')
+      setOutput('')
+      setResult(null)
     } finally {
-      setIsGenerating(false);
+      setIsGenerating(false)
     }
-  };
+  }
 
   const handleLoadExample = (algorithm: HashAlgorithm) => {
-    const exampleInput = HASH_EXAMPLE_INPUTS[algorithm];
+    const exampleInput = HASH_EXAMPLE_INPUTS[algorithm]
     if (exampleInput) {
-      setInput(exampleInput);
-      setOptions(prev => ({ ...prev, algorithm }));
-      setError('');
+      setInput(exampleInput)
+      setOptions((prev) => ({ ...prev, algorithm }))
+      setError('')
     }
-  };
+  }
 
   const handleOptionChange = (key: keyof HashGenerationOptions, value: unknown) => {
-    setOptions(prev => ({ ...prev, [key]: value }));
-  };
+    setOptions((prev) => ({ ...prev, [key]: value }))
+  }
 
-  const selectedAlgorithm = HASH_ALGORITHMS.find(a => a.value === options.algorithm);
+  const selectedAlgorithm = HASH_ALGORITHMS.find((a) => a.value === options.algorithm)
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           Hash Generator
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -137,17 +140,14 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Main Controls Row */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Algorithm Selection */}
-              <Select
-                value={options.algorithm}
-                onValueChange={(value) => handleOptionChange('algorithm', value)}
-              >
+              <Select value={options.algorithm} onValueChange={(value) => handleOptionChange('algorithm', value)}>
                 <SelectTrigger label="Algorithm:" className="min-w-[300px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -161,10 +161,7 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
               </Select>
 
               {/* Output Format Selection */}
-              <Select
-                value={options.outputFormat}
-                onValueChange={(value) => handleOptionChange('outputFormat', value)}
-              >
+              <Select value={options.outputFormat} onValueChange={(value) => handleOptionChange('outputFormat', value)}>
                 <SelectTrigger label="Format:" className="min-w-[200px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -178,25 +175,22 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
               </Select>
 
               {/* Uppercase Toggle */}
-              <div className="flex items-center gap-2 min-w-[150px]">
+              <div className="flex min-w-[150px] items-center gap-2">
                 <Switch
                   id="uppercase"
                   checked={options.uppercase}
                   onCheckedChange={(checked) => handleOptionChange('uppercase', checked)}
                 />
-                <label htmlFor="uppercase" className="text-sm font-medium cursor-pointer">
+                <label htmlFor="uppercase" className="cursor-pointer text-sm font-medium">
                   Uppercase
                 </label>
               </div>
             </div>
 
             {/* Salt Options Row */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Salt Position */}
-              <Select
-                value={options.saltPosition}
-                onValueChange={(value) => handleOptionChange('saltPosition', value)}
-              >
+              <Select value={options.saltPosition} onValueChange={(value) => handleOptionChange('saltPosition', value)}>
                 <SelectTrigger label="Salt Position:" className="min-w-[200px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -219,13 +213,13 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
                 disabled={options.saltPosition === 'none'}
               />
             </div>
-
           </div>
 
           {/* Side-by-side Editor Panels */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Input Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="Input Text"
               value={input}
               onChange={setInput}
@@ -239,36 +233,27 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
               headerActions={
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 text-xs"
-                    >
+                    <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                       Load Examples
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      <ChevronDownIcon className="ml-1 h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     {HASH_ALGORITHMS.map((algorithm) => {
-                      const exampleInput = HASH_EXAMPLE_INPUTS[algorithm.value];
+                      const exampleInput = HASH_EXAMPLE_INPUTS[algorithm.value]
                       if (exampleInput) {
                         return (
-                          <DropdownMenuItem
-                            key={algorithm.value}
-                            onClick={() => handleLoadExample(algorithm.value)}
-                          >
+                          <DropdownMenuItem key={algorithm.value} onClick={() => handleLoadExample(algorithm.value)}>
                             {algorithm.label} Example
                           </DropdownMenuItem>
-                        );
+                        )
                       }
-                      return null;
+                      return null
                     })}
                   </DropdownMenuContent>
                 </DropdownMenu>
               }
-              footerLeftContent={
-                <span>{input.length} characters</span>
-              }
+              footerLeftContent={<span>{input.length} characters</span>}
               footerRightContent={
                 <Button
                   onClick={handleGenerate}
@@ -279,7 +264,7 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
                 >
                   {isGenerating ? (
                     <>
-                      <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                      <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
                       Generating...
                     </>
                   ) : (
@@ -290,7 +275,8 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
             />
 
             {/* Output Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="Hash Output"
               value={output}
               language="plaintext"
@@ -301,11 +287,7 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
               readOnly={true}
               footerLeftContent={
                 <>
-                  {error && (
-                    <span className="text-red-700 dark:text-red-300">
-                      Error: {error}
-                    </span>
-                  )}
+                  {error && <span className="text-red-700 dark:text-red-300">Error: {error}</span>}
                   {!error && selectedAlgorithm && selectedAlgorithm.security === 'deprecated' && (
                     <span className="text-yellow-700 dark:text-yellow-300">
                       ⚠️ {selectedAlgorithm.label} is deprecated
@@ -329,6 +311,5 @@ export function HashGenerator({ className, instanceId }: HashGeneratorProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }
-

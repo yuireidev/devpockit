@@ -1,166 +1,161 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import type { CodeOutputTab } from '@/components/ui/code-panel';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { XmlTreeView } from '@/components/ui/xml-tree-view';
-import { Label } from '@/components/ui/label';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import type { CodeOutputTab } from '@/components/ui/code-panel'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { XmlTreeView } from '@/components/ui/xml-tree-view'
+import { Label } from '@/components/ui/label'
 import {
   DEFAULT_XML_PATH_OPTIONS,
   XML_PATH_COMMON_PATTERNS,
   XML_PATH_EXAMPLES,
-  type XmlPathFinderOptions
-} from '@/config/xml-path-finder-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import {
-  evaluateXPath,
-  formatXPathResults,
-  validateXPath,
-  type XmlPathResult
-} from '@/libs/xml-path-finder';
-import { cn } from '@/libs/utils';
-import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+  type XmlPathFinderOptions,
+} from '@/config/xml-path-finder-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { evaluateXPath, formatXPathResults, validateXPath, type XmlPathResult } from '@/libs/xml-path-finder'
+import { cn } from '@/libs/utils'
+import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 interface XmlPathFinderProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
-  const { toolState, updateToolState } = useToolState('xml-path-finder', instanceId);
+  const { toolState, updateToolState } = useToolState('xml-path-finder', instanceId)
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options] = useState<XmlPathFinderOptions>((toolState?.options as XmlPathFinderOptions) ?? (DEFAULT_XML_PATH_OPTIONS));
-  const [xmlInput, setXmlInput] = useState<string>((toolState?.xmlInput as string) ?? (''));
-  const [pathInput, setPathInput] = useState<string>((toolState?.pathInput as string) ?? (''));
-  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
-  const [result, setResult] = useState<XmlPathResult | null>((toolState?.result as XmlPathResult) ?? (null));
+  const [options] = useState<XmlPathFinderOptions>(
+    (toolState?.options as XmlPathFinderOptions) ?? DEFAULT_XML_PATH_OPTIONS
+  )
+  const [xmlInput, setXmlInput] = useState<string>((toolState?.xmlInput as string) ?? '')
+  const [pathInput, setPathInput] = useState<string>((toolState?.pathInput as string) ?? '')
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? '')
+  const [isEvaluating, setIsEvaluating] = useState(false)
+  const [error, setError] = useState<string>((toolState?.error as string) ?? '')
+  const [result, setResult] = useState<XmlPathResult | null>((toolState?.result as XmlPathResult) ?? null)
 
-  const [activeTab, setActiveTab] = useState<string>((toolState?.activeTab as string) ?? ('tree'));
-  const [getExpandedXml, setGetExpandedXml] = useState<(() => string) | null>(null);
+  const [activeTab, setActiveTab] = useState<string>((toolState?.activeTab as string) ?? 'tree')
+  const [getExpandedXml, setGetExpandedXml] = useState<(() => string) | null>(null)
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [inputWrapText, setInputWrapText] = useState(true);
-  const [outputWrapText, setOutputWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [inputWrapText, setInputWrapText] = useState(true)
+  const [outputWrapText, setOutputWrapText] = useState(true)
 
   // Hydrate state from toolState after mount (client-side only)
-
 
   // Update persistent state whenever local state changes
   useEffect(() => {
     updateToolState({
-        options,
-        xmlInput,
-        pathInput,
-        output,
-        error,
-        result: result || undefined,
-        activeTab
-      });
+      options,
+      xmlInput,
+      pathInput,
+      output,
+      error,
+      result: result || undefined,
+      activeTab,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, xmlInput, pathInput, output, error, result, activeTab]);
+  }, [options, xmlInput, pathInput, output, error, result, activeTab])
 
   // Reset local state when tool state is cleared
 
-
   const handleEvaluate = async () => {
     if (!xmlInput.trim()) {
-      setError('Please enter XML data');
-      setOutput('');
-      setResult(null);
-      return;
+      setError('Please enter XML data')
+      setOutput('')
+      setResult(null)
+      return
     }
 
     if (!pathInput.trim()) {
-      setError('Please enter an XPath expression');
-      setOutput('');
-      setResult(null);
-      return;
+      setError('Please enter an XPath expression')
+      setOutput('')
+      setResult(null)
+      return
     }
 
-    setIsEvaluating(true);
-    setError('');
+    setIsEvaluating(true)
+    setError('')
 
     try {
       // Validate XPath syntax
-      const pathValidation = validateXPath(pathInput);
+      const pathValidation = validateXPath(pathInput)
       if (!pathValidation.isValid) {
-        setError(pathValidation.error || 'Invalid XPath expression');
-        setOutput('');
-        setResult(null);
-        return;
+        setError(pathValidation.error || 'Invalid XPath expression')
+        setOutput('')
+        setResult(null)
+        return
       }
 
       // Simulate async operation for better UX
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
       // Evaluate XPath
-      const pathResult = evaluateXPath(xmlInput, pathInput);
+      const pathResult = evaluateXPath(xmlInput, pathInput)
 
       if (pathResult.success) {
-        setResult(pathResult);
-        setOutput(formatXPathResults(pathResult));
+        setResult(pathResult)
+        setOutput(formatXPathResults(pathResult))
       } else {
-        setError(pathResult.error || 'XPath evaluation failed');
-        setOutput('');
-        setResult(null);
+        setError(pathResult.error || 'XPath evaluation failed')
+        setOutput('')
+        setResult(null)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Evaluation failed');
-      setOutput('');
-      setResult(null);
+      setError(err instanceof Error ? err.message : 'Evaluation failed')
+      setOutput('')
+      setResult(null)
     } finally {
-      setIsEvaluating(false);
+      setIsEvaluating(false)
     }
-  };
+  }
 
-  const handleLoadExample = (example: typeof XML_PATH_EXAMPLES[0]) => {
-    setXmlInput(example.xml);
-    setPathInput(example.path);
-    setError('');
-    setOutput('');
-    setResult(null);
-  };
+  const handleLoadExample = (example: (typeof XML_PATH_EXAMPLES)[0]) => {
+    setXmlInput(example.xml)
+    setPathInput(example.path)
+    setError('')
+    setOutput('')
+    setResult(null)
+  }
 
-  const handleLoadPattern = (pattern: typeof XML_PATH_COMMON_PATTERNS[0]) => {
-    setPathInput(pattern.example);
+  const handleLoadPattern = (pattern: (typeof XML_PATH_COMMON_PATTERNS)[0]) => {
+    setPathInput(pattern.example)
     // Focus on path input
     setTimeout(() => {
-      const pathInputElement = document.querySelector('input[placeholder*="XPath"]') as HTMLInputElement;
+      const pathInputElement = document.querySelector('input[placeholder*="XPath"]') as HTMLInputElement
       if (pathInputElement) {
-        pathInputElement.focus();
+        pathInputElement.focus()
       }
-    }, 100);
-  };
+    }, 100)
+  }
 
   const getCharacterCount = (text: string): number => {
-    return text.length;
-  };
+    return text.length
+  }
 
   const getLineCount = (text: string): number => {
-    if (!text) return 0;
-    return text.split('\n').length;
-  };
+    if (!text) return 0
+    return text.split('\n').length
+  }
 
   // Validate XML safely
   const isValidXml = useMemo(() => {
-    if (!xmlInput.trim()) return false;
+    if (!xmlInput.trim()) return false
     try {
-      const parser = new DOMParser();
-      const doc = parser.parseFromString(xmlInput, 'text/xml');
-      const parserError = doc.querySelector('parsererror');
-      return !parserError;
+      const parser = new DOMParser()
+      const doc = parser.parseFromString(xmlInput, 'text/xml')
+      const parserError = doc.querySelector('parsererror')
+      return !parserError
     } catch {
-      return false;
+      return false
     }
-  }, [xmlInput]);
+  }, [xmlInput])
 
   // Create output tabs - Always show both tabs
   const outputTabs: CodeOutputTab[] = useMemo(() => {
@@ -169,23 +164,24 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
         id: 'tree',
         label: 'Tree View',
         value: '', // Not used for tree view
-        language: 'xml'
+        language: 'xml',
       },
       {
         id: 'results',
         label: 'Results',
         value: output || '',
-        language: 'json'
-      }
-    ];
+        language: 'json',
+      },
+    ]
 
-    return tabs;
-  }, [output]);
+    return tabs
+  }, [output])
 
-  const selectedOutputTab = outputTabs.find(tab => tab.id === activeTab)?.id
-    ?? outputTabs.find(tab => tab.id === 'tree')?.id
-    ?? outputTabs[0]?.id
-    ?? activeTab;
+  const selectedOutputTab =
+    outputTabs.find((tab) => tab.id === activeTab)?.id ??
+    outputTabs.find((tab) => tab.id === 'tree')?.id ??
+    outputTabs[0]?.id ??
+    activeTab
 
   // Custom tab content renderer
   const renderCustomTabContent = (tabId: string): React.ReactNode => {
@@ -199,49 +195,49 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
               highlightedPaths={result?.paths || []}
               onPathClick={(path) => {
                 // Copy path to clipboard
-                navigator.clipboard.writeText(path).catch(console.error);
+                navigator.clipboard.writeText(path).catch(console.error)
               }}
               onGetExpandedXml={(fn: () => string) => setGetExpandedXml(() => fn)}
               maxDepth={3}
               height="500px"
             />
           </div>
-        );
+        )
       }
       // Show empty state when no XML is provided
       return (
-        <div className="h-full w-full flex items-center justify-center text-neutral-500 dark:text-neutral-400">
+        <div className="flex h-full w-full items-center justify-center text-neutral-500 dark:text-neutral-400">
           <div className="text-center">
             <p className="text-sm">Enter XML data to view the tree structure</p>
           </div>
         </div>
-      );
+      )
     }
-    return null;
-  };
+    return null
+  }
 
   // Custom copy handler for tree view
   const handleTreeViewCopy = useCallback(async (): Promise<string | null> => {
     if (selectedOutputTab === 'tree') {
       if (getExpandedXml) {
         try {
-          const xml = getExpandedXml();
-          return xml || '';
+          const xml = getExpandedXml()
+          return xml || ''
         } catch {
-          return null;
+          return null
         }
       }
       // Function not ready yet, but button should still be enabled
-      return '';
+      return ''
     }
-    return null; // Use default copy behavior for other tabs
-  }, [selectedOutputTab, getExpandedXml]);
+    return null // Use default copy behavior for other tabs
+  }, [selectedOutputTab, getExpandedXml])
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           XML Path Finder
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -250,8 +246,8 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* XPath Input */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="xpath-input" className="text-sm font-medium">
@@ -265,8 +261,8 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
                 onChange={(e) => setPathInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    handleEvaluate();
+                    e.preventDefault()
+                    handleEvaluate()
                   }
                 }}
                 className="flex-1 font-mono text-sm"
@@ -280,7 +276,7 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
               >
                 {isEvaluating ? (
                   <>
-                    <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
                     Evaluating...
                   </>
                 ) : (
@@ -289,16 +285,12 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-10 px-3 text-xs"
-                  >
+                  <Button variant="outline" size="sm" className="h-10 px-3 text-xs">
                     Patterns
-                    <ChevronDownIcon className="h-3 w-3 ml-1" />
+                    <ChevronDownIcon className="ml-1 h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto w-64">
+                <DropdownMenuContent align="end" className="max-h-[300px] w-64 overflow-y-auto">
                   {XML_PATH_COMMON_PATTERNS.map((pattern, index) => (
                     <DropdownMenuItem
                       key={index}
@@ -306,21 +298,20 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
                       className="flex flex-col items-start gap-1"
                     >
                       <span className="font-mono text-xs">{pattern.pattern}</span>
-                      <span className="text-xs text-muted-foreground">{pattern.description}</span>
+                      <span className="text-muted-foreground text-xs">{pattern.description}</span>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Press Ctrl+Enter (Cmd+Enter on Mac) to evaluate
-            </p>
+            <p className="text-muted-foreground text-xs">Press Ctrl+Enter (Cmd+Enter on Mac) to evaluate</p>
           </div>
 
           {/* Side-by-side Editor Panels */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Input Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="XML Input"
               value={xmlInput}
               onChange={setXmlInput}
@@ -334,13 +325,9 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
               headerActions={
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 text-xs"
-                    >
+                    <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                       Load Examples
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      <ChevronDownIcon className="ml-1 h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto">
@@ -351,24 +338,19 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
                         className="flex flex-col items-start gap-1"
                       >
                         <span className="font-medium">{example.name}</span>
-                        <span className="text-xs text-muted-foreground font-mono">
-                          {example.path}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {example.description}
-                        </span>
+                        <span className="text-muted-foreground font-mono text-xs">{example.path}</span>
+                        <span className="text-muted-foreground text-xs">{example.description}</span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               }
-              footerLeftContent={
-                <span>{getCharacterCount(xmlInput)} characters</span>
-              }
+              footerLeftContent={<span>{getCharacterCount(xmlInput)} characters</span>}
             />
 
             {/* Output Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               tabs={outputTabs}
               activeTab={selectedOutputTab}
               onTabChange={setActiveTab}
@@ -385,24 +367,26 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
                   {selectedOutputTab === 'tree' && result && (
                     <span
                       className={cn(
-                        'px-2.5 py-1 rounded-full text-xs font-semibold',
+                        'rounded-full px-2.5 py-1 text-xs font-semibold',
                         result.success && result.count > 0
-                          ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
+                          ? 'border border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300'
                           : result.success && result.count === 0
-                          ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
-                          : ''
+                            ? 'border border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-950/30 dark:text-orange-300'
+                            : ''
                       )}
                     >
                       {result.success && result.count > 0
                         ? `Found ${result.count} match${result.count !== 1 ? 'es' : ''}`
                         : result.success && result.count === 0
-                        ? 'No matches found'
-                        : ''}
+                          ? 'No matches found'
+                          : ''}
                     </span>
                   )}
                   {selectedOutputTab === 'results' && output && result && (
                     <>
-                      <span>{result.count} match{result.count !== 1 ? 'es' : ''}</span>
+                      <span>
+                        {result.count} match{result.count !== 1 ? 'es' : ''}
+                      </span>
                       <span>{getCharacterCount(output)} characters</span>
                       <span>{getLineCount(output)} lines</span>
                     </>
@@ -414,16 +398,12 @@ export function XmlPathFinder({ className, instanceId }: XmlPathFinderProps) {
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+            <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+              <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           )}
-
         </div>
       </div>
     </div>
-  );
+  )
 }
-

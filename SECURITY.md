@@ -4,9 +4,9 @@
 
 We release patches for security vulnerabilities. Which versions are eligible for receiving such patches depends on the CVSS v3.0 Rating:
 
-| Version | Supported          |
-| ------- | ------------------ |
-| Latest  | :white_check_mark: |
+| Version  | Supported          |
+| -------- | ------------------ |
+| Latest   | :white_check_mark: |
 | < Latest | :x:                |
 
 ## Reporting a Vulnerability
@@ -25,6 +25,7 @@ Instead, please report them via one of the following methods:
 ### What to Include
 
 When reporting a vulnerability, please include:
+
 - Type of vulnerability
 - Full paths of source file(s) related to the vulnerability
 - The location of the affected code
@@ -112,6 +113,7 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' '
 ## 🛡️ Security Checklist
 
 ### Before Deployment
+
 - [ ] No hardcoded secrets or API keys in code
 - [ ] All dependencies are up to date
 - [ ] Security vulnerabilities scanned (via Dependabot/CodeQL)
@@ -121,6 +123,7 @@ Content-Security-Policy: default-src 'self'; script-src 'self' 'unsafe-inline' '
 - [ ] No use of dangerous functions (eval, innerHTML with user input)
 
 ### Regular Maintenance
+
 - [ ] Update dependencies regularly (Dependabot handles this)
 - [ ] Monitor for security vulnerabilities (GitHub Security)
 - [ ] Review and merge security updates
@@ -152,6 +155,7 @@ For security-related issues:
 - **Alternative**: Contact maintainers directly (see repository maintainers)
 
 Please follow responsible disclosure practices:
+
 - Give us reasonable time to fix the issue before public disclosure
 - Do not access or modify data that doesn't belong to you
 - Act in good faith and avoid privacy violations

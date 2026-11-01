@@ -1,94 +1,93 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import {
   DEFAULT_LIST_CONVERTER_OPTIONS,
   LIST_CONVERTER_EXAMPLES,
   LIST_CONVERTER_OPTIONS,
   type ListConverterOptions,
-} from '@/config/list-converter-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import {
-  convertListFormat,
-  getLanguageForFormat,
-} from '@/libs/list-converter';
-import { cn } from '@/libs/utils';
-import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useMemo, useState } from 'react';
+} from '@/config/list-converter-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { convertListFormat, getLanguageForFormat } from '@/libs/list-converter'
+import { cn } from '@/libs/utils'
+import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { useEffect, useMemo, useState } from 'react'
 
 interface ListConverterProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function ListConverter({ className, instanceId }: ListConverterProps) {
-  const { toolState, updateToolState } = useToolState('list-converter', instanceId);
+  const { toolState, updateToolState } = useToolState('list-converter', instanceId)
 
   // State
-  const [input, setInput] = useState<string>((toolState?.input as string) ?? (''));
-  const [options, setOptions] = useState<ListConverterOptions>((toolState?.options as ListConverterOptions) ?? (DEFAULT_LIST_CONVERTER_OPTIONS));
+  const [input, setInput] = useState<string>((toolState?.input as string) ?? '')
+  const [options, setOptions] = useState<ListConverterOptions>(
+    (toolState?.options as ListConverterOptions) ?? DEFAULT_LIST_CONVERTER_OPTIONS
+  )
   const { output, error, conversionStats } = useMemo(() => {
-    if (!input.trim()) return { output: '', error: '', conversionStats: null };
+    if (!input.trim()) return { output: '', error: '', conversionStats: null }
     const result = convertListFormat(input, options.inputFormat, options.outputFormat, {
       preserveTypes: options.preserveTypes,
       removeEmpty: options.removeEmpty,
       removeDuplicates: options.removeDuplicates,
       sortOrder: options.sortOrder,
-    });
+    })
     return result.success
       ? { output: result.output, error: '', conversionStats: result.stats }
-      : { output: '', error: result.error || 'Conversion failed', conversionStats: result.stats };
-  }, [input, options]);
+      : { output: '', error: result.error || 'Conversion failed', conversionStats: result.stats }
+  }, [input, options])
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [inputWrapText, setInputWrapText] = useState(true);
-  const [outputWrapText, setOutputWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [inputWrapText, setInputWrapText] = useState(true)
+  const [outputWrapText, setOutputWrapText] = useState(true)
 
   // Update persistent state
   useEffect(() => {
     updateToolState({
-        input,
-        output,
-        options,
-        error,
-      });
+      input,
+      output,
+      options,
+      error,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, output, options, error]);
+  }, [input, output, options, error])
 
   // Handlers
   const handleLoadExample = (format: typeof options.inputFormat) => {
-    setInput(LIST_CONVERTER_EXAMPLES[format]);
-    setOptions(prev => ({ ...prev, inputFormat: format }));
-  };
+    setInput(LIST_CONVERTER_EXAMPLES[format])
+    setOptions((prev) => ({ ...prev, inputFormat: format }))
+  }
 
   const handleSwapFormats = () => {
-    setOptions(prev => ({
+    setOptions((prev) => ({
       ...prev,
       inputFormat: prev.outputFormat,
       outputFormat: prev.inputFormat,
-    }));
+    }))
     // Swap input and output
-    setInput(output);
-  };
+    setInput(output)
+  }
 
   const getCharacterCount = (text: string): number => {
-    return text.length;
-  };
+    return text.length
+  }
 
-  const inputLanguage = useMemo(() => getLanguageForFormat(options.inputFormat), [options.inputFormat]);
-  const outputLanguage = useMemo(() => getLanguageForFormat(options.outputFormat), [options.outputFormat]);
+  const inputLanguage = useMemo(() => getLanguageForFormat(options.inputFormat), [options.inputFormat])
+  const outputLanguage = useMemo(() => getLanguageForFormat(options.outputFormat), [options.outputFormat])
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           List Format Converter
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -97,12 +96,12 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Format Selectors */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               <Select
                 value={options.inputFormat}
                 onValueChange={(value) =>
@@ -128,7 +127,7 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
                 className="h-8 px-3 text-xs"
                 title="Swap input and output formats"
               >
-                <ArrowPathIcon className="h-3 w-3 mr-1" />
+                <ArrowPathIcon className="mr-1 h-3 w-3" />
                 Swap
               </Button>
 
@@ -152,34 +151,28 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
             </div>
 
             {/* Conversion Options */}
-            <div className="flex items-center gap-4 flex-wrap min-h-[40px]">
+            <div className="flex min-h-[40px] flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Preserve Types:</span>
+                <span className="text-muted-foreground text-sm">Preserve Types:</span>
                 <Switch
                   checked={options.preserveTypes}
-                  onCheckedChange={(checked) =>
-                    setOptions((prev) => ({ ...prev, preserveTypes: checked }))
-                  }
+                  onCheckedChange={(checked) => setOptions((prev) => ({ ...prev, preserveTypes: checked }))}
                 />
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Remove Empty:</span>
+                <span className="text-muted-foreground text-sm">Remove Empty:</span>
                 <Switch
                   checked={options.removeEmpty}
-                  onCheckedChange={(checked) =>
-                    setOptions((prev) => ({ ...prev, removeEmpty: checked }))
-                  }
+                  onCheckedChange={(checked) => setOptions((prev) => ({ ...prev, removeEmpty: checked }))}
                 />
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Remove Duplicates:</span>
+                <span className="text-muted-foreground text-sm">Remove Duplicates:</span>
                 <Switch
                   checked={options.removeDuplicates}
-                  onCheckedChange={(checked) =>
-                    setOptions((prev) => ({ ...prev, removeDuplicates: checked }))
-                  }
+                  onCheckedChange={(checked) => setOptions((prev) => ({ ...prev, removeDuplicates: checked }))}
                 />
               </div>
 
@@ -202,10 +195,11 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
           </div>
 
           {/* Side-by-side Panels */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Input Panel */}
-            <CodePanel fillHeight={true}
-              title={`Input (${LIST_CONVERTER_OPTIONS.formats.find(f => f.value === options.inputFormat)?.label})`}
+            <CodePanel
+              fillHeight={true}
+              title={`Input (${LIST_CONVERTER_OPTIONS.formats.find((f) => f.value === options.inputFormat)?.label})`}
               value={input}
               onChange={setInput}
               language={inputLanguage}
@@ -221,7 +215,7 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                       Load Example
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      <ChevronDownIcon className="ml-1 h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto">
@@ -249,8 +243,9 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
             />
 
             {/* Output Panel */}
-            <CodePanel fillHeight={true}
-              title={`Output (${LIST_CONVERTER_OPTIONS.formats.find(f => f.value === options.outputFormat)?.label})`}
+            <CodePanel
+              fillHeight={true}
+              title={`Output (${LIST_CONVERTER_OPTIONS.formats.find((f) => f.value === options.outputFormat)?.label})`}
               value={output}
               readOnly={true}
               language={outputLanguage}
@@ -259,7 +254,8 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
               wrapText={outputWrapText}
               onWrapTextChange={setOutputWrapText}
               footerLeftContent={
-                output && conversionStats && (
+                output &&
+                conversionStats && (
                   <>
                     <span>{conversionStats.outputItems} items</span>
                     <span>{getCharacterCount(output)} chars</span>
@@ -271,16 +267,14 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+            <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+              <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           )}
 
           {/* Statistics */}
           {conversionStats && !error && (
-            <div className="flex items-center justify-center gap-6 py-3 px-4 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[10px] flex-wrap text-sm text-muted-foreground">
+            <div className="text-muted-foreground flex flex-wrap items-center justify-center gap-6 rounded-[10px] border border-neutral-200 bg-neutral-100 px-4 py-3 text-sm dark:border-neutral-700 dark:bg-neutral-800">
               <span>
                 Input: <span className="font-medium">{conversionStats.inputItems}</span> items,{' '}
                 <span className="font-medium">{conversionStats.inputSize}</span> chars
@@ -298,14 +292,18 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
                       conversionStats.outputSize > conversionStats.inputSize
                         ? 'text-red-600 dark:text-red-400'
                         : conversionStats.outputSize < conversionStats.inputSize
-                        ? 'text-green-600 dark:text-green-400'
-                        : ''
+                          ? 'text-green-600 dark:text-green-400'
+                          : ''
                     )}
                   >
                     {((conversionStats.outputSize - conversionStats.inputSize) / conversionStats.inputSize) * 100 > 0
                       ? '+'
                       : ''}
-                    {(((conversionStats.outputSize - conversionStats.inputSize) / conversionStats.inputSize) * 100).toFixed(1)}%
+                    {(
+                      ((conversionStats.outputSize - conversionStats.inputSize) / conversionStats.inputSize) *
+                      100
+                    ).toFixed(1)}
+                    %
                   </span>
                 </span>
               )}
@@ -314,6 +312,5 @@ export function ListConverter({ className, instanceId }: ListConverterProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }
-

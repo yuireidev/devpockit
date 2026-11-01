@@ -1,12 +1,12 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LabeledInput } from '@/components/ui/labeled-input';
-import { NumberInput } from '@/components/ui/number-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { LabeledInput } from '@/components/ui/labeled-input'
+import { NumberInput } from '@/components/ui/number-input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   DEFAULT_UUID_OPTIONS,
   UUID_EXAMPLE_SETS,
@@ -14,105 +14,114 @@ import {
   UUID_HYPHENS,
   UUID_NAMESPACE_OPTIONS,
   UUID_QUANTITY_LIMITS,
-  UUID_VERSIONS
-} from '@/config/uuid-generator-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import { cn } from '@/libs/utils';
-import { generateUuids, getUuidStats, type UuidGenerationOptions } from '@/libs/uuid-generator';
-import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+  UUID_VERSIONS,
+} from '@/config/uuid-generator-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { cn } from '@/libs/utils'
+import { generateUuids, getUuidStats, type UuidGenerationOptions } from '@/libs/uuid-generator'
+import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState } from 'react'
 
 interface UuidGeneratorProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function UuidGenerator({ className, instanceId }: UuidGeneratorProps) {
-  const { toolState, updateToolState } = useToolState('uuid-generator', instanceId);
+  const { toolState, updateToolState } = useToolState('uuid-generator', instanceId)
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<UuidGenerationOptions>(((toolState?.options as UuidGenerationOptions)) ?? (DEFAULT_UUID_OPTIONS));
-  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
-  const [stats, setStats] = useState<{ count: number; totalLength: number; averageLength: number; uniqueCount: number; duplicates: number } | null>((toolState?.stats as { count: number; totalLength: number; averageLength: number; uniqueCount: number; duplicates: number } | undefined) ?? null);
-
+  const [options, setOptions] = useState<UuidGenerationOptions>(
+    (toolState?.options as UuidGenerationOptions) ?? DEFAULT_UUID_OPTIONS
+  )
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? '')
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [error, setError] = useState<string>((toolState?.error as string) ?? '')
+  const [stats, setStats] = useState<{
+    count: number
+    totalLength: number
+    averageLength: number
+    uniqueCount: number
+    duplicates: number
+  } | null>(
+    (toolState?.stats as
+      | { count: number; totalLength: number; averageLength: number; uniqueCount: number; duplicates: number }
+      | undefined) ?? null
+  )
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [wrapText, setWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [wrapText, setWrapText] = useState(true)
 
   // Hydrate state from toolState after mount (client-side only)
-
 
   // Update persistent state whenever local state changes
   useEffect(() => {
     updateToolState({
-        options,
-        output,
-        error,
-        stats: stats || undefined
-      });
+      options,
+      output,
+      error,
+      stats: stats || undefined,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, output, error, stats]);
+  }, [options, output, error, stats])
 
   // Reset local state when tool state is cleared
 
-
   const handleGenerate = async () => {
-    setIsGenerating(true);
-    setError('');
+    setIsGenerating(true)
+    setError('')
 
     try {
       if (options.quantity < UUID_QUANTITY_LIMITS.min || options.quantity > UUID_QUANTITY_LIMITS.max) {
-        setError(`Quantity must be between ${UUID_QUANTITY_LIMITS.min} and ${UUID_QUANTITY_LIMITS.max}`);
-        return;
+        setError(`Quantity must be between ${UUID_QUANTITY_LIMITS.min} and ${UUID_QUANTITY_LIMITS.max}`)
+        return
       }
 
       if (options.version === 'v5' && (!options.namespace || !options.name)) {
-        setError('Namespace and name are required for v5 UUIDs');
-        return;
+        setError('Namespace and name are required for v5 UUIDs')
+        return
       }
 
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-      const result = generateUuids(options);
-      setOutput(result.uuids.join('\n'));
-      setStats(getUuidStats(result.uuids));
+      const result = generateUuids(options)
+      setOutput(result.uuids.join('\n'))
+      setStats(getUuidStats(result.uuids))
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to generate UUIDs');
-      setOutput('');
-      setStats(null);
+      setError(err instanceof Error ? err.message : 'Failed to generate UUIDs')
+      setOutput('')
+      setStats(null)
     } finally {
-      setIsGenerating(false);
+      setIsGenerating(false)
     }
-  };
+  }
 
   const handleLoadExample = (version: 'v1' | 'v4' | 'v5' | 'v7') => {
-    const examples = UUID_EXAMPLE_SETS[version];
-    setOutput(examples.join('\n'));
-    setStats(getUuidStats(examples));
-    setError('');
-  };
+    const examples = UUID_EXAMPLE_SETS[version]
+    setOutput(examples.join('\n'))
+    setStats(getUuidStats(examples))
+    setError('')
+  }
 
   const handleOptionChange = (key: keyof UuidGenerationOptions, value: unknown) => {
-    setOptions(prev => ({ ...prev, [key]: value }));
-  };
+    setOptions((prev) => ({ ...prev, [key]: value }))
+  }
 
   const handleQuantityChange = (quantity: number) => {
-    setOptions(prev => ({ ...prev, quantity }));
-  };
+    setOptions((prev) => ({ ...prev, quantity }))
+  }
 
   const getLineCount = (text: string): number => {
-    if (!text) return 0;
-    return text.split('\n').length;
-  };
+    if (!text) return 0
+    return text.split('\n').length
+  }
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           UUID Generator
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -121,17 +130,14 @@ export function UuidGenerator({ className, instanceId }: UuidGeneratorProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Main Controls Row */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Version Selection */}
-              <Select
-                value={options.version}
-                onValueChange={(value) => handleOptionChange('version', value)}
-              >
+              <Select value={options.version} onValueChange={(value) => handleOptionChange('version', value)}>
                 <SelectTrigger label="Version:" className="min-w-[300px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -145,10 +151,7 @@ export function UuidGenerator({ className, instanceId }: UuidGeneratorProps) {
               </Select>
 
               {/* Format Selection */}
-              <Select
-                value={options.format}
-                onValueChange={(value) => handleOptionChange('format', value)}
-              >
+              <Select value={options.format} onValueChange={(value) => handleOptionChange('format', value)}>
                 <SelectTrigger label="Format:" className="min-w-[150px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -162,10 +165,7 @@ export function UuidGenerator({ className, instanceId }: UuidGeneratorProps) {
               </Select>
 
               {/* Hyphens Selection */}
-              <Select
-                value={options.hyphens}
-                onValueChange={(value) => handleOptionChange('hyphens', value)}
-              >
+              <Select value={options.hyphens} onValueChange={(value) => handleOptionChange('hyphens', value)}>
                 <SelectTrigger label="Hyphens:" className="min-w-[250px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -187,15 +187,10 @@ export function UuidGenerator({ className, instanceId }: UuidGeneratorProps) {
               />
 
               {/* Generate Button */}
-              <Button
-                onClick={handleGenerate}
-                disabled={isGenerating}
-                variant="default"
-                size="default"
-              >
+              <Button onClick={handleGenerate} disabled={isGenerating} variant="default" size="default">
                 {isGenerating ? (
                   <>
-                    <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
                     Generating...
                   </>
                 ) : (
@@ -206,12 +201,9 @@ export function UuidGenerator({ className, instanceId }: UuidGeneratorProps) {
 
             {/* V5 Options Row */}
             {options.version === 'v5' && (
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex flex-wrap items-center gap-3">
                 {/* Namespace */}
-                <Select
-                  value={options.namespace}
-                  onValueChange={(value) => handleOptionChange('namespace', value)}
-                >
+                <Select value={options.namespace} onValueChange={(value) => handleOptionChange('namespace', value)}>
                   <SelectTrigger label="Namespace:" className="min-w-[380px]">
                     <SelectValue />
                   </SelectTrigger>
@@ -237,7 +229,8 @@ export function UuidGenerator({ className, instanceId }: UuidGeneratorProps) {
           </div>
 
           {/* Output Panel */}
-          <CodePanel fillHeight={true}
+          <CodePanel
+            fillHeight={true}
             title="Generated UUIDs"
             value={output}
             language="plaintext"
@@ -249,25 +242,15 @@ export function UuidGenerator({ className, instanceId }: UuidGeneratorProps) {
             headerActions={
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                  >
+                  <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                     Load Examples
-                    <ChevronDownIcon className="h-3 w-3 ml-1" />
+                    <ChevronDownIcon className="ml-1 h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
-                  <DropdownMenuItem onClick={() => handleLoadExample('v1')}>
-                    v1 Examples (Timestamp)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleLoadExample('v4')}>
-                    v4 Examples (Random)
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleLoadExample('v5')}>
-                    v5 Examples (Namespace)
-                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleLoadExample('v1')}>v1 Examples (Timestamp)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleLoadExample('v4')}>v4 Examples (Random)</DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleLoadExample('v5')}>v5 Examples (Namespace)</DropdownMenuItem>
                   <DropdownMenuItem onClick={() => handleLoadExample('v7')}>
                     v7 Examples (Time-ordered)
                   </DropdownMenuItem>
@@ -286,14 +269,12 @@ export function UuidGenerator({ className, instanceId }: UuidGeneratorProps) {
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+            <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+              <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }

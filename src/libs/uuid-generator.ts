@@ -90,7 +90,7 @@ export function generateUuids(options: UuidGenerationOptions): UuidGenerationRes
     format,
     hyphens,
     quantity,
-    totalLength
+    totalLength,
   }
 }
 
@@ -124,7 +124,7 @@ export function getUuidStats(uuids: string[]): {
     totalLength,
     averageLength,
     uniqueCount,
-    duplicates
+    duplicates,
   }
 }
 
@@ -157,9 +157,7 @@ export function getUuidVersion(uuid: string): UuidVersion | null {
  * Format UUIDs for display
  */
 export function formatUuidsForDisplay(uuids: string[], format: UuidFormat): string {
-  const formattedUuids = uuids.map(uuid =>
-    format === 'uppercase' ? uuid.toUpperCase() : uuid.toLowerCase()
-  )
+  const formattedUuids = uuids.map((uuid) => (format === 'uppercase' ? uuid.toUpperCase() : uuid.toLowerCase()))
 
   return formattedUuids.join('\n')
 }

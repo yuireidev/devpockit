@@ -46,12 +46,14 @@ Welcome to the DevPockit community! This document outlines our community values,
 ### GitHub Discussions
 
 **Categories**:
+
 - **General**: General discussions about the project
 - **Ideas**: Feature ideas and suggestions
 - **Q&A**: Questions and answers
 - **Show and Tell**: Share projects using DevPockit
 
 **Guidelines**:
+
 - Use appropriate categories
 - Search before posting
 - Be respectful and constructive
@@ -60,11 +62,13 @@ Welcome to the DevPockit community! This document outlines our community values,
 ### GitHub Issues
 
 **Use for**:
+
 - Bug reports
 - Feature requests
 - Documentation issues
 
 **Guidelines**:
+
 - Use issue templates
 - One issue per problem/feature
 - Link related issues
@@ -73,6 +77,7 @@ Welcome to the DevPockit community! This document outlines our community values,
 ### Pull Requests
 
 **Guidelines**:
+
 - Use PR template
 - Link related issues
 - Keep PRs focused and small when possible
@@ -116,6 +121,7 @@ We recognize and appreciate all contributors:
 ## Response Times
 
 We aim to respond within:
+
 - **Issues**: 48 hours
 - **Pull Requests**: 1 week for review
 - **Discussions**: 48 hours
@@ -159,12 +165,14 @@ Please be patient - maintainers are volunteers.
 ## Feedback
 
 We welcome feedback on:
+
 - Project direction
 - Documentation quality
 - Community processes
 - Code quality
 
 Share feedback via:
+
 - GitHub Discussions
 - GitHub Issues
 - Direct communication with maintainers
@@ -176,4 +184,3 @@ Thank you for being part of the DevPockit community! Your contributions, questio
 ---
 
 **Remember**: We're all here to build something great together. Be kind, be helpful, and have fun! 🚀
-

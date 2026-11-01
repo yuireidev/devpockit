@@ -1,280 +1,272 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import {
   DEFAULT_LIST_COMPARISON_OPTIONS,
   LIST_COMPARISON_EXAMPLES,
   LIST_COMPARISON_OPTIONS,
   type ListComparisonOptions,
-} from '@/config/list-comparison-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import {
-  calculateStats,
-  parseListInput,
-  performOperation,
-  sortListItems,
-  type ListItem,
-} from '@/libs/list-comparison';
-import { cn } from '@/libs/utils';
-import { ChevronDownIcon } from '@heroicons/react/24/outline';
-import { Check, Copy, Download, Search } from 'lucide-react';
-import { useEffect, useMemo, useState } from 'react';
-import { stringify } from 'yaml';
+} from '@/config/list-comparison-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { calculateStats, parseListInput, performOperation, sortListItems, type ListItem } from '@/libs/list-comparison'
+import { cn } from '@/libs/utils'
+import { ChevronDownIcon } from '@heroicons/react/24/outline'
+import { Check, Copy, Download, Search } from 'lucide-react'
+import { useEffect, useMemo, useState } from 'react'
+import { stringify } from 'yaml'
 
 interface ListComparisonProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function ListComparison({ className, instanceId }: ListComparisonProps) {
-  const { toolState, updateToolState } = useToolState('list-comparison', instanceId);
+  const { toolState, updateToolState } = useToolState('list-comparison', instanceId)
 
   // State
-  const [listAText, setListAText] = useState<string>((toolState?.listAText as string) ?? (''));
-  const [listBText, setListBText] = useState<string>((toolState?.listBText as string) ?? (''));
-  const [options, setOptions] = useState<ListComparisonOptions>((toolState?.options as ListComparisonOptions) ?? (DEFAULT_LIST_COMPARISON_OPTIONS));
+  const [listAText, setListAText] = useState<string>((toolState?.listAText as string) ?? '')
+  const [listBText, setListBText] = useState<string>((toolState?.listBText as string) ?? '')
+  const [options, setOptions] = useState<ListComparisonOptions>(
+    (toolState?.options as ListComparisonOptions) ?? DEFAULT_LIST_COMPARISON_OPTIONS
+  )
   const { stats, results } = useMemo(() => {
-    if (!listAText.trim() && !listBText.trim()) return { stats: null, results: [] as ListItem[] };
+    if (!listAText.trim() && !listBText.trim()) return { stats: null, results: [] as ListItem[] }
     try {
-      const listA = parseListInput(listAText, options.inputFormat, options.caseSensitive);
-      const listB = parseListInput(listBText, options.inputFormat, options.caseSensitive);
-      const comparisonStats = calculateStats(listA, listB, options.caseSensitive);
-      const comparisonResults = performOperation(listA, listB, options.operation, options.caseSensitive);
+      const listA = parseListInput(listAText, options.inputFormat, options.caseSensitive)
+      const listB = parseListInput(listBText, options.inputFormat, options.caseSensitive)
+      const comparisonStats = calculateStats(listA, listB, options.caseSensitive)
+      const comparisonResults = performOperation(listA, listB, options.operation, options.caseSensitive)
       return {
         stats: comparisonStats,
         results: sortListItems(comparisonResults, options.sortOrder),
-      };
+      }
     } catch {
-      return { stats: null, results: [] as ListItem[] };
+      return { stats: null, results: [] as ListItem[] }
     }
-  }, [listAText, listBText, options]);
+  }, [listAText, listBText, options])
 
-  const [copySuccess, setCopySuccess] = useState<'results' | null>(null);
-  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [copySuccess, setCopySuccess] = useState<'results' | null>(null)
+  const [searchQuery, setSearchQuery] = useState<string>('')
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [listAWrapText, setListAWrapText] = useState(true);
-  const [listBWrapText, setListBWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [listAWrapText, setListAWrapText] = useState(true)
+  const [listBWrapText, setListBWrapText] = useState(true)
 
   // Hydrate state from toolState after mount
-
 
   // Update persistent state
   useEffect(() => {
     updateToolState({
-        listAText,
-        listBText,
-        options,
-      });
+      listAText,
+      listBText,
+      options,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [listAText, listBText, options]);
+  }, [listAText, listBText, options])
 
   // Reset state when tool state is cleared
-
 
   // Filter results based on search query
   const filteredResults = useMemo(() => {
     if (!searchQuery.trim()) {
-      return results;
+      return results
     }
-    const query = searchQuery.toLowerCase();
-    return results.filter(item => item.originalValue.toLowerCase().includes(query));
-  }, [results, searchQuery]);
+    const query = searchQuery.toLowerCase()
+    return results.filter((item) => item.originalValue.toLowerCase().includes(query))
+  }, [results, searchQuery])
 
   // Handlers
   const handleLoadExample = (side: 'list-a' | 'list-b') => {
-    const example = LIST_COMPARISON_EXAMPLES[side][options.inputFormat];
+    const example = LIST_COMPARISON_EXAMPLES[side][options.inputFormat]
     if (side === 'list-a') {
-      setListAText(example);
+      setListAText(example)
     } else {
-      setListBText(example);
+      setListBText(example)
     }
-  };
+  }
 
   // Format results based on input format
   const formatResults = (items: ListItem[], format: typeof options.inputFormat): string => {
-    const values = items.map(item => item.originalValue);
+    const values = items.map((item) => item.originalValue)
 
     switch (format) {
       case 'line-by-line':
         // Multi-line format
-        return values.join('\n');
+        return values.join('\n')
 
       case 'comma-separated':
         // Single line with commas
-        return values.join(', ');
+        return values.join(', ')
 
       case 'space-separated':
         // Single line with spaces
-        return values.join(' ');
+        return values.join(' ')
 
       case 'pipe-separated':
         // Single line with pipe separators
-        return values.join(' | ');
+        return values.join(' | ')
 
       case 'tab-separated':
         // Single line with tab separators
-        return values.join('\t');
+        return values.join('\t')
 
       case 'json-array':
         // Single line JSON array (no indentation)
-        return JSON.stringify(values);
+        return JSON.stringify(values)
 
       case 'python-list': {
         // Single line Python list with single quotes
-        const formatted = values.map(item => {
+        const formatted = values.map((item) => {
           // Escape single quotes in the item
-          const escaped = item.replace(/'/g, "\\'");
+          const escaped = item.replace(/'/g, "\\'")
           // Check if it's a number
-          const num = Number(item);
+          const num = Number(item)
           if (!isNaN(num) && item.trim() === num.toString()) {
-            return num.toString();
+            return num.toString()
           }
-          return `'${escaped}'`;
-        });
-        return `[${formatted.join(', ')}]`;
+          return `'${escaped}'`
+        })
+        return `[${formatted.join(', ')}]`
       }
 
       case 'javascript-array': {
         // Single line JavaScript array with single quotes
-        const formatted = values.map(item => {
+        const formatted = values.map((item) => {
           // Escape single quotes in the item
-          const escaped = item.replace(/'/g, "\\'");
+          const escaped = item.replace(/'/g, "\\'")
           // Check if it's a number
-          const num = Number(item);
+          const num = Number(item)
           if (!isNaN(num) && item.trim() === num.toString()) {
-            return num.toString();
+            return num.toString()
           }
-          return `'${escaped}'`;
-        });
-        return `[${formatted.join(', ')}]`;
+          return `'${escaped}'`
+        })
+        return `[${formatted.join(', ')}]`
       }
 
       case 'yaml-array': {
         // Format as YAML array
         // Try to preserve numeric types
-        const yamlValues = values.map(item => {
-          const num = Number(item);
+        const yamlValues = values.map((item) => {
+          const num = Number(item)
           if (!isNaN(num) && item.trim() === num.toString()) {
-            return num;
+            return num
           }
-          return item;
-        });
+          return item
+        })
         return stringify(yamlValues, {
           indent: 2,
           lineWidth: 0,
-        });
+        })
       }
 
       default:
-        return values.join('\n');
+        return values.join('\n')
     }
-  };
+  }
 
   const handleCopyResults = async () => {
-    if (filteredResults.length === 0) return;
+    if (filteredResults.length === 0) return
 
-    const text = formatResults(filteredResults, options.inputFormat);
+    const text = formatResults(filteredResults, options.inputFormat)
 
     try {
-      await navigator.clipboard.writeText(text);
-      setCopySuccess('results');
-      setTimeout(() => setCopySuccess(null), 2000);
+      await navigator.clipboard.writeText(text)
+      setCopySuccess('results')
+      setTimeout(() => setCopySuccess(null), 2000)
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error('Failed to copy:', err)
     }
-  };
+  }
 
   const handleExport = (format: 'json' | 'csv' | 'txt') => {
-    const data = filteredResults.map(item => item.originalValue);
-    let content = '';
-    let mimeType = '';
-    let filename = '';
+    const data = filteredResults.map((item) => item.originalValue)
+    let content = ''
+    let mimeType = ''
+    let filename = ''
 
     switch (format) {
       case 'json':
-        content = JSON.stringify(data, null, 2);
-        mimeType = 'application/json';
-        filename = 'list-comparison-results.json';
-        break;
+        content = JSON.stringify(data, null, 2)
+        mimeType = 'application/json'
+        filename = 'list-comparison-results.json'
+        break
       case 'csv':
-        content = data.map(item => `"${item.replace(/"/g, '""')}"`).join('\n');
-        mimeType = 'text/csv';
-        filename = 'list-comparison-results.csv';
-        break;
+        content = data.map((item) => `"${item.replace(/"/g, '""')}"`).join('\n')
+        mimeType = 'text/csv'
+        filename = 'list-comparison-results.csv'
+        break
       case 'txt':
-        content = data.join('\n');
-        mimeType = 'text/plain';
-        filename = 'list-comparison-results.txt';
-        break;
+        content = data.join('\n')
+        mimeType = 'text/plain'
+        filename = 'list-comparison-results.txt'
+        break
     }
 
-    const blob = new Blob([content], { type: mimeType });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = filename;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+    const blob = new Blob([content], { type: mimeType })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = filename
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   const getItemCount = (text: string): number => {
-    if (!text.trim()) return 0;
+    if (!text.trim()) return 0
     try {
-      return parseListInput(text, options.inputFormat, options.caseSensitive).length;
+      return parseListInput(text, options.inputFormat, options.caseSensitive).length
     } catch {
-      return 0;
+      return 0
     }
-  };
+  }
 
   const getUniqueCount = (text: string): number => {
-    if (!text.trim()) return 0;
+    if (!text.trim()) return 0
     try {
-      const items = parseListInput(text, options.inputFormat, options.caseSensitive);
-      const normalized = options.caseSensitive
-        ? items
-        : items.map(item => item.toLowerCase());
-      return new Set(normalized).size;
+      const items = parseListInput(text, options.inputFormat, options.caseSensitive)
+      const normalized = options.caseSensitive ? items : items.map((item) => item.toLowerCase())
+      return new Set(normalized).size
     } catch {
-      return 0;
+      return 0
     }
-  };
+  }
 
-  const hasListAContent = listAText.trim().length > 0;
-  const hasListBContent = listBText.trim().length > 0;
-  const hasContent = hasListAContent || hasListBContent;
+  const hasListAContent = listAText.trim().length > 0
+  const hasListBContent = listBText.trim().length > 0
+  const hasContent = hasListAContent || hasListBContent
 
   // Determine language based on input format
   const getLanguage = (): string => {
     switch (options.inputFormat) {
       case 'json-array':
-        return 'json';
+        return 'json'
       case 'python-list':
-        return 'python';
+        return 'python'
       case 'javascript-array':
-        return 'javascript';
+        return 'javascript'
       case 'yaml-array':
-        return 'yaml';
+        return 'yaml'
       default:
-        return 'plaintext';
+        return 'plaintext'
     }
-  };
+  }
 
-  const editorLanguage = getLanguage();
+  const editorLanguage = getLanguage()
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           List Comparison Tool
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -283,11 +275,11 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-3 flex-wrap min-h-[40px]">
+            <div className="flex min-h-[40px] flex-wrap items-center gap-3">
               {/* Input Format Select */}
               <Select
                 value={options.inputFormat}
@@ -326,21 +318,20 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
 
               {/* Case Sensitive Toggle */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Case Sensitive:</span>
+                <span className="text-muted-foreground text-sm">Case Sensitive:</span>
                 <Switch
                   checked={options.caseSensitive}
-                  onCheckedChange={(checked) =>
-                    setOptions((prev) => ({ ...prev, caseSensitive: checked }))
-                  }
+                  onCheckedChange={(checked) => setOptions((prev) => ({ ...prev, caseSensitive: checked }))}
                 />
               </div>
             </div>
           </div>
 
           {/* Side-by-side Input Panels */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
             {/* List A Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="List A"
               value={listAText}
               onChange={setListAText}
@@ -357,13 +348,11 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                       Load Example
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      <ChevronDownIcon className="ml-1 h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleLoadExample('list-a')}>
-                      Load Example
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleLoadExample('list-a')}>Load Example</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               }
@@ -376,7 +365,8 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
             />
 
             {/* List B Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="List B"
               value={listBText}
               onChange={setListBText}
@@ -393,13 +383,11 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                       Load Example
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      <ChevronDownIcon className="ml-1 h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
-                    <DropdownMenuItem onClick={() => handleLoadExample('list-b')}>
-                      Load Example
-                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleLoadExample('list-b')}>Load Example</DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
               }
@@ -414,24 +402,20 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
 
           {/* Statistics Bar */}
           {stats && (
-            <div className="flex items-center justify-center gap-6 py-3 px-4 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[10px] flex-wrap">
-              <span className="text-sm text-muted-foreground">
+            <div className="flex flex-wrap items-center justify-center gap-6 rounded-[10px] border border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+              <span className="text-muted-foreground text-sm">
                 List A: <span className="font-medium">{stats.listASize}</span> items (
                 <span className="font-medium">{stats.listAUnique}</span> unique)
               </span>
-              <span className="text-sm text-muted-foreground">
+              <span className="text-muted-foreground text-sm">
                 List B: <span className="font-medium">{stats.listBSize}</span> items (
                 <span className="font-medium">{stats.listBUnique}</span> unique)
               </span>
               <span className="text-sm font-medium text-green-600 dark:text-green-400">
                 Common: {stats.commonItems}
               </span>
-              <span className="text-sm font-medium text-red-600 dark:text-red-400">
-                Only in A: {stats.onlyInA}
-              </span>
-              <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
-                Only in B: {stats.onlyInB}
-              </span>
+              <span className="text-sm font-medium text-red-600 dark:text-red-400">Only in A: {stats.onlyInA}</span>
+              <span className="text-sm font-medium text-blue-600 dark:text-blue-400">Only in B: {stats.onlyInB}</span>
               <span className="text-sm font-medium text-orange-600 dark:text-orange-400">
                 Similarity: {stats.similarity}%
               </span>
@@ -440,17 +424,19 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
 
           {/* Results Section */}
           {hasContent && (
-            <div className="bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[10px] overflow-hidden">
+            <div className="overflow-hidden rounded-[10px] border border-neutral-200 bg-neutral-100 dark:border-neutral-700 dark:bg-neutral-800">
               {/* Operation Selector */}
-              <div className="px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="text-sm font-medium text-foreground mr-2">Operation:</span>
+              <div className="border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-foreground mr-2 text-sm font-medium">Operation:</span>
                   {LIST_COMPARISON_OPTIONS.operations.map((op) => (
                     <Button
                       key={op.value}
                       variant={options.operation === op.value ? 'default' : 'outline'}
                       size="sm"
-                      onClick={() => setOptions((prev) => ({ ...prev, operation: op.value as typeof options.operation }))}
+                      onClick={() =>
+                        setOptions((prev) => ({ ...prev, operation: op.value as typeof options.operation }))
+                      }
                       className="h-8 px-3 text-xs"
                       title={op.description}
                     >
@@ -461,16 +447,16 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
               </div>
 
               {/* Results Header */}
-              <div className="flex items-center justify-between px-4 py-3 border-b border-neutral-200 dark:border-neutral-700">
+              <div className="flex items-center justify-between border-b border-neutral-200 px-4 py-3 dark:border-neutral-700">
                 <div className="flex items-center gap-2">
                   <div className="relative">
-                    <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    <Search className="text-muted-foreground absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 transform" />
                     <input
                       type="text"
                       placeholder="Search results..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="pl-8 pr-3 py-1.5 text-sm bg-white dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 rounded-md focus:outline-hidden focus:ring-2 focus:ring-orange-500 focus:border-transparent w-48"
+                      className="w-48 rounded-md border border-neutral-200 bg-white py-1.5 pr-3 pl-8 text-sm focus:border-transparent focus:ring-2 focus:ring-orange-500 focus:outline-hidden dark:border-neutral-700 dark:bg-neutral-900"
                     />
                   </div>
                 </div>
@@ -484,22 +470,27 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
                   >
                     {copySuccess === 'results' ? (
                       <>
-                        <Check className="h-3 w-3 mr-1" />
+                        <Check className="mr-1 h-3 w-3" />
                         Copied
                       </>
                     ) : (
                       <>
-                        <Copy className="h-3 w-3 mr-1" />
+                        <Copy className="mr-1 h-3 w-3" />
                         Copy All
                       </>
                     )}
                   </Button>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="outline" size="sm" className="h-8 px-3 text-xs" disabled={filteredResults.length === 0}>
-                        <Download className="h-3 w-3 mr-1" />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 px-3 text-xs"
+                        disabled={filteredResults.length === 0}
+                      >
+                        <Download className="mr-1 h-3 w-3" />
                         Export
-                        <ChevronDownIcon className="h-3 w-3 ml-1" />
+                        <ChevronDownIcon className="ml-1 h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -514,53 +505,43 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
               {/* Results List */}
               <div className="p-4">
                 {filteredResults.length > 0 ? (
-                  <div className="space-y-1 max-h-[400px] overflow-y-auto">
+                  <div className="max-h-[400px] space-y-1 overflow-y-auto">
                     {filteredResults.map((item, index) => {
                       const bgColor =
                         item.source === 'both'
                           ? 'bg-green-50 dark:bg-green-950/20 border-green-200 dark:border-green-800'
                           : item.source === 'a-only'
-                          ? 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800'
-                          : 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800';
+                            ? 'bg-red-50 dark:bg-red-950/20 border-red-200 dark:border-red-800'
+                            : 'bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-800'
 
                       const textColor =
                         item.source === 'both'
                           ? 'text-green-700 dark:text-green-300'
                           : item.source === 'a-only'
-                          ? 'text-red-700 dark:text-red-300'
-                          : 'text-blue-700 dark:text-blue-300';
+                            ? 'text-red-700 dark:text-red-300'
+                            : 'text-blue-700 dark:text-blue-300'
 
                       const badgeText =
-                        item.source === 'both'
-                          ? '(in both)'
-                          : item.source === 'a-only'
-                          ? '(in A only)'
-                          : '(in B only)';
+                        item.source === 'both' ? '(in both)' : item.source === 'a-only' ? '(in A only)' : '(in B only)'
 
                       return (
-                        <div
-                          key={index}
-                          className={cn(
-                            'flex items-center gap-2 px-3 py-2 rounded-md border',
-                            bgColor
-                          )}
-                        >
+                        <div key={index} className={cn('flex items-center gap-2 rounded-md border px-3 py-2', bgColor)}>
                           <Check className={cn('h-4 w-4 shrink-0', textColor)} />
-                          <span className={cn('font-mono text-sm flex-1', textColor)}>{item.originalValue}</span>
+                          <span className={cn('flex-1 font-mono text-sm', textColor)}>{item.originalValue}</span>
                           <span className={cn('text-xs font-medium', textColor)}>{badgeText}</span>
                         </div>
-                      );
+                      )
                     })}
                   </div>
                 ) : (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-muted-foreground py-8 text-center">
                     {searchQuery ? 'No results match your search' : 'No results to display'}
                   </div>
                 )}
               </div>
 
               {/* Results Footer */}
-              <div className="px-4 py-2 border-t border-neutral-200 dark:border-neutral-700 text-sm text-muted-foreground">
+              <div className="text-muted-foreground border-t border-neutral-200 px-4 py-2 text-sm dark:border-neutral-700">
                 {filteredResults.length} {filteredResults.length === 1 ? 'item' : 'items'}
                 {searchQuery && filteredResults.length !== results.length && (
                   <span> (filtered from {results.length} total)</span>
@@ -571,6 +552,5 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
         </div>
       </div>
     </div>
-  );
+  )
 }
-

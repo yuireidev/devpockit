@@ -1,11 +1,11 @@
 // Re-export from libs for convenience
-export { DEFAULT_SYSTEM_INFO_OPTIONS } from '@/libs/system-info';
-export type { SystemInfoOptions } from '@/libs/system-info';
+export { DEFAULT_SYSTEM_INFO_OPTIONS } from '@/libs/system-info'
+export type { SystemInfoOptions } from '@/libs/system-info'
 
 export const SYSTEM_INFO_FORMAT_OPTIONS = [
   { value: 'formatted', label: 'Formatted Text', description: 'Human-readable formatted output' },
   { value: 'json', label: 'JSON', description: 'Structured JSON output' },
-];
+]
 
 export const SYSTEM_INFO_HELP = {
   title: 'System Information',
@@ -30,5 +30,4 @@ export const SYSTEM_INFO_HELP = {
     'Private browsing mode may limit some features',
     'All information is collected client-side for privacy',
   ],
-};
-
+}

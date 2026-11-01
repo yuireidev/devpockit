@@ -1,4 +1,4 @@
-import ipaddr from 'ipaddr.js';
+import ipaddr from 'ipaddr.js'
 
 /**
  * IP Address and CIDR Converter Utility Functions
@@ -12,112 +12,112 @@ import ipaddr from 'ipaddr.js';
  */
 
 export interface IpValidationResult {
-  isValid: boolean;
-  version: 'ipv4' | 'ipv6' | null;
-  error?: string;
+  isValid: boolean
+  version: 'ipv4' | 'ipv6' | null
+  error?: string
 }
 
 export interface CidrValidationResult {
-  isValid: boolean;
-  ip: string;
-  prefixLength: number;
-  version: 'ipv4' | 'ipv6' | null;
-  error?: string;
+  isValid: boolean
+  ip: string
+  prefixLength: number
+  version: 'ipv4' | 'ipv6' | null
+  error?: string
 }
 
 export interface IpRange {
-  start: string;
-  end: string;
-  count: number;
+  start: string
+  end: string
+  count: number
 }
 
 export interface NetworkAnalysis {
-  networkAddress: string;
-  broadcastAddress: string;
-  subnetMask: string;
-  usableHosts: number;
-  totalHosts: number;
-  firstUsable: string;
-  lastUsable: string;
+  networkAddress: string
+  broadcastAddress: string
+  subnetMask: string
+  usableHosts: number
+  totalHosts: number
+  firstUsable: string
+  lastUsable: string
 }
 
 export interface CidrParseResult {
-  isValid: boolean;
-  ip: string;
-  prefixLength: number;
-  version: 'ipv4' | 'ipv6' | null;
-  networkAddress: string;
-  broadcastAddress: string;
-  subnetMask: string;
-  totalHosts: number;
-  usableHosts: number;
-  firstUsable: string;
-  lastUsable: string;
-  error?: string;
+  isValid: boolean
+  ip: string
+  prefixLength: number
+  version: 'ipv4' | 'ipv6' | null
+  networkAddress: string
+  broadcastAddress: string
+  subnetMask: string
+  totalHosts: number
+  usableHosts: number
+  firstUsable: string
+  lastUsable: string
+  error?: string
 }
 
 export interface IpToCidrResult {
-  isValid: boolean;
-  ip: string;
-  cidr: string;
-  prefixLength: number;
-  version: 'ipv4' | 'ipv6' | null;
-  networkAddress: string;
-  subnetMask: string;
-  error?: string;
+  isValid: boolean
+  ip: string
+  cidr: string
+  prefixLength: number
+  version: 'ipv4' | 'ipv6' | null
+  networkAddress: string
+  subnetMask: string
+  error?: string
 }
 
 export interface CidrToRangeResult {
-  isValid: boolean;
-  cidr: string;
-  startIp: string;
-  endIp: string;
-  totalHosts: number;
-  usableHosts: number;
-  version: 'ipv4' | 'ipv6' | null;
-  networkAddress: string;
-  broadcastAddress: string;
-  firstUsable: string;
-  lastUsable: string;
-  error?: string;
+  isValid: boolean
+  cidr: string
+  startIp: string
+  endIp: string
+  totalHosts: number
+  usableHosts: number
+  version: 'ipv4' | 'ipv6' | null
+  networkAddress: string
+  broadcastAddress: string
+  firstUsable: string
+  lastUsable: string
+  error?: string
 }
 
 export interface NetworkAnalysisResult {
-  isValid: boolean;
-  cidr: string;
-  version: 'ipv4' | 'ipv6' | null;
-  networkAddress: string;
-  broadcastAddress: string;
-  subnetMask: string;
-  wildcardMask: string;
-  prefixLength: number;
-  totalHosts: number;
-  usableHosts: number;
-  firstUsable: string;
-  lastUsable: string;
-  networkClass: string;
-  isPrivate: boolean;
-  isLoopback: boolean;
-  isMulticast: boolean;
-  isLinkLocal: boolean;
-  hostBits: number;
-  networkBits: number;
-  error?: string;
+  isValid: boolean
+  cidr: string
+  version: 'ipv4' | 'ipv6' | null
+  networkAddress: string
+  broadcastAddress: string
+  subnetMask: string
+  wildcardMask: string
+  prefixLength: number
+  totalHosts: number
+  usableHosts: number
+  firstUsable: string
+  lastUsable: string
+  networkClass: string
+  isPrivate: boolean
+  isLoopback: boolean
+  isMulticast: boolean
+  isLinkLocal: boolean
+  hostBits: number
+  networkBits: number
+  error?: string
 }
 
 export interface SubnetInfo {
-  isValid: boolean;
-  cidr: string;
+  isValid: boolean
+  cidr: string
   subnets: {
-    network: string;
-    broadcast: string;
-    firstUsable: string;
-    lastUsable: string;
-    usableHosts: number;
-  }[];
-  totalSubnets: number;
-  hostsPerSubnet: number;
-  error?: string;
+    network: string
+    broadcast: string
+    firstUsable: string
+    lastUsable: string
+    usableHosts: number
+  }[]
+  totalSubnets: number
+  hostsPerSubnet: number
+  error?: string
 }
 
 /**
@@ -125,31 +125,31 @@ export interface SubnetInfo {
  */
 export function validateIpAddress(ip: string): IpValidationResult {
   try {
-    const addr = ipaddr.process(ip);
+    const addr = ipaddr.process(ip)
 
     if (addr.kind() === 'ipv4') {
       return {
         isValid: true,
-        version: 'ipv4'
-      };
+        version: 'ipv4',
+      }
     } else if (addr.kind() === 'ipv6') {
       return {
         isValid: true,
-        version: 'ipv6'
-      };
+        version: 'ipv6',
+      }
     }
 
     return {
       isValid: false,
       version: null,
-      error: 'Unknown IP address format'
-    };
+      error: 'Unknown IP address format',
+    }
   } catch (error) {
     return {
       isValid: false,
       version: null,
-      error: error instanceof Error ? error.message : 'Invalid IP address format'
-    };
+      error: error instanceof Error ? error.message : 'Invalid IP address format',
+    }
   }
 }
 
@@ -158,7 +158,7 @@ export function validateIpAddress(ip: string): IpValidationResult {
  */
 export function validateCidr(cidr: string): CidrValidationResult {
   try {
-    const [ipPart, prefixPart] = cidr.split('/');
+    const [ipPart, prefixPart] = cidr.split('/')
 
     if (!ipPart || !prefixPart) {
       return {
@@ -166,11 +166,11 @@ export function validateCidr(cidr: string): CidrValidationResult {
         ip: '',
         prefixLength: 0,
         version: null,
-        error: 'Invalid CIDR format. Expected format: IP/PREFIX (e.g., 192.168.1.0/24)'
-      };
+        error: 'Invalid CIDR format. Expected format: IP/PREFIX (e.g., 192.168.1.0/24)',
+      }
     }
 
-    const prefixLength = parseInt(prefixPart, 10);
+    const prefixLength = parseInt(prefixPart, 10)
 
     if (isNaN(prefixLength)) {
       return {
@@ -178,48 +178,48 @@ export function validateCidr(cidr: string): CidrValidationResult {
         ip: ipPart,
         prefixLength: 0,
         version: null,
-        error: 'Prefix length must be a number'
-      };
+        error: 'Prefix length must be a number',
+      }
     }
 
     // Validate IP address
-    const ipValidation = validateIpAddress(ipPart);
+    const ipValidation = validateIpAddress(ipPart)
     if (!ipValidation.isValid) {
       return {
         isValid: false,
         ip: ipPart,
         prefixLength,
         version: null,
-        error: ipValidation.error
-      };
+        error: ipValidation.error,
+      }
     }
 
     // Validate prefix length
-    const maxPrefix = ipValidation.version === 'ipv4' ? 32 : 128;
+    const maxPrefix = ipValidation.version === 'ipv4' ? 32 : 128
     if (prefixLength < 0 || prefixLength > maxPrefix) {
       return {
         isValid: false,
         ip: ipPart,
         prefixLength,
         version: ipValidation.version,
-        error: `Prefix length must be between 0 and ${maxPrefix} for ${ipValidation.version}`
-      };
+        error: `Prefix length must be between 0 and ${maxPrefix} for ${ipValidation.version}`,
+      }
     }
 
     return {
       isValid: true,
       ip: ipPart,
       prefixLength,
-      version: ipValidation.version!
-    };
+      version: ipValidation.version!,
+    }
   } catch (error) {
     return {
       isValid: false,
       ip: '',
       prefixLength: 0,
       version: null,
-      error: error instanceof Error ? error.message : 'Invalid CIDR format'
-    };
+      error: error instanceof Error ? error.message : 'Invalid CIDR format',
+    }
   }
 }
 
@@ -228,10 +228,10 @@ export function validateCidr(cidr: string): CidrValidationResult {
  */
 export function isPrivateIp(ip: string): boolean {
   try {
-    const addr = ipaddr.process(ip);
-    return addr.range() !== 'unicast';
+    const addr = ipaddr.process(ip)
+    return addr.range() !== 'unicast'
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -240,10 +240,10 @@ export function isPrivateIp(ip: string): boolean {
  */
 export function isLoopbackIp(ip: string): boolean {
   try {
-    const addr = ipaddr.process(ip);
-    return addr.range() === 'loopback';
+    const addr = ipaddr.process(ip)
+    return addr.range() === 'loopback'
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -251,24 +251,24 @@ export function isLoopbackIp(ip: string): boolean {
  * Get IP address information
  */
 export function getIpInfo(ip: string): {
-  version: 'ipv4' | 'ipv6' | null;
-  isPrivate: boolean;
-  isLoopback: boolean;
-  isMulticast: boolean;
-  isLinkLocal: boolean;
-  range: string;
+  version: 'ipv4' | 'ipv6' | null
+  isPrivate: boolean
+  isLoopback: boolean
+  isMulticast: boolean
+  isLinkLocal: boolean
+  range: string
 } {
   try {
-    const addr = ipaddr.process(ip);
-    const range = addr.range();
+    const addr = ipaddr.process(ip)
+    const range = addr.range()
     return {
       version: addr.kind() as 'ipv4' | 'ipv6',
       isPrivate: range !== 'unicast',
       isLoopback: range === 'loopback',
       isMulticast: range === 'multicast',
       isLinkLocal: range === 'linkLocal',
-      range
-    };
+      range,
+    }
   } catch {
     return {
       version: null,
@@ -276,8 +276,8 @@ export function getIpInfo(ip: string): {
       isLoopback: false,
       isMulticast: false,
       isLinkLocal: false,
-      range: 'unknown'
-    };
+      range: 'unknown',
+    }
   }
 }
 
@@ -287,7 +287,7 @@ export function getIpInfo(ip: string): {
 export function parseCidr(cidr: string): CidrParseResult {
   try {
     // First validate the CIDR format
-    const cidrValidation = validateCidr(cidr);
+    const cidrValidation = validateCidr(cidr)
     if (!cidrValidation.isValid) {
       return {
         isValid: false,
@@ -301,76 +301,76 @@ export function parseCidr(cidr: string): CidrParseResult {
         usableHosts: 0,
         firstUsable: '',
         lastUsable: '',
-        error: cidrValidation.error
-      };
+        error: cidrValidation.error,
+      }
     }
 
-    const addr = ipaddr.process(cidrValidation.ip);
-    const prefixLength = cidrValidation.prefixLength;
-    const version = cidrValidation.version!;
+    const addr = ipaddr.process(cidrValidation.ip)
+    const prefixLength = cidrValidation.prefixLength
+    const version = cidrValidation.version!
 
     // Calculate network address
-    const networkAddr = addr.toString();
+    const networkAddr = addr.toString()
 
     // Calculate broadcast address and other network info
-    let broadcastAddr = '';
-    let subnetMask = '';
-    let totalHosts = 0;
-    let usableHosts = 0;
-    let firstUsable = '';
-    let lastUsable = '';
+    let broadcastAddr = ''
+    let subnetMask = ''
+    let totalHosts = 0
+    let usableHosts = 0
+    let firstUsable = ''
+    let lastUsable = ''
 
     if (version === 'ipv4') {
       // For IPv4, calculate broadcast address
-      const addrBytes = addr.toByteArray();
-      const hostBits = 32 - prefixLength;
-      const hostMask = (1 << hostBits) - 1;
+      const addrBytes = addr.toByteArray()
+      const hostBits = 32 - prefixLength
+      const hostMask = (1 << hostBits) - 1
       // Calculate broadcast address
-      const broadcastBytes = [...addrBytes];
+      const broadcastBytes = [...addrBytes]
       for (let i = 0; i < 4; i++) {
-        const byteIndex = 3 - i;
-        const bitsInThisByte = Math.min(hostBits - (i * 8), 8);
+        const byteIndex = 3 - i
+        const bitsInThisByte = Math.min(hostBits - i * 8, 8)
         if (bitsInThisByte > 0) {
-          const byteMask = (1 << bitsInThisByte) - 1;
-          broadcastBytes[byteIndex] |= byteMask;
+          const byteMask = (1 << bitsInThisByte) - 1
+          broadcastBytes[byteIndex] |= byteMask
         }
       }
-      broadcastAddr = broadcastBytes.join('.');
+      broadcastAddr = broadcastBytes.join('.')
 
       // Calculate subnet mask
-      const maskBytes = [0, 0, 0, 0];
+      const maskBytes = [0, 0, 0, 0]
       for (let i = 0; i < prefixLength; i++) {
-        const byteIndex = Math.floor(i / 8);
-        const bitIndex = 7 - (i % 8);
-        maskBytes[byteIndex] |= (1 << bitIndex);
+        const byteIndex = Math.floor(i / 8)
+        const bitIndex = 7 - (i % 8)
+        maskBytes[byteIndex] |= 1 << bitIndex
       }
-      subnetMask = maskBytes.join('.');
+      subnetMask = maskBytes.join('.')
 
       // Calculate host counts
-      totalHosts = Math.pow(2, hostBits);
-      usableHosts = Math.max(0, totalHosts - 2); // Subtract network and broadcast
+      totalHosts = Math.pow(2, hostBits)
+      usableHosts = Math.max(0, totalHosts - 2) // Subtract network and broadcast
 
       // Calculate first and last usable addresses
       if (usableHosts > 0) {
-        const networkBytes = [...addrBytes];
-        networkBytes[3] = (networkBytes[3] & ~hostMask) + 1; // First usable
-        firstUsable = networkBytes.join('.');
+        const networkBytes = [...addrBytes]
+        networkBytes[3] = (networkBytes[3] & ~hostMask) + 1 // First usable
+        firstUsable = networkBytes.join('.')
 
-        const lastBytes = [...broadcastBytes];
-        lastBytes[3] = (lastBytes[3] & ~hostMask) + (hostMask - 1); // Last usable
-        lastUsable = lastBytes.join('.');
+        const lastBytes = [...broadcastBytes]
+        lastBytes[3] = (lastBytes[3] & ~hostMask) + (hostMask - 1) // Last usable
+        lastUsable = lastBytes.join('.')
       }
     } else if (version === 'ipv6') {
       // For IPv6, use different calculations
-      const hostBits = 128 - prefixLength;
-      totalHosts = Math.pow(2, hostBits);
-      usableHosts = totalHosts; // IPv6 doesn't have broadcast address
+      const hostBits = 128 - prefixLength
+      totalHosts = Math.pow(2, hostBits)
+      usableHosts = totalHosts // IPv6 doesn't have broadcast address
 
       // For IPv6, we'll use the network address as first usable
-      firstUsable = networkAddr;
-      lastUsable = networkAddr; // Simplified for now
-      broadcastAddr = networkAddr; // IPv6 doesn't have broadcast
-      subnetMask = `/${prefixLength}`; // IPv6 uses prefix notation
+      firstUsable = networkAddr
+      lastUsable = networkAddr // Simplified for now
+      broadcastAddr = networkAddr // IPv6 doesn't have broadcast
+      subnetMask = `/${prefixLength}` // IPv6 uses prefix notation
     }
 
     return {
@@ -384,8 +384,8 @@ export function parseCidr(cidr: string): CidrParseResult {
       totalHosts,
       usableHosts,
       firstUsable,
-      lastUsable
-    };
+      lastUsable,
+    }
   } catch (error) {
     return {
       isValid: false,
@@ -399,8 +399,8 @@ export function parseCidr(cidr: string): CidrParseResult {
       usableHosts: 0,
       firstUsable: '',
       lastUsable: '',
-      error: error instanceof Error ? error.message : 'Failed to parse CIDR notation'
-    };
+      error: error instanceof Error ? error.message : 'Failed to parse CIDR notation',
+    }
   }
 }
 
@@ -408,16 +408,16 @@ export function parseCidr(cidr: string): CidrParseResult {
  * Extract IP address from CIDR notation
  */
 export function extractIpFromCidr(cidr: string): string {
-  const parts = cidr.split('/');
-  return parts[0] || '';
+  const parts = cidr.split('/')
+  return parts[0] || ''
 }
 
 /**
  * Extract prefix length from CIDR notation
  */
 export function extractPrefixFromCidr(cidr: string): number {
-  const parts = cidr.split('/');
-  return parseInt(parts[1] || '0', 10);
+  const parts = cidr.split('/')
+  return parseInt(parts[1] || '0', 10)
 }
 
 /**
@@ -425,63 +425,63 @@ export function extractPrefixFromCidr(cidr: string): number {
  */
 export function isIpInCidr(ip: string, cidr: string): boolean {
   try {
-    const ipAddr = ipaddr.process(ip);
-    const [networkIp, prefixLength] = cidr.split('/');
-    const networkAddr = ipaddr.process(networkIp);
-    const prefix = parseInt(prefixLength, 10);
+    const ipAddr = ipaddr.process(ip)
+    const [networkIp, prefixLength] = cidr.split('/')
+    const networkAddr = ipaddr.process(networkIp)
+    const prefix = parseInt(prefixLength, 10)
 
     // For IPv4
     if (ipAddr.kind() === 'ipv4' && networkAddr.kind() === 'ipv4') {
-      const ipBytes = ipAddr.toByteArray();
-      const networkBytes = networkAddr.toByteArray();
+      const ipBytes = ipAddr.toByteArray()
+      const networkBytes = networkAddr.toByteArray()
 
       // Check if the IP matches the network prefix
-      const bytesToCheck = Math.floor(prefix / 8);
-      const bitsInLastByte = prefix % 8;
+      const bytesToCheck = Math.floor(prefix / 8)
+      const bitsInLastByte = prefix % 8
 
       for (let i = 0; i < bytesToCheck; i++) {
         if (ipBytes[i] !== networkBytes[i]) {
-          return false;
+          return false
         }
       }
 
       if (bitsInLastByte > 0) {
-        const mask = (0xFF << (8 - bitsInLastByte)) & 0xFF;
+        const mask = (0xff << (8 - bitsInLastByte)) & 0xff
         if ((ipBytes[bytesToCheck] & mask) !== (networkBytes[bytesToCheck] & mask)) {
-          return false;
+          return false
         }
       }
 
-      return true;
+      return true
     }
 
     // For IPv6 (simplified)
     if (ipAddr.kind() === 'ipv6' && networkAddr.kind() === 'ipv6') {
-      const ipBytes = ipAddr.toByteArray();
-      const networkBytes = networkAddr.toByteArray();
+      const ipBytes = ipAddr.toByteArray()
+      const networkBytes = networkAddr.toByteArray()
 
-      const bytesToCheck = Math.floor(prefix / 8);
-      const bitsInLastByte = prefix % 8;
+      const bytesToCheck = Math.floor(prefix / 8)
+      const bitsInLastByte = prefix % 8
 
       for (let i = 0; i < bytesToCheck; i++) {
         if (ipBytes[i] !== networkBytes[i]) {
-          return false;
+          return false
         }
       }
 
       if (bitsInLastByte > 0) {
-        const mask = (0xFF << (8 - bitsInLastByte)) & 0xFF;
+        const mask = (0xff << (8 - bitsInLastByte)) & 0xff
         if ((ipBytes[bytesToCheck] & mask) !== (networkBytes[bytesToCheck] & mask)) {
-          return false;
+          return false
         }
       }
 
-      return true;
+      return true
     }
 
-    return false;
+    return false
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -491,7 +491,7 @@ export function isIpInCidr(ip: string, cidr: string): boolean {
 export function ipToCidr(ip: string, prefixLength: number): IpToCidrResult {
   try {
     // Validate IP address first
-    const ipValidation = validateIpAddress(ip);
+    const ipValidation = validateIpAddress(ip)
     if (!ipValidation.isValid) {
       return {
         isValid: false,
@@ -501,12 +501,12 @@ export function ipToCidr(ip: string, prefixLength: number): IpToCidrResult {
         version: null,
         networkAddress: '',
         subnetMask: '',
-        error: ipValidation.error
-      };
+        error: ipValidation.error,
+      }
     }
 
-    const version = ipValidation.version!;
-    const maxPrefix = version === 'ipv4' ? 32 : 128;
+    const version = ipValidation.version!
+    const maxPrefix = version === 'ipv4' ? 32 : 128
 
     // Validate prefix length
     if (prefixLength < 0 || prefixLength > maxPrefix) {
@@ -518,45 +518,45 @@ export function ipToCidr(ip: string, prefixLength: number): IpToCidrResult {
         version,
         networkAddress: '',
         subnetMask: '',
-        error: `Prefix length must be between 0 and ${maxPrefix} for ${version}`
-      };
+        error: `Prefix length must be between 0 and ${maxPrefix} for ${version}`,
+      }
     }
 
-    const addr = ipaddr.process(ip);
-    const cidr = `${ip}/${prefixLength}`;
+    const addr = ipaddr.process(ip)
+    const cidr = `${ip}/${prefixLength}`
 
     // Calculate network address and subnet mask
-    let networkAddress = '';
-    let subnetMask = '';
+    let networkAddress = ''
+    let subnetMask = ''
 
     if (version === 'ipv4') {
       // Calculate network address for IPv4
-      const addrBytes = addr.toByteArray();
-      const hostBits = 32 - prefixLength;
+      const addrBytes = addr.toByteArray()
+      const hostBits = 32 - prefixLength
       // Calculate network address
-      const networkBytes = [...addrBytes];
+      const networkBytes = [...addrBytes]
       for (let i = 0; i < 4; i++) {
-        const byteIndex = 3 - i;
-        const bitsInThisByte = Math.min(hostBits - (i * 8), 8);
+        const byteIndex = 3 - i
+        const bitsInThisByte = Math.min(hostBits - i * 8, 8)
         if (bitsInThisByte > 0) {
-          const byteMask = (1 << bitsInThisByte) - 1;
-          networkBytes[byteIndex] &= ~byteMask;
+          const byteMask = (1 << bitsInThisByte) - 1
+          networkBytes[byteIndex] &= ~byteMask
         }
       }
-      networkAddress = networkBytes.join('.');
+      networkAddress = networkBytes.join('.')
 
       // Calculate subnet mask
-      const maskBytes = [0, 0, 0, 0];
+      const maskBytes = [0, 0, 0, 0]
       for (let i = 0; i < prefixLength; i++) {
-        const byteIndex = Math.floor(i / 8);
-        const bitIndex = 7 - (i % 8);
-        maskBytes[byteIndex] |= (1 << bitIndex);
+        const byteIndex = Math.floor(i / 8)
+        const bitIndex = 7 - (i % 8)
+        maskBytes[byteIndex] |= 1 << bitIndex
       }
-      subnetMask = maskBytes.join('.');
+      subnetMask = maskBytes.join('.')
     } else if (version === 'ipv6') {
       // For IPv6, use the IP as network address
-      networkAddress = ip;
-      subnetMask = `/${prefixLength}`;
+      networkAddress = ip
+      subnetMask = `/${prefixLength}`
     }
 
     return {
@@ -566,8 +566,8 @@ export function ipToCidr(ip: string, prefixLength: number): IpToCidrResult {
       prefixLength,
       version,
       networkAddress,
-      subnetMask
-    };
+      subnetMask,
+    }
   } catch (error) {
     return {
       isValid: false,
@@ -577,8 +577,8 @@ export function ipToCidr(ip: string, prefixLength: number): IpToCidrResult {
       version: null,
       networkAddress: '',
       subnetMask: '',
-      error: error instanceof Error ? error.message : 'Failed to convert IP to CIDR'
-    };
+      error: error instanceof Error ? error.message : 'Failed to convert IP to CIDR',
+    }
   }
 }
 
@@ -587,7 +587,7 @@ export function ipToCidr(ip: string, prefixLength: number): IpToCidrResult {
  */
 export function ipToCidrAuto(ip: string): IpToCidrResult {
   try {
-    const ipValidation = validateIpAddress(ip);
+    const ipValidation = validateIpAddress(ip)
     if (!ipValidation.isValid) {
       return {
         isValid: false,
@@ -597,41 +597,51 @@ export function ipToCidrAuto(ip: string): IpToCidrResult {
         version: null,
         networkAddress: '',
         subnetMask: '',
-        error: ipValidation.error
-      };
+        error: ipValidation.error,
+      }
     }
 
-    const version = ipValidation.version!;
+    const version = ipValidation.version!
 
     // For automatic detection, use common prefix lengths
-    let suggestedPrefix = 24; // Default for IPv4
+    let suggestedPrefix = 24 // Default for IPv4
     if (version === 'ipv6') {
-      suggestedPrefix = 64; // Default for IPv6
+      suggestedPrefix = 64 // Default for IPv6
     }
 
     // Check if it's a private IP and suggest appropriate prefix
-    const ipInfo = getIpInfo(ip);
+    const ipInfo = getIpInfo(ip)
     if (ipInfo.isPrivate) {
       if (version === 'ipv4') {
         // Suggest common private network prefixes
         if (ip.startsWith('10.')) {
-          suggestedPrefix = 8; // Class A private
-        } else if (ip.startsWith('172.16.') || ip.startsWith('172.17.') ||
-                   ip.startsWith('172.18.') || ip.startsWith('172.19.') ||
-                   ip.startsWith('172.20.') || ip.startsWith('172.21.') ||
-                   ip.startsWith('172.22.') || ip.startsWith('172.23.') ||
-                   ip.startsWith('172.24.') || ip.startsWith('172.25.') ||
-                   ip.startsWith('172.26.') || ip.startsWith('172.27.') ||
-                   ip.startsWith('172.28.') || ip.startsWith('172.29.') ||
-                   ip.startsWith('172.30.') || ip.startsWith('172.31.')) {
-          suggestedPrefix = 12; // Class B private
+          suggestedPrefix = 8 // Class A private
+        } else if (
+          ip.startsWith('172.16.') ||
+          ip.startsWith('172.17.') ||
+          ip.startsWith('172.18.') ||
+          ip.startsWith('172.19.') ||
+          ip.startsWith('172.20.') ||
+          ip.startsWith('172.21.') ||
+          ip.startsWith('172.22.') ||
+          ip.startsWith('172.23.') ||
+          ip.startsWith('172.24.') ||
+          ip.startsWith('172.25.') ||
+          ip.startsWith('172.26.') ||
+          ip.startsWith('172.27.') ||
+          ip.startsWith('172.28.') ||
+          ip.startsWith('172.29.') ||
+          ip.startsWith('172.30.') ||
+          ip.startsWith('172.31.')
+        ) {
+          suggestedPrefix = 12 // Class B private
         } else if (ip.startsWith('192.168.')) {
-          suggestedPrefix = 16; // Class C private
+          suggestedPrefix = 16 // Class C private
         }
       }
     }
 
-    return ipToCidr(ip, suggestedPrefix);
+    return ipToCidr(ip, suggestedPrefix)
   } catch (error) {
     return {
       isValid: false,
@@ -641,8 +651,8 @@ export function ipToCidrAuto(ip: string): IpToCidrResult {
       version: null,
       networkAddress: '',
       subnetMask: '',
-      error: error instanceof Error ? error.message : 'Failed to convert IP to CIDR automatically'
-    };
+      error: error instanceof Error ? error.message : 'Failed to convert IP to CIDR automatically',
+    }
   }
 }
 
@@ -651,40 +661,40 @@ export function ipToCidrAuto(ip: string): IpToCidrResult {
  */
 export function getCidrSuggestions(ip: string): string[] {
   try {
-    const ipValidation = validateIpAddress(ip);
+    const ipValidation = validateIpAddress(ip)
     if (!ipValidation.isValid) {
-      return [];
+      return []
     }
 
-    const version = ipValidation.version!;
-    const suggestions: string[] = [];
+    const version = ipValidation.version!
+    const suggestions: string[] = []
 
     if (version === 'ipv4') {
       // Common IPv4 CIDR suggestions
-      suggestions.push(`${ip}/32`); // Single host
-      suggestions.push(`${ip}/24`); // /24 network
-      suggestions.push(`${ip}/16`); // /16 network
-      suggestions.push(`${ip}/8`);  // /8 network
+      suggestions.push(`${ip}/32`) // Single host
+      suggestions.push(`${ip}/24`) // /24 network
+      suggestions.push(`${ip}/16`) // /16 network
+      suggestions.push(`${ip}/8`) // /8 network
 
       // Add private network suggestions if applicable
       if (ip.startsWith('192.168.')) {
-        suggestions.push('192.168.0.0/16');
+        suggestions.push('192.168.0.0/16')
       } else if (ip.startsWith('10.')) {
-        suggestions.push('10.0.0.0/8');
+        suggestions.push('10.0.0.0/8')
       } else if (ip.startsWith('172.')) {
-        suggestions.push('172.16.0.0/12');
+        suggestions.push('172.16.0.0/12')
       }
     } else if (version === 'ipv6') {
       // Common IPv6 CIDR suggestions
-      suggestions.push(`${ip}/128`); // Single host
-      suggestions.push(`${ip}/64`);  // /64 network
-      suggestions.push(`${ip}/48`);  // /48 network
-      suggestions.push(`${ip}/32`);  // /32 network
+      suggestions.push(`${ip}/128`) // Single host
+      suggestions.push(`${ip}/64`) // /64 network
+      suggestions.push(`${ip}/48`) // /48 network
+      suggestions.push(`${ip}/32`) // /32 network
     }
 
-    return suggestions;
+    return suggestions
   } catch {
-    return [];
+    return []
   }
 }
 
@@ -694,7 +704,7 @@ export function getCidrSuggestions(ip: string): string[] {
 export function cidrToRange(cidr: string): CidrToRangeResult {
   try {
     // First validate the CIDR format
-    const cidrValidation = validateCidr(cidr);
+    const cidrValidation = validateCidr(cidr)
     if (!cidrValidation.isValid) {
       return {
         isValid: false,
@@ -708,77 +718,77 @@ export function cidrToRange(cidr: string): CidrToRangeResult {
         broadcastAddress: '',
         firstUsable: '',
         lastUsable: '',
-        error: cidrValidation.error
-      };
+        error: cidrValidation.error,
+      }
     }
 
-    const addr = ipaddr.process(cidrValidation.ip);
-    const prefixLength = cidrValidation.prefixLength;
-    const version = cidrValidation.version!;
+    const addr = ipaddr.process(cidrValidation.ip)
+    const prefixLength = cidrValidation.prefixLength
+    const version = cidrValidation.version!
 
-    let startIp = '';
-    let endIp = '';
-    let totalHosts = 0;
-    let usableHosts = 0;
-    let networkAddress = '';
-    let broadcastAddress = '';
-    let firstUsable = '';
-    let lastUsable = '';
+    let startIp = ''
+    let endIp = ''
+    let totalHosts = 0
+    let usableHosts = 0
+    let networkAddress = ''
+    let broadcastAddress = ''
+    let firstUsable = ''
+    let lastUsable = ''
 
     if (version === 'ipv4') {
-      const addrBytes = addr.toByteArray();
-      const hostBits = 32 - prefixLength;
-      totalHosts = Math.pow(2, hostBits);
-      usableHosts = Math.max(0, totalHosts - 2); // Subtract network and broadcast
+      const addrBytes = addr.toByteArray()
+      const hostBits = 32 - prefixLength
+      totalHosts = Math.pow(2, hostBits)
+      usableHosts = Math.max(0, totalHosts - 2) // Subtract network and broadcast
 
       // Calculate network address (start IP)
-      const networkBytes = [...addrBytes];
+      const networkBytes = [...addrBytes]
       for (let i = 0; i < 4; i++) {
-        const byteIndex = 3 - i;
-        const bitsInThisByte = Math.min(hostBits - (i * 8), 8);
+        const byteIndex = 3 - i
+        const bitsInThisByte = Math.min(hostBits - i * 8, 8)
         if (bitsInThisByte > 0) {
-          const byteMask = (1 << bitsInThisByte) - 1;
-          networkBytes[byteIndex] &= ~byteMask;
+          const byteMask = (1 << bitsInThisByte) - 1
+          networkBytes[byteIndex] &= ~byteMask
         }
       }
-      networkAddress = networkBytes.join('.');
-      startIp = networkAddress;
+      networkAddress = networkBytes.join('.')
+      startIp = networkAddress
 
       // Calculate broadcast address (end IP)
-      const broadcastBytes = [...networkBytes];
+      const broadcastBytes = [...networkBytes]
       for (let i = 0; i < 4; i++) {
-        const byteIndex = 3 - i;
-        const bitsInThisByte = Math.min(hostBits - (i * 8), 8);
+        const byteIndex = 3 - i
+        const bitsInThisByte = Math.min(hostBits - i * 8, 8)
         if (bitsInThisByte > 0) {
-          const byteMask = (1 << bitsInThisByte) - 1;
-          broadcastBytes[byteIndex] |= byteMask;
+          const byteMask = (1 << bitsInThisByte) - 1
+          broadcastBytes[byteIndex] |= byteMask
         }
       }
-      broadcastAddress = broadcastBytes.join('.');
-      endIp = broadcastAddress;
+      broadcastAddress = broadcastBytes.join('.')
+      endIp = broadcastAddress
 
       // Calculate first and last usable addresses
       if (usableHosts > 0) {
-        const firstBytes = [...networkBytes];
-        firstBytes[3] = (firstBytes[3] & ~((1 << hostBits) - 1)) + 1;
-        firstUsable = firstBytes.join('.');
+        const firstBytes = [...networkBytes]
+        firstBytes[3] = (firstBytes[3] & ~((1 << hostBits) - 1)) + 1
+        firstUsable = firstBytes.join('.')
 
-        const lastBytes = [...broadcastBytes];
-        lastBytes[3] = (lastBytes[3] & ~((1 << hostBits) - 1)) + ((1 << hostBits) - 2);
-        lastUsable = lastBytes.join('.');
+        const lastBytes = [...broadcastBytes]
+        lastBytes[3] = (lastBytes[3] & ~((1 << hostBits) - 1)) + ((1 << hostBits) - 2)
+        lastUsable = lastBytes.join('.')
       }
     } else if (version === 'ipv6') {
       // For IPv6, use the network address as both start and end
-      networkAddress = addr.toString();
-      startIp = networkAddress;
-      endIp = networkAddress;
-      broadcastAddress = networkAddress;
-      firstUsable = networkAddress;
-      lastUsable = networkAddress;
+      networkAddress = addr.toString()
+      startIp = networkAddress
+      endIp = networkAddress
+      broadcastAddress = networkAddress
+      firstUsable = networkAddress
+      lastUsable = networkAddress
 
-      const hostBits = 128 - prefixLength;
-      totalHosts = Math.pow(2, hostBits);
-      usableHosts = totalHosts; // IPv6 doesn't have broadcast address
+      const hostBits = 128 - prefixLength
+      totalHosts = Math.pow(2, hostBits)
+      usableHosts = totalHosts // IPv6 doesn't have broadcast address
     }
 
     return {
@@ -792,8 +802,8 @@ export function cidrToRange(cidr: string): CidrToRangeResult {
       networkAddress,
       broadcastAddress,
       firstUsable,
-      lastUsable
-    };
+      lastUsable,
+    }
   } catch (error) {
     return {
       isValid: false,
@@ -807,8 +817,8 @@ export function cidrToRange(cidr: string): CidrToRangeResult {
       broadcastAddress: '',
       firstUsable: '',
       lastUsable: '',
-      error: error instanceof Error ? error.message : 'Failed to convert CIDR to IP range'
-    };
+      error: error instanceof Error ? error.message : 'Failed to convert CIDR to IP range',
+    }
   }
 }
 
@@ -817,38 +827,38 @@ export function cidrToRange(cidr: string): CidrToRangeResult {
  */
 export function generateIpRange(cidr: string, maxIps: number = 1000): string[] {
   try {
-    const rangeResult = cidrToRange(cidr);
+    const rangeResult = cidrToRange(cidr)
     if (!rangeResult.isValid || rangeResult.version !== 'ipv4') {
-      return [];
+      return []
     }
 
-    const ips: string[] = [];
-    const startBytes = ipaddr.process(rangeResult.startIp).toByteArray();
-    const endBytes = ipaddr.process(rangeResult.endIp).toByteArray();
+    const ips: string[] = []
+    const startBytes = ipaddr.process(rangeResult.startIp).toByteArray()
+    const endBytes = ipaddr.process(rangeResult.endIp).toByteArray()
 
     // Convert to numbers for comparison
-    const startNum = (startBytes[0] << 24) | (startBytes[1] << 16) | (startBytes[2] << 8) | startBytes[3];
-    const endNum = (endBytes[0] << 24) | (endBytes[1] << 16) | (endBytes[2] << 8) | endBytes[3];
+    const startNum = (startBytes[0] << 24) | (startBytes[1] << 16) | (startBytes[2] << 8) | startBytes[3]
+    const endNum = (endBytes[0] << 24) | (endBytes[1] << 16) | (endBytes[2] << 8) | endBytes[3]
 
-    let currentNum = startNum;
-    let count = 0;
+    let currentNum = startNum
+    let count = 0
 
     // Generate IPs until we reach the end or hit the limit
     while (count < maxIps && currentNum <= endNum) {
       const bytes = [
-        (currentNum >>> 24) & 0xFF,
-        (currentNum >>> 16) & 0xFF,
-        (currentNum >>> 8) & 0xFF,
-        currentNum & 0xFF
-      ];
-      ips.push(bytes.join('.'));
-      currentNum++;
-      count++;
+        (currentNum >>> 24) & 0xff,
+        (currentNum >>> 16) & 0xff,
+        (currentNum >>> 8) & 0xff,
+        currentNum & 0xff,
+      ]
+      ips.push(bytes.join('.'))
+      currentNum++
+      count++
     }
 
-    return ips;
+    return ips
   } catch {
-    return [];
+    return []
   }
 }
 
@@ -857,33 +867,33 @@ export function generateIpRange(cidr: string, maxIps: number = 1000): string[] {
  */
 export function cidrRangesOverlap(cidr1: string, cidr2: string): boolean {
   try {
-    const range1 = cidrToRange(cidr1);
-    const range2 = cidrToRange(cidr2);
+    const range1 = cidrToRange(cidr1)
+    const range2 = cidrToRange(cidr2)
 
     if (!range1.isValid || !range2.isValid || range1.version !== range2.version) {
-      return false;
+      return false
     }
 
     if (range1.version === 'ipv4') {
       // Convert IPs to numbers for comparison
-      const start1Bytes = ipaddr.process(range1.startIp).toByteArray();
-      const end1Bytes = ipaddr.process(range1.endIp).toByteArray();
-      const start2Bytes = ipaddr.process(range2.startIp).toByteArray();
-      const end2Bytes = ipaddr.process(range2.endIp).toByteArray();
+      const start1Bytes = ipaddr.process(range1.startIp).toByteArray()
+      const end1Bytes = ipaddr.process(range1.endIp).toByteArray()
+      const start2Bytes = ipaddr.process(range2.startIp).toByteArray()
+      const end2Bytes = ipaddr.process(range2.endIp).toByteArray()
 
-      const start1Num = (start1Bytes[0] << 24) | (start1Bytes[1] << 16) | (start1Bytes[2] << 8) | start1Bytes[3];
-      const end1Num = (end1Bytes[0] << 24) | (end1Bytes[1] << 16) | (end1Bytes[2] << 8) | end1Bytes[3];
-      const start2Num = (start2Bytes[0] << 24) | (start2Bytes[1] << 16) | (start2Bytes[2] << 8) | start2Bytes[3];
-      const end2Num = (end2Bytes[0] << 24) | (end2Bytes[1] << 16) | (end2Bytes[2] << 8) | end2Bytes[3];
+      const start1Num = (start1Bytes[0] << 24) | (start1Bytes[1] << 16) | (start1Bytes[2] << 8) | start1Bytes[3]
+      const end1Num = (end1Bytes[0] << 24) | (end1Bytes[1] << 16) | (end1Bytes[2] << 8) | end1Bytes[3]
+      const start2Num = (start2Bytes[0] << 24) | (start2Bytes[1] << 16) | (start2Bytes[2] << 8) | start2Bytes[3]
+      const end2Num = (end2Bytes[0] << 24) | (end2Bytes[1] << 16) | (end2Bytes[2] << 8) | end2Bytes[3]
 
       // Check if ranges overlap
-      return (start1Num <= end2Num && end1Num >= start2Num);
+      return start1Num <= end2Num && end1Num >= start2Num
     }
 
     // For IPv6, simplified comparison
-    return range1.startIp === range2.startIp;
+    return range1.startIp === range2.startIp
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -892,38 +902,33 @@ export function cidrRangesOverlap(cidr1: string, cidr2: string): boolean {
  */
 export function getNextIpInRange(cidr: string, currentIp: string): string | null {
   try {
-    const rangeResult = cidrToRange(cidr);
+    const rangeResult = cidrToRange(cidr)
     if (!rangeResult.isValid || rangeResult.version !== 'ipv4') {
-      return null;
+      return null
     }
 
-    const currentBytes = ipaddr.process(currentIp).toByteArray();
-    const endBytes = ipaddr.process(rangeResult.endIp).toByteArray();
+    const currentBytes = ipaddr.process(currentIp).toByteArray()
+    const endBytes = ipaddr.process(rangeResult.endIp).toByteArray()
 
     // Convert to numbers for comparison
-    const currentNum = (currentBytes[0] << 24) | (currentBytes[1] << 16) | (currentBytes[2] << 8) | currentBytes[3];
-    const endNum = (endBytes[0] << 24) | (endBytes[1] << 16) | (endBytes[2] << 8) | endBytes[3];
+    const currentNum = (currentBytes[0] << 24) | (currentBytes[1] << 16) | (currentBytes[2] << 8) | currentBytes[3]
+    const endNum = (endBytes[0] << 24) | (endBytes[1] << 16) | (endBytes[2] << 8) | endBytes[3]
 
     if (currentNum >= endNum) {
-      return null; // Already at or past the end
+      return null // Already at or past the end
     }
 
-    const nextNum = currentNum + 1;
+    const nextNum = currentNum + 1
     if (nextNum > endNum) {
-      return null; // Next IP would be past the end
+      return null // Next IP would be past the end
     }
 
     // Convert back to IP address
-    const nextBytes = [
-      (nextNum >>> 24) & 0xFF,
-      (nextNum >>> 16) & 0xFF,
-      (nextNum >>> 8) & 0xFF,
-      nextNum & 0xFF
-    ];
+    const nextBytes = [(nextNum >>> 24) & 0xff, (nextNum >>> 16) & 0xff, (nextNum >>> 8) & 0xff, nextNum & 0xff]
 
-    return nextBytes.join('.');
+    return nextBytes.join('.')
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -933,7 +938,7 @@ export function getNextIpInRange(cidr: string, currentIp: string): string | null
 export function analyzeNetwork(cidr: string): NetworkAnalysisResult {
   try {
     // First validate the CIDR format
-    const cidrValidation = validateCidr(cidr);
+    const cidrValidation = validateCidr(cidr)
     if (!cidrValidation.isValid) {
       return {
         isValid: false,
@@ -955,73 +960,73 @@ export function analyzeNetwork(cidr: string): NetworkAnalysisResult {
         isLinkLocal: false,
         hostBits: 0,
         networkBits: 0,
-        error: cidrValidation.error
-      };
+        error: cidrValidation.error,
+      }
     }
 
-    const addr = ipaddr.process(cidrValidation.ip);
-    const prefixLength = cidrValidation.prefixLength;
-    const version = cidrValidation.version!;
+    const addr = ipaddr.process(cidrValidation.ip)
+    const prefixLength = cidrValidation.prefixLength
+    const version = cidrValidation.version!
 
     // Get basic network info from existing functions
-    const parseResult = parseCidr(cidr);
-    const ipInfo = getIpInfo(cidrValidation.ip);
+    const parseResult = parseCidr(cidr)
+    const ipInfo = getIpInfo(cidrValidation.ip)
 
-    let networkAddress = '';
-    let broadcastAddress = '';
-    let subnetMask = '';
-    let wildcardMask = '';
-    let totalHosts = 0;
-    let usableHosts = 0;
-    let firstUsable = '';
-    let lastUsable = '';
-    let networkClass = '';
-    let hostBits = 0;
-    let networkBits = 0;
+    let networkAddress = ''
+    let broadcastAddress = ''
+    let subnetMask = ''
+    let wildcardMask = ''
+    let totalHosts = 0
+    let usableHosts = 0
+    let firstUsable = ''
+    let lastUsable = ''
+    let networkClass = ''
+    let hostBits = 0
+    let networkBits = 0
 
     if (version === 'ipv4') {
-      networkAddress = parseResult.networkAddress;
-      broadcastAddress = parseResult.broadcastAddress;
-      subnetMask = parseResult.subnetMask;
-      totalHosts = parseResult.totalHosts;
-      usableHosts = parseResult.usableHosts;
-      firstUsable = parseResult.firstUsable;
-      lastUsable = parseResult.lastUsable;
-      hostBits = 32 - prefixLength;
-      networkBits = prefixLength;
+      networkAddress = parseResult.networkAddress
+      broadcastAddress = parseResult.broadcastAddress
+      subnetMask = parseResult.subnetMask
+      totalHosts = parseResult.totalHosts
+      usableHosts = parseResult.usableHosts
+      firstUsable = parseResult.firstUsable
+      lastUsable = parseResult.lastUsable
+      hostBits = 32 - prefixLength
+      networkBits = prefixLength
 
       // Calculate wildcard mask (inverse of subnet mask)
-      const maskBytes = subnetMask.split('.').map(Number);
-      const wildcardBytes = maskBytes.map(byte => 255 - byte);
-      wildcardMask = wildcardBytes.join('.');
+      const maskBytes = subnetMask.split('.').map(Number)
+      const wildcardBytes = maskBytes.map((byte) => 255 - byte)
+      wildcardMask = wildcardBytes.join('.')
 
       // Determine network class
-      const firstOctet = parseInt(cidrValidation.ip.split('.')[0]);
+      const firstOctet = parseInt(cidrValidation.ip.split('.')[0])
       if (firstOctet >= 1 && firstOctet <= 126) {
-        networkClass = 'A';
+        networkClass = 'A'
       } else if (firstOctet >= 128 && firstOctet <= 191) {
-        networkClass = 'B';
+        networkClass = 'B'
       } else if (firstOctet >= 192 && firstOctet <= 223) {
-        networkClass = 'C';
+        networkClass = 'C'
       } else if (firstOctet >= 224 && firstOctet <= 239) {
-        networkClass = 'D (Multicast)';
+        networkClass = 'D (Multicast)'
       } else if (firstOctet >= 240 && firstOctet <= 255) {
-        networkClass = 'E (Reserved)';
+        networkClass = 'E (Reserved)'
       } else {
-        networkClass = 'Unknown';
+        networkClass = 'Unknown'
       }
     } else if (version === 'ipv6') {
-      networkAddress = addr.toString();
-      broadcastAddress = addr.toString(); // IPv6 doesn't have broadcast
-      subnetMask = `/${prefixLength}`;
-      wildcardMask = `/${128 - prefixLength}`;
-      hostBits = 128 - prefixLength;
-      networkBits = prefixLength;
-      totalHosts = Math.pow(2, hostBits);
-      usableHosts = totalHosts;
-      firstUsable = networkAddress;
-      lastUsable = networkAddress;
-      networkClass = 'IPv6';
+      networkAddress = addr.toString()
+      broadcastAddress = addr.toString() // IPv6 doesn't have broadcast
+      subnetMask = `/${prefixLength}`
+      wildcardMask = `/${128 - prefixLength}`
+      hostBits = 128 - prefixLength
+      networkBits = prefixLength
+      totalHosts = Math.pow(2, hostBits)
+      usableHosts = totalHosts
+      firstUsable = networkAddress
+      lastUsable = networkAddress
+      networkClass = 'IPv6'
     }
 
     return {
@@ -1043,8 +1048,8 @@ export function analyzeNetwork(cidr: string): NetworkAnalysisResult {
       isMulticast: ipInfo.isMulticast,
       isLinkLocal: ipInfo.isLinkLocal,
       hostBits,
-      networkBits
-    };
+      networkBits,
+    }
   } catch (error) {
     return {
       isValid: false,
@@ -1066,8 +1071,8 @@ export function analyzeNetwork(cidr: string): NetworkAnalysisResult {
       isLinkLocal: false,
       hostBits: 0,
       networkBits: 0,
-      error: error instanceof Error ? error.message : 'Failed to analyze network'
-    };
+      error: error instanceof Error ? error.message : 'Failed to analyze network',
+    }
   }
 }
 
@@ -1076,7 +1081,7 @@ export function analyzeNetwork(cidr: string): NetworkAnalysisResult {
  */
 export function calculateSubnets(cidr: string, subnetCount: number): SubnetInfo {
   try {
-    const analysis = analyzeNetwork(cidr);
+    const analysis = analyzeNetwork(cidr)
     if (!analysis.isValid || analysis.version !== 'ipv4') {
       return {
         isValid: false,
@@ -1084,13 +1089,13 @@ export function calculateSubnets(cidr: string, subnetCount: number): SubnetInfo 
         subnets: [],
         totalSubnets: 0,
         hostsPerSubnet: 0,
-        error: analysis.error || 'Invalid CIDR or not IPv4'
-      };
+        error: analysis.error || 'Invalid CIDR or not IPv4',
+      }
     }
 
     // Calculate how many bits we need to borrow for the subnets
-    const bitsNeeded = Math.ceil(Math.log2(subnetCount));
-    const newPrefixLength = analysis.prefixLength + bitsNeeded;
+    const bitsNeeded = Math.ceil(Math.log2(subnetCount))
+    const newPrefixLength = analysis.prefixLength + bitsNeeded
 
     if (newPrefixLength > 32) {
       return {
@@ -1099,70 +1104,70 @@ export function calculateSubnets(cidr: string, subnetCount: number): SubnetInfo 
         subnets: [],
         totalSubnets: 0,
         hostsPerSubnet: 0,
-        error: 'Too many subnets requested'
-      };
+        error: 'Too many subnets requested',
+      }
     }
 
-    const subnets: SubnetInfo['subnets'] = [];
-    const networkBytes = ipaddr.process(analysis.networkAddress).toByteArray();
-    const subnetSize = Math.pow(2, 32 - newPrefixLength);
-    const hostsPerSubnet = Math.max(0, subnetSize - 2);
+    const subnets: SubnetInfo['subnets'] = []
+    const networkBytes = ipaddr.process(analysis.networkAddress).toByteArray()
+    const subnetSize = Math.pow(2, 32 - newPrefixLength)
+    const hostsPerSubnet = Math.max(0, subnetSize - 2)
 
     for (let i = 0; i < subnetCount; i++) {
       // Calculate subnet network address
-      const subnetOffset = i * subnetSize;
-      const subnetNetworkBytes = [...networkBytes];
-      let carry = subnetOffset;
+      const subnetOffset = i * subnetSize
+      const subnetNetworkBytes = [...networkBytes]
+      let carry = subnetOffset
 
       for (let j = 3; j >= 0; j--) {
-        const sum = subnetNetworkBytes[j] + carry;
-        subnetNetworkBytes[j] = sum & 0xFF;
-        carry = Math.floor(sum / 256);
+        const sum = subnetNetworkBytes[j] + carry
+        subnetNetworkBytes[j] = sum & 0xff
+        carry = Math.floor(sum / 256)
       }
 
-      const subnetNetwork = subnetNetworkBytes.join('.');
+      const subnetNetwork = subnetNetworkBytes.join('.')
 
       // Calculate subnet broadcast address
-      const subnetBroadcastBytes = [...subnetNetworkBytes];
-      const broadcastOffset = subnetSize - 1;
-      let broadcastCarry = broadcastOffset;
+      const subnetBroadcastBytes = [...subnetNetworkBytes]
+      const broadcastOffset = subnetSize - 1
+      let broadcastCarry = broadcastOffset
 
       for (let j = 3; j >= 0; j--) {
-        const sum = subnetBroadcastBytes[j] + broadcastCarry;
-        subnetBroadcastBytes[j] = sum & 0xFF;
-        broadcastCarry = Math.floor(sum / 256);
+        const sum = subnetBroadcastBytes[j] + broadcastCarry
+        subnetBroadcastBytes[j] = sum & 0xff
+        broadcastCarry = Math.floor(sum / 256)
       }
 
-      const subnetBroadcast = subnetBroadcastBytes.join('.');
+      const subnetBroadcast = subnetBroadcastBytes.join('.')
 
-      let firstUsable = '';
-      let lastUsable = '';
+      let firstUsable = ''
+      let lastUsable = ''
 
       if (hostsPerSubnet > 0) {
         // First usable = network + 1
-        const firstUsableBytes = [...subnetNetworkBytes];
-        let firstCarry = 1;
+        const firstUsableBytes = [...subnetNetworkBytes]
+        let firstCarry = 1
         for (let j = 3; j >= 0; j--) {
-          const sum = firstUsableBytes[j] + firstCarry;
-          firstUsableBytes[j] = sum & 0xFF;
-          firstCarry = Math.floor(sum / 256);
+          const sum = firstUsableBytes[j] + firstCarry
+          firstUsableBytes[j] = sum & 0xff
+          firstCarry = Math.floor(sum / 256)
         }
-        firstUsable = firstUsableBytes.join('.');
+        firstUsable = firstUsableBytes.join('.')
 
         // Last usable = broadcast - 1
-        const lastUsableBytes = [...subnetBroadcastBytes];
-        let lastCarry = -1;
+        const lastUsableBytes = [...subnetBroadcastBytes]
+        let lastCarry = -1
         for (let j = 3; j >= 0; j--) {
-          const sum = lastUsableBytes[j] + lastCarry;
+          const sum = lastUsableBytes[j] + lastCarry
           if (sum < 0) {
-            lastUsableBytes[j] = 256 + sum;
-            lastCarry = -1;
+            lastUsableBytes[j] = 256 + sum
+            lastCarry = -1
           } else {
-            lastUsableBytes[j] = sum;
-            lastCarry = 0;
+            lastUsableBytes[j] = sum
+            lastCarry = 0
           }
         }
-        lastUsable = lastUsableBytes.join('.');
+        lastUsable = lastUsableBytes.join('.')
       }
 
       subnets.push({
@@ -1170,8 +1175,8 @@ export function calculateSubnets(cidr: string, subnetCount: number): SubnetInfo 
         broadcast: subnetBroadcast,
         firstUsable,
         lastUsable,
-        usableHosts: hostsPerSubnet
-      });
+        usableHosts: hostsPerSubnet,
+      })
     }
 
     return {
@@ -1179,8 +1184,8 @@ export function calculateSubnets(cidr: string, subnetCount: number): SubnetInfo 
       cidr,
       subnets,
       totalSubnets: subnetCount,
-      hostsPerSubnet
-    };
+      hostsPerSubnet,
+    }
   } catch (error) {
     return {
       isValid: false,
@@ -1188,8 +1193,8 @@ export function calculateSubnets(cidr: string, subnetCount: number): SubnetInfo 
       subnets: [],
       totalSubnets: 0,
       hostsPerSubnet: 0,
-      error: error instanceof Error ? error.message : 'Failed to calculate subnets'
-    };
+      error: error instanceof Error ? error.message : 'Failed to calculate subnets',
+    }
   }
 }
 
@@ -1197,17 +1202,17 @@ export function calculateSubnets(cidr: string, subnetCount: number): SubnetInfo 
  * Get network statistics and summary
  */
 export function getNetworkStats(cidr: string): {
-  isValid: boolean;
-  cidr: string;
-  version: 'ipv4' | 'ipv6' | null;
-  networkSize: string;
-  hostDensity: string;
-  subnetRecommendations: string[];
-  commonUses: string[];
-  error?: string;
+  isValid: boolean
+  cidr: string
+  version: 'ipv4' | 'ipv6' | null
+  networkSize: string
+  hostDensity: string
+  subnetRecommendations: string[]
+  commonUses: string[]
+  error?: string
 } {
   try {
-    const analysis = analyzeNetwork(cidr);
+    const analysis = analyzeNetwork(cidr)
     if (!analysis.isValid) {
       return {
         isValid: false,
@@ -1217,56 +1222,56 @@ export function getNetworkStats(cidr: string): {
         hostDensity: '',
         subnetRecommendations: [],
         commonUses: [],
-        error: analysis.error
-      };
+        error: analysis.error,
+      }
     }
 
-    let networkSize = '';
-    let hostDensity = '';
-    const subnetRecommendations: string[] = [];
-    const commonUses: string[] = [];
+    let networkSize = ''
+    let hostDensity = ''
+    const subnetRecommendations: string[] = []
+    const commonUses: string[] = []
 
     if (analysis.version === 'ipv4') {
       // Network size classification
       if (analysis.totalHosts <= 2) {
-        networkSize = 'Point-to-Point';
-        commonUses.push('VPN tunnels', 'Point-to-point links');
+        networkSize = 'Point-to-Point'
+        commonUses.push('VPN tunnels', 'Point-to-point links')
       } else if (analysis.totalHosts <= 254) {
-        networkSize = 'Small Network';
-        commonUses.push('Home networks', 'Small offices', 'Branch offices');
+        networkSize = 'Small Network'
+        commonUses.push('Home networks', 'Small offices', 'Branch offices')
       } else if (analysis.totalHosts <= 65534) {
-        networkSize = 'Medium Network';
-        commonUses.push('Department networks', 'Campus networks');
+        networkSize = 'Medium Network'
+        commonUses.push('Department networks', 'Campus networks')
       } else if (analysis.totalHosts <= 16777214) {
-        networkSize = 'Large Network';
-        commonUses.push('Enterprise networks', 'ISP allocations');
+        networkSize = 'Large Network'
+        commonUses.push('Enterprise networks', 'ISP allocations')
       } else {
-        networkSize = 'Very Large Network';
-        commonUses.push('ISP backbone', 'Major enterprise');
+        networkSize = 'Very Large Network'
+        commonUses.push('ISP backbone', 'Major enterprise')
       }
 
       // Host density
-      const density = (analysis.usableHosts / analysis.totalHosts) * 100;
+      const density = (analysis.usableHosts / analysis.totalHosts) * 100
       if (density >= 90) {
-        hostDensity = 'High density (90%+ usable)';
+        hostDensity = 'High density (90%+ usable)'
       } else if (density >= 70) {
-        hostDensity = 'Medium density (70-90% usable)';
+        hostDensity = 'Medium density (70-90% usable)'
       } else if (density >= 50) {
-        hostDensity = 'Low density (50-70% usable)';
+        hostDensity = 'Low density (50-70% usable)'
       } else {
-        hostDensity = 'Very low density (<50% usable)';
+        hostDensity = 'Very low density (<50% usable)'
       }
 
       // Subnet recommendations based on network size
       if (analysis.totalHosts > 254) {
-        subnetRecommendations.push(`Split into /${analysis.prefixLength + 1} subnets (${Math.pow(2, 1)} subnets)`);
-        subnetRecommendations.push(`Split into /${analysis.prefixLength + 2} subnets (${Math.pow(2, 2)} subnets)`);
-        subnetRecommendations.push(`Split into /${analysis.prefixLength + 3} subnets (${Math.pow(2, 3)} subnets)`);
+        subnetRecommendations.push(`Split into /${analysis.prefixLength + 1} subnets (${Math.pow(2, 1)} subnets)`)
+        subnetRecommendations.push(`Split into /${analysis.prefixLength + 2} subnets (${Math.pow(2, 2)} subnets)`)
+        subnetRecommendations.push(`Split into /${analysis.prefixLength + 3} subnets (${Math.pow(2, 3)} subnets)`)
       }
     } else if (analysis.version === 'ipv6') {
-      networkSize = 'IPv6 Network';
-      hostDensity = 'IPv6 networks typically have abundant addresses';
-      commonUses.push('IPv6 networks', 'Modern internet infrastructure');
+      networkSize = 'IPv6 Network'
+      hostDensity = 'IPv6 networks typically have abundant addresses'
+      commonUses.push('IPv6 networks', 'Modern internet infrastructure')
     }
 
     return {
@@ -1276,8 +1281,8 @@ export function getNetworkStats(cidr: string): {
       networkSize,
       hostDensity,
       subnetRecommendations,
-      commonUses
-    };
+      commonUses,
+    }
   } catch (error) {
     return {
       isValid: false,
@@ -1287,7 +1292,7 @@ export function getNetworkStats(cidr: string): {
       hostDensity: '',
       subnetRecommendations: [],
       commonUses: [],
-      error: error instanceof Error ? error.message : 'Failed to get network statistics'
-    };
+      error: error instanceof Error ? error.message : 'Failed to get network statistics',
+    }
   }
 }

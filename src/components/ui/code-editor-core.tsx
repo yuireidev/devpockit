@@ -3,26 +3,26 @@
  * A minimal Monaco Editor wrapper - just the editor, no chrome
  */
 
-'use client';
+'use client'
 
-import { MonacoEditorInstance } from '@/components/ui/monaco-editor-instance';
-import { type CodeEditorTheme } from '@/config/code-editor-themes';
-import { cn } from '@/libs/utils';
-import type { OnMount } from '@monaco-editor/react';
+import { MonacoEditorInstance } from '@/components/ui/monaco-editor-instance'
+import { type CodeEditorTheme } from '@/config/code-editor-themes'
+import { cn } from '@/libs/utils'
+import type { OnMount } from '@monaco-editor/react'
 
 export interface CodeEditorCoreProps {
-  value: string;
-  onChange?: (value: string) => void;
-  language?: string;
-  theme?: CodeEditorTheme;
-  readOnly?: boolean;
-  wrapText?: boolean;
-  showLineNumbers?: boolean;
-  placeholder?: string;
-  height?: string;
-  className?: string;
-  singleLine?: boolean;
-  onMount?: OnMount;
+  value: string
+  onChange?: (value: string) => void
+  language?: string
+  theme?: CodeEditorTheme
+  readOnly?: boolean
+  wrapText?: boolean
+  showLineNumbers?: boolean
+  placeholder?: string
+  height?: string
+  className?: string
+  singleLine?: boolean
+  onMount?: OnMount
 }
 
 export function CodeEditorCore({
@@ -41,10 +41,7 @@ export function CodeEditorCore({
 }: CodeEditorCoreProps) {
   return (
     <div
-      className={cn(
-        'bg-white dark:bg-neutral-900 rounded-[8px] overflow-hidden h-full',
-        className
-      )}
+      className={cn('h-full overflow-hidden rounded-[8px] bg-white dark:bg-neutral-900', className)}
       style={{ height }}
     >
       <MonacoEditorInstance
@@ -63,6 +60,5 @@ export function CodeEditorCore({
         onMount={onMount}
       />
     </div>
-  );
+  )
 }
-

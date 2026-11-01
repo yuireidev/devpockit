@@ -1,36 +1,31 @@
-'use client';
+'use client'
 
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogTitle,
-} from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Separator } from '@/components/ui/separator';
-import { useToolActivity } from '@/components/providers/ToolActivityProvider';
-import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut';
-import { getCategoryById, searchTools, toolIcons } from '@/libs/tools-data';
-import { cn } from '@/libs/utils';
-import { type Tool } from '@/types/tools';
-import { Search, Star } from 'lucide-react';
-import { startTransition, useEffect, useMemo, useRef, useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogTitle } from '@/components/ui/dialog'
+import { Input } from '@/components/ui/input'
+import { Separator } from '@/components/ui/separator'
+import { useToolActivity } from '@/components/providers/ToolActivityProvider'
+import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut'
+import { getCategoryById, searchTools, toolIcons } from '@/libs/tools-data'
+import { cn } from '@/libs/utils'
+import { type Tool } from '@/types/tools'
+import { Search, Star } from 'lucide-react'
+import { startTransition, useEffect, useMemo, useRef, useState } from 'react'
 
 interface CommandPaletteProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onToolSelect: (toolId: string) => void;
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  onToolSelect: (toolId: string) => void
 }
 
 interface CommandPaletteResultProps {
-  tool: Tool;
-  onSelect: (toolId: string) => void;
-  isSelected?: boolean;
-  index: number;
-  onHover?: (index: number) => void;
-  showPin?: boolean;
-  pinned?: boolean;
-  onTogglePin?: (toolId: string) => void;
+  tool: Tool
+  onSelect: (toolId: string) => void
+  isSelected?: boolean
+  index: number
+  onHover?: (index: number) => void
+  showPin?: boolean
+  pinned?: boolean
+  onTogglePin?: (toolId: string) => void
 }
 
 const CommandPaletteResult = ({
@@ -43,18 +38,18 @@ const CommandPaletteResult = ({
   pinned = false,
   onTogglePin,
 }: CommandPaletteResultProps) => {
-  const category = getCategoryById(tool.category);
-  const IconComponent = toolIcons[tool.id];
-  const [isHovered, setIsHovered] = useState(false);
+  const category = getCategoryById(tool.category)
+  const IconComponent = toolIcons[tool.id]
+  const [isHovered, setIsHovered] = useState(false)
 
   const handleSelect = () => {
-    onSelect(tool.id);
-  };
+    onSelect(tool.id)
+  }
 
   const handleMouseEnter = () => {
-    setIsHovered(true);
-    onHover?.(index);
-  };
+    setIsHovered(true)
+    onHover?.(index)
+  }
 
   return (
     <div className="flex items-stretch gap-1">
@@ -65,7 +60,7 @@ const CommandPaletteResult = ({
         id={`palette-option-${index}`}
         className={cn(
           'group flex min-w-0 flex-1 items-center gap-2.5 rounded-lg border px-3 py-2 transition-all duration-200',
-          'cursor-pointer hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-orange-500 focus:ring-offset-2',
+          'cursor-pointer hover:shadow-sm focus:ring-2 focus:ring-orange-500 focus:ring-offset-2 focus:outline-none',
           isHovered || isSelected
             ? 'border-orange-200 bg-orange-50 shadow-sm dark:border-orange-900 dark:bg-orange-950/50'
             : 'border-transparent bg-transparent hover:bg-neutral-50 dark:hover:bg-neutral-800/50'
@@ -75,8 +70,8 @@ const CommandPaletteResult = ({
         onMouseLeave={() => setIsHovered(false)}
         onKeyDown={(e) => {
           if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault();
-            handleSelect();
+            e.preventDefault()
+            handleSelect()
           }
         }}
       >
@@ -114,13 +109,11 @@ const CommandPaletteResult = ({
           >
             {tool.name}
           </div>
-          <div className="mt-0.5 line-clamp-1 text-xs text-neutral-600 dark:text-neutral-400">
-            {tool.description}
-          </div>
+          <div className="mt-0.5 line-clamp-1 text-xs text-neutral-600 dark:text-neutral-400">{tool.description}</div>
           {category && (
             <div className="mt-1">
               <div className="inline-block rounded border border-neutral-200 bg-neutral-100 px-1.5 py-0.5 dark:border-neutral-700 dark:bg-neutral-800">
-                <p className="whitespace-nowrap text-[9px] font-normal leading-3 text-neutral-700 dark:text-neutral-300">
+                <p className="text-[9px] leading-3 font-normal whitespace-nowrap text-neutral-700 dark:text-neutral-300">
                   {category.name}
                 </p>
               </div>
@@ -142,9 +135,9 @@ const CommandPaletteResult = ({
           aria-label={pinned ? `Unpin ${tool.name}` : `Pin ${tool.name}`}
           aria-pressed={pinned}
           onClick={(e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            onTogglePin(tool.id);
+            e.preventDefault()
+            e.stopPropagation()
+            onTogglePin(tool.id)
           }}
         >
           <Star
@@ -157,154 +150,149 @@ const CommandPaletteResult = ({
         </button>
       ) : null}
     </div>
-  );
-};
+  )
+}
 
 export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPaletteProps) {
-  const { pinnedTools, recentTools, togglePinnedTool, isPinned } = useToolActivity();
-  const [query, setQuery] = useState('');
-  const [results, setResults] = useState<Tool[]>([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
-  const keyboardShortcut = useKeyboardShortcut();
-  const inputRef = useRef<HTMLInputElement>(null);
-  const resultsRef = useRef<HTMLDivElement>(null);
-  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPod|iPad/i.test(navigator.platform);
+  const { pinnedTools, recentTools, togglePinnedTool, isPinned } = useToolActivity()
+  const [query, setQuery] = useState('')
+  const [results, setResults] = useState<Tool[]>([])
+  const [selectedIndex, setSelectedIndex] = useState(0)
+  const keyboardShortcut = useKeyboardShortcut()
+  const inputRef = useRef<HTMLInputElement>(null)
+  const resultsRef = useRef<HTMLDivElement>(null)
+  const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPod|iPad/i.test(navigator.platform)
 
   const shortcutRows = useMemo(() => {
-    const pinnedSet = new Set(pinnedTools.map(t => t.id));
-    const out: { tool: Tool; index: number }[] = [];
-    let i = 0;
+    const pinnedSet = new Set(pinnedTools.map((t) => t.id))
+    const out: { tool: Tool; index: number }[] = []
+    let i = 0
     for (const tool of pinnedTools) {
-      out.push({ tool, index: i++ });
+      out.push({ tool, index: i++ })
     }
     for (const tool of recentTools) {
       if (!pinnedSet.has(tool.id)) {
-        out.push({ tool, index: i++ });
+        out.push({ tool, index: i++ })
       }
     }
-    return out;
-  }, [pinnedTools, recentTools]);
+    return out
+  }, [pinnedTools, recentTools])
 
-  const hasQuery = query.trim().length > 0;
-  const hasResults = results.length > 0;
-  const showShortcuts = !hasQuery && shortcutRows.length > 0;
-  const activeCount = hasQuery ? results.length : shortcutRows.length;
+  const hasQuery = query.trim().length > 0
+  const hasResults = results.length > 0
+  const showShortcuts = !hasQuery && shortcutRows.length > 0
+  const activeCount = hasQuery ? results.length : shortcutRows.length
 
   useEffect(() => {
     if (open && inputRef.current) {
       const t = window.setTimeout(() => {
-        inputRef.current?.focus();
-      }, 100);
-      return () => clearTimeout(t);
+        inputRef.current?.focus()
+      }, 100)
+      return () => clearTimeout(t)
     }
-  }, [open]);
+  }, [open])
 
   useEffect(() => {
     if (!open) {
       startTransition(() => {
-        setQuery('');
-        setResults([]);
-        setSelectedIndex(0);
-      });
+        setQuery('')
+        setResults([])
+        setSelectedIndex(0)
+      })
     }
-  }, [open]);
+  }, [open])
 
   useEffect(() => {
     if (query.trim().length > 0) {
-      const searchResults = searchTools(query);
+      const searchResults = searchTools(query)
       startTransition(() => {
-        setResults(searchResults);
-        setSelectedIndex(0);
-      });
+        setResults(searchResults)
+        setSelectedIndex(0)
+      })
     } else {
       startTransition(() => {
-        setResults([]);
-        setSelectedIndex(0);
-      });
+        setResults([])
+        setSelectedIndex(0)
+      })
     }
-  }, [query]);
+  }, [query])
 
   useEffect(() => {
     if (activeCount > 0 && selectedIndex >= activeCount) {
       startTransition(() => {
-        setSelectedIndex(0);
-      });
+        setSelectedIndex(0)
+      })
     }
-  }, [activeCount, selectedIndex]);
+  }, [activeCount, selectedIndex])
 
   useEffect(() => {
-    if (!resultsRef.current || activeCount <= 0 || selectedIndex < 0) return;
+    if (!resultsRef.current || activeCount <= 0 || selectedIndex < 0) return
 
-    const container = resultsRef.current.querySelector('[role="group"]');
-    if (!container) return;
+    const container = resultsRef.current.querySelector('[role="group"]')
+    if (!container) return
 
-    const selectedWrap = container.children[selectedIndex] as HTMLElement | undefined;
-    const selectedElement = selectedWrap?.querySelector('[role="option"]') as HTMLElement | undefined;
+    const selectedWrap = container.children[selectedIndex] as HTMLElement | undefined
+    const selectedElement = selectedWrap?.querySelector('[role="option"]') as HTMLElement | undefined
     if (selectedElement) {
       selectedElement.scrollIntoView({
         behavior: 'smooth',
         block: 'nearest',
-      });
+      })
     }
-  }, [selectedIndex, activeCount, hasQuery, showShortcuts]);
+  }, [selectedIndex, activeCount, hasQuery, showShortcuts])
 
   const handleClose = () => {
-    onOpenChange(false);
-  };
+    onOpenChange(false)
+  }
 
   const handlePaletteToolSelect = (toolId: string) => {
-    onToolSelect(toolId);
-    handleClose();
-  };
+    onToolSelect(toolId)
+    handleClose()
+  }
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === 'Escape') {
-      e.preventDefault();
-      handleClose();
-      return;
+      e.preventDefault()
+      handleClose()
+      return
     }
 
-    const list = hasQuery ? results : shortcutRows.map(r => r.tool);
-    if (
-      e.key === 'Enter' &&
-      list.length > 0 &&
-      selectedIndex >= 0 &&
-      selectedIndex < list.length
-    ) {
-      e.preventDefault();
-      const toolToSelect = list[selectedIndex];
+    const list = hasQuery ? results : shortcutRows.map((r) => r.tool)
+    if (e.key === 'Enter' && list.length > 0 && selectedIndex >= 0 && selectedIndex < list.length) {
+      e.preventDefault()
+      const toolToSelect = list[selectedIndex]
       if (toolToSelect) {
-        handlePaletteToolSelect(toolToSelect.id);
+        handlePaletteToolSelect(toolToSelect.id)
       }
-      return;
+      return
     }
 
     if (e.key === 'ArrowDown' && list.length > 0) {
-      e.preventDefault();
-      setSelectedIndex(prev => (prev + 1) % list.length);
-      return;
+      e.preventDefault()
+      setSelectedIndex((prev) => (prev + 1) % list.length)
+      return
     }
 
     if (e.key === 'ArrowUp' && list.length > 0) {
-      e.preventDefault();
-      setSelectedIndex(prev => (prev - 1 + list.length) % list.length);
-      return;
+      e.preventDefault()
+      setSelectedIndex((prev) => (prev - 1 + list.length) % list.length)
+      return
     }
 
     if (e.key === 'Home' && list.length > 0) {
-      e.preventDefault();
-      setSelectedIndex(0);
-      return;
+      e.preventDefault()
+      setSelectedIndex(0)
+      return
     }
 
     if (e.key === 'End' && list.length > 0) {
-      e.preventDefault();
-      setSelectedIndex(list.length - 1);
-      return;
+      e.preventDefault()
+      setSelectedIndex(list.length - 1)
+      return
     }
-  };
+  }
 
-  const listboxActive = hasQuery ? hasResults : showShortcuts;
+  const listboxActive = hasQuery ? hasResults : showShortcuts
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -315,10 +303,9 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
       >
         <DialogTitle className="sr-only">Search Tools</DialogTitle>
         <DialogDescription className="sr-only">
-          Search for developer tools by name or description. Use arrow keys to navigate and Enter to
-          select.
+          Search for developer tools by name or description. Use arrow keys to navigate and Enter to select.
         </DialogDescription>
-        <div className="flex min-h-0 flex-1 flex-col px-6 pb-0 pt-6">
+        <div className="flex min-h-0 flex-1 flex-col px-6 pt-6 pb-0">
           <div className="relative shrink-0">
             <label htmlFor="command-palette-search" className="sr-only">
               Search for tools
@@ -336,18 +323,16 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 onKeyDown={handleKeyDown}
-                className="h-12 border-0 bg-transparent pl-9 pr-20 text-base text-[#0a0a0a] placeholder:text-neutral-500 focus-visible:ring-0 focus-visible:ring-offset-0 dark:text-[#e5e5e5] dark:placeholder:text-neutral-400"
+                className="h-12 border-0 bg-transparent pr-20 pl-9 text-base text-[#0a0a0a] placeholder:text-neutral-500 focus-visible:ring-0 focus-visible:ring-offset-0 dark:text-[#e5e5e5] dark:placeholder:text-neutral-400"
                 aria-label="Search tools"
                 aria-autocomplete="list"
                 aria-controls="command-palette-results"
                 aria-expanded={listboxActive}
-                aria-activedescendant={
-                  listboxActive ? `palette-option-${selectedIndex}` : undefined
-                }
+                aria-activedescendant={listboxActive ? `palette-option-${selectedIndex}` : undefined}
               />
               {keyboardShortcut ? (
                 <div
-                  className="pointer-events-none absolute right-3 text-xs font-medium leading-[20px] tracking-normal text-[#111827] dark:text-[#e5e5e5]"
+                  className="pointer-events-none absolute right-3 text-xs leading-[20px] font-medium tracking-normal text-[#111827] dark:text-[#e5e5e5]"
                   aria-hidden="true"
                 >
                   {keyboardShortcut}
@@ -370,7 +355,7 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
                     Press {keyboardShortcut} to open this palette anytime
                   </p>
                 ) : null}
-                <p className="text-xs text-neutral-500 dark:text-neutral-500 mt-1 text-center">
+                <p className="mt-1 text-center text-xs text-neutral-500 dark:text-neutral-500">
                   Press {isMac ? '⌘B' : 'Ctrl+B'} to toggle sidebar
                 </p>
               </div>
@@ -460,14 +445,12 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
                 <p className="mb-1 text-sm font-medium text-neutral-900 dark:text-neutral-100">
                   No tools found for &ldquo;{query}&rdquo;
                 </p>
-                <p className="text-xs text-neutral-600 dark:text-neutral-400">
-                  Try a different search term
-                </p>
+                <p className="text-xs text-neutral-600 dark:text-neutral-400">Try a different search term</p>
               </div>
             ) : null}
           </div>
         </div>
       </DialogContent>
     </Dialog>
-  );
+  )
 }

@@ -1,19 +1,19 @@
 export interface CronFieldValue {
-  type: 'every' | 'specific' | 'range' | 'step' | 'list';
-  value?: string | number;
-  start?: number;
-  end?: number;
-  step?: number;
-  list?: number[];
+  type: 'every' | 'specific' | 'range' | 'step' | 'list'
+  value?: string | number
+  start?: number
+  end?: number
+  step?: number
+  list?: number[]
 }
 
 export interface CronParserOptions {
-  minute: CronFieldValue;
-  hour: CronFieldValue;
-  day: CronFieldValue;
-  month: CronFieldValue;
-  weekday: CronFieldValue;
-  timezone?: string;
+  minute: CronFieldValue
+  hour: CronFieldValue
+  day: CronFieldValue
+  month: CronFieldValue
+  weekday: CronFieldValue
+  timezone?: string
 }
 
 export const DEFAULT_CRON_PARSER_OPTIONS: CronParserOptions = {
@@ -22,15 +22,15 @@ export const DEFAULT_CRON_PARSER_OPTIONS: CronParserOptions = {
   day: { type: 'every' },
   month: { type: 'every' },
   weekday: { type: 'every' },
-  timezone: 'UTC'
-};
+  timezone: 'UTC',
+}
 
 export interface CronPreset {
-  name: string;
-  description: string;
-  expression: string;
-  category: string;
-  options: CronParserOptions;
+  name: string
+  description: string
+  expression: string
+  category: string
+  options: CronParserOptions
 }
 
 export const CRON_PRESETS: CronPreset[] = [
@@ -44,8 +44,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'every' },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'every' }
-    }
+      weekday: { type: 'every' },
+    },
   },
   {
     name: 'Every Hour',
@@ -57,8 +57,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'every' },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'every' }
-    }
+      weekday: { type: 'every' },
+    },
   },
   {
     name: 'Every Day at Midnight',
@@ -70,8 +70,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'specific', value: 0 },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'every' }
-    }
+      weekday: { type: 'every' },
+    },
   },
   {
     name: 'Every Day at 9 AM',
@@ -83,8 +83,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'specific', value: 9 },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'every' }
-    }
+      weekday: { type: 'every' },
+    },
   },
   {
     name: 'Every Monday at 9 AM',
@@ -96,8 +96,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'specific', value: 9 },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'specific', value: 1 }
-    }
+      weekday: { type: 'specific', value: 1 },
+    },
   },
   {
     name: 'Every 15 Minutes',
@@ -109,8 +109,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'every' },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'every' }
-    }
+      weekday: { type: 'every' },
+    },
   },
   {
     name: 'Every 30 Minutes',
@@ -122,8 +122,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'every' },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'every' }
-    }
+      weekday: { type: 'every' },
+    },
   },
   {
     name: 'Every 2 Hours',
@@ -135,8 +135,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'step', step: 2 },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'every' }
-    }
+      weekday: { type: 'every' },
+    },
   },
   {
     name: 'Weekdays at 6 PM',
@@ -148,8 +148,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'specific', value: 18 },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'range', start: 1, end: 5 }
-    }
+      weekday: { type: 'range', start: 1, end: 5 },
+    },
   },
   {
     name: 'Business Hours (9 AM - 5 PM)',
@@ -161,8 +161,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'range', start: 9, end: 17 },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'range', start: 1, end: 5 }
-    }
+      weekday: { type: 'range', start: 1, end: 5 },
+    },
   },
   {
     name: 'First Day of Month',
@@ -174,8 +174,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'specific', value: 0 },
       day: { type: 'specific', value: 1 },
       month: { type: 'every' },
-      weekday: { type: 'every' }
-    }
+      weekday: { type: 'every' },
+    },
   },
   {
     name: 'Backup at 2 AM',
@@ -187,8 +187,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'specific', value: 2 },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'every' }
-    }
+      weekday: { type: 'every' },
+    },
   },
   {
     name: 'Quarterly Report',
@@ -200,8 +200,8 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'specific', value: 9 },
       day: { type: 'specific', value: 1 },
       month: { type: 'list', list: [1, 4, 7, 10] },
-      weekday: { type: 'every' }
-    }
+      weekday: { type: 'every' },
+    },
   },
   {
     name: 'Weekend Backup',
@@ -213,40 +213,53 @@ export const CRON_PRESETS: CronPreset[] = [
       hour: { type: 'specific', value: 2 },
       day: { type: 'every' },
       month: { type: 'every' },
-      weekday: { type: 'list', list: [0, 6] }
-    }
-  }
-];
+      weekday: { type: 'list', list: [0, 6] },
+    },
+  },
+]
 
 export const CRON_FIELD_DEFINITIONS = {
   minute: {
     label: 'Minute',
     range: { min: 0, max: 59 },
-    description: 'Minute of the hour (0-59)'
+    description: 'Minute of the hour (0-59)',
   },
   hour: {
     label: 'Hour',
     range: { min: 0, max: 23 },
-    description: 'Hour of the day (0-23)'
+    description: 'Hour of the day (0-23)',
   },
   day: {
     label: 'Month-Day',
     range: { min: 1, max: 31 },
-    description: 'Day of the month (1-31)'
+    description: 'Day of the month (1-31)',
   },
   month: {
     label: 'Month',
     range: { min: 1, max: 12 },
     description: 'Month of the year (1-12)',
-    names: ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+    names: [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ],
   },
   weekday: {
     label: 'Week-Day',
     range: { min: 0, max: 6 },
     description: 'Day of the week (0=Sunday, 6=Saturday)',
-    names: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday']
-  }
-};
+    names: ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
+  },
+}
 
 // Timezone options for cron parser
 export const TIMEZONES = [
@@ -273,4 +286,4 @@ export const TIMEZONES = [
   { value: 'America/Sao_Paulo', label: 'São Paulo (BRT)' },
   { value: 'America/Toronto', label: 'Toronto (ET)' },
   { value: 'America/Vancouver', label: 'Vancouver (PT)' },
-] as const;
+] as const

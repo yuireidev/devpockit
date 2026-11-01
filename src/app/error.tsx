@@ -1,29 +1,29 @@
-'use client';
+'use client'
 
-import { Button } from '@/components/ui/button';
-import { AlertCircle, Home, RefreshCw } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useEffect } from 'react';
+import { Button } from '@/components/ui/button'
+import { AlertCircle, Home, RefreshCw } from 'lucide-react'
+import { useRouter } from 'next/navigation'
+import { useEffect } from 'react'
 
 interface ErrorProps {
-  error: Error & { digest?: string };
-  reset: () => void;
+  error: Error & { digest?: string }
+  reset: () => void
 }
 
 export default function Error({ error, reset }: ErrorProps) {
-  const router = useRouter();
+  const router = useRouter()
 
   useEffect(() => {
     // Log error to console for debugging
-    console.error('Application error:', error);
-  }, [error]);
+    console.error('Application error:', error)
+  }, [error])
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-md space-y-6 text-center">
         <div className="flex justify-center">
-          <div className="rounded-full bg-destructive/10 p-4 dark:bg-destructive/20">
-            <AlertCircle className="h-12 w-12 text-destructive" />
+          <div className="bg-destructive/10 dark:bg-destructive/20 rounded-full p-4">
+            <AlertCircle className="text-destructive h-12 w-12" />
           </div>
         </div>
 
@@ -35,16 +35,10 @@ export default function Error({ error, reset }: ErrorProps) {
         </div>
 
         {process.env.NODE_ENV === 'development' && error.message && (
-          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-4 text-left">
-            <p className="text-sm font-medium text-destructive">Error Details:</p>
-            <p className="mt-2 text-sm text-muted-foreground font-mono break-all">
-              {error.message}
-            </p>
-            {error.digest && (
-              <p className="mt-2 text-xs text-muted-foreground">
-                Error ID: {error.digest}
-              </p>
-            )}
+          <div className="border-destructive/20 bg-destructive/5 rounded-lg border p-4 text-left">
+            <p className="text-destructive text-sm font-medium">Error Details:</p>
+            <p className="text-muted-foreground mt-2 font-mono text-sm break-all">{error.message}</p>
+            {error.digest && <p className="text-muted-foreground mt-2 text-xs">Error ID: {error.digest}</p>}
           </div>
         )}
 
@@ -53,17 +47,12 @@ export default function Error({ error, reset }: ErrorProps) {
             <RefreshCw className="mr-2 h-4 w-4" />
             Try again
           </Button>
-          <Button
-            onClick={() => router.push('/')}
-            variant="outline"
-            className="w-full sm:w-auto"
-          >
+          <Button onClick={() => router.push('/')} variant="outline" className="w-full sm:w-auto">
             <Home className="mr-2 h-4 w-4" />
             Go home
           </Button>
         </div>
       </div>
     </div>
-  );
+  )
 }
-

@@ -46,21 +46,25 @@ For detailed setup instructions, see [CONTRIBUTING.md](CONTRIBUTING.md).
 ## 🛠️ Available Tools
 
 ### Text Tools
+
 - **Lorem Ipsum Generator** - Generate placeholder text
 - **Regex Tester** - Test and debug regular expressions
 - **Diff Checker** - Compare two texts side-by-side
 
 ### Formatters
+
 - **JSON Formatter** - Format and beautify JSON
 - **XML Formatter** - Format and beautify XML
 
 ### Cryptography & Security
+
 - **UUID Generator** - Generate v1, v4, and v5 UUIDs
 - **JWT Decoder** - Decode and analyze JWT tokens
 - **JWT Encoder** - Create and encode JWT tokens
 - **Hash Generator** - Generate cryptographic hashes (SHA-1, SHA-256, SHA-512, SHA-3)
 
 ### Encoders & Decoders
+
 - **QR Code Generator** - Generate QR codes for text, URLs, contacts, WiFi, SMS, email
 - **QR Code Decoder** - Decode QR codes from images
 - **QR Code Scanner** - Scan QR codes using device camera
@@ -68,6 +72,7 @@ For detailed setup instructions, see [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Base Encoder/Decoder** - Base64, Base32, Base16, Base85 encoding
 
 ### Converters
+
 - **Cron Expression Parser** - Build and parse cron expressions
 - **Data Format Converter** - Convert between JSON, YAML, Python Dict, TypeScript Map, XML
 - **Timestamp Converter** - Convert between Unix timestamps, ISO 8601, RFC 2822
@@ -76,12 +81,14 @@ For detailed setup instructions, see [CONTRIBUTING.md](CONTRIBUTING.md).
 - **Number Base Converter** - Convert between binary, octal, decimal, hexadecimal
 
 ### Network Tools
+
 - **CIDR Analyzer** - Analyze CIDR notation
 - **IP to CIDR Converter** - Convert IP addresses to CIDR
 - **IP Address Lookup** - Look up IP address information
 - **System Information** - View browser and device information
 
 ### Utilities
+
 - **List Comparison** - Compare two lists to find differences
 - **JSON Path Finder** - Query JSON using JSONPath
 - **XML Path Finder** - Query XML using XPath

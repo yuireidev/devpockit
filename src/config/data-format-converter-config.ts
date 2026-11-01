@@ -1,39 +1,39 @@
-import type { FormatType } from '@/libs/data-format-converter';
+import type { FormatType } from '@/libs/data-format-converter'
 
 export interface MultiFormatOptions {
-  inputFormat: FormatType;
-  outputFormat: FormatType;
-  indentSize: number;
-  pythonQuoteStyle: 'single' | 'double';
+  inputFormat: FormatType
+  outputFormat: FormatType
+  indentSize: number
+  pythonQuoteStyle: 'single' | 'double'
 }
 
 export const DEFAULT_MULTI_FORMAT_OPTIONS: MultiFormatOptions = {
   inputFormat: 'json',
   outputFormat: 'json',
   indentSize: 2,
-  pythonQuoteStyle: 'single'
-};
+  pythonQuoteStyle: 'single',
+}
 
 export const FORMAT_OPTIONS: Array<{ value: FormatType; label: string; description: string }> = [
   { value: 'json', label: 'JSON', description: 'JavaScript Object Notation' },
-  { value: 'yaml', label: 'YAML', description: 'YAML Ain\'t Markup Language' },
+  { value: 'yaml', label: 'YAML', description: "YAML Ain't Markup Language" },
   { value: 'python', label: 'Python Dictionary', description: 'Python dict syntax' },
   { value: 'typescript', label: 'TypeScript Map', description: 'TypeScript object/Map syntax' },
-  { value: 'xml', label: 'XML', description: 'eXtensible Markup Language' }
-];
+  { value: 'xml', label: 'XML', description: 'eXtensible Markup Language' },
+]
 
-export const INPUT_FORMAT_OPTIONS: Array<{ value: FormatType; label: string; description: string }> = FORMAT_OPTIONS;
+export const INPUT_FORMAT_OPTIONS: Array<{ value: FormatType; label: string; description: string }> = FORMAT_OPTIONS
 
 export const INDENT_OPTIONS = [
   { value: 2, label: '2 spaces', description: 'Standard indentation' },
   { value: 4, label: '4 spaces', description: 'Wide indentation' },
-  { value: 1, label: '1 space', description: 'Compact indentation' }
-];
+  { value: 1, label: '1 space', description: 'Compact indentation' },
+]
 
 export const PYTHON_QUOTE_STYLE_OPTIONS = [
   { value: 'single', label: 'Single Quotes', description: "Use single quotes (')" },
-  { value: 'double', label: 'Double Quotes', description: 'Use double quotes (")' }
-];
+  { value: 'double', label: 'Double Quotes', description: 'Use double quotes (")' },
+]
 
 export const MULTI_FORMAT_EXAMPLES = [
   {
@@ -62,7 +62,7 @@ email: john@example.com`,
   <email>john@example.com</email>
 </root>`,
     description: 'Basic object with string and number values',
-    category: 'Basic'
+    category: 'Basic',
   },
   {
     name: 'Nested Object',
@@ -132,7 +132,7 @@ email: john@example.com`,
   </user>
 </root>`,
     description: 'Object with nested structures',
-    category: 'Nested'
+    category: 'Nested',
   },
   {
     name: 'Array of Objects',
@@ -187,7 +187,7 @@ email: john@example.com`,
   }
 ]`,
     description: 'Array containing multiple objects',
-    category: 'Arrays'
+    category: 'Arrays',
   },
   {
     name: 'Configuration File',
@@ -279,7 +279,7 @@ server:
   </server>
 </root>`,
     description: 'Application configuration structure',
-    category: 'Configuration'
+    category: 'Configuration',
   },
   {
     name: 'Mixed Types',
@@ -336,50 +336,50 @@ object:
   </object>
 </root>`,
     description: 'Object with various data types',
-    category: 'Mixed'
-  }
-];
+    category: 'Mixed',
+  },
+]
 
 export const MULTI_FORMAT_TOOL_DESCRIPTIONS = {
   title: 'Data Format Converter',
-  description: 'Convert between JSON, YAML, Python Dictionary, TypeScript Map, and XML formats. JSON is used as the common intermediate format.',
+  description:
+    'Convert between JSON, YAML, Python Dictionary, TypeScript Map, and XML formats. JSON is used as the common intermediate format.',
   features: [
     'Convert between JSON, YAML, Python Dictionary, and TypeScript Map',
     'Auto-detect input format',
     'JSON as common intermediate format',
     'Format validation with error messages',
     'Pretty-printing with customizable indentation',
-    'Real-time conversion statistics'
+    'Real-time conversion statistics',
   ],
   useCases: [
     'Converting configuration files between formats',
     'API response format conversion',
     'Data migration between systems',
     'Configuration management',
-    'Cross-language data sharing'
-  ]
-};
+    'Cross-language data sharing',
+  ],
+}
 
 export const MULTI_FORMAT_CONVERSION_TIPS = [
   {
     tip: 'JSON as Common Format',
     description: 'All conversions use JSON as an intermediate format for maximum compatibility',
-    example: 'Input → JSON → Output'
+    example: 'Input → JSON → Output',
   },
   {
     tip: 'Python Dictionary',
     description: 'Python dicts use single quotes, True/False/None instead of true/false/null',
-    example: "{'key': 'value', 'bool': True, 'null': None}"
+    example: "{'key': 'value', 'bool': True, 'null': None}",
   },
   {
     tip: 'TypeScript Map',
     description: 'TypeScript uses object literal syntax with unquoted keys when valid identifiers',
-    example: '{ key: "value", number: 42, bool: true }'
+    example: '{ key: "value", number: 42, bool: true }',
   },
   {
     tip: 'YAML Format',
     description: 'YAML uses indentation and colons, more human-readable than JSON',
-    example: 'key: value\nnested:\n  inner: data'
-  }
-];
-
+    example: 'key: value\nnested:\n  inner: data',
+  },
+]

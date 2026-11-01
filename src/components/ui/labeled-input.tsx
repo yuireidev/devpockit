@@ -1,12 +1,12 @@
-import * as React from 'react';
-import { cn } from '@/libs/utils';
+import * as React from 'react'
+import { cn } from '@/libs/utils'
 
 export interface LabeledInputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'onChange'> {
-  label: string;
-  value: string;
-  onChange: (value: string) => void;
-  containerClassName?: string;
-  inputClassName?: string;
+  label: string
+  value: string
+  onChange: (value: string) => void
+  containerClassName?: string
+  inputClassName?: string
 }
 
 export const LabeledInput = React.forwardRef<HTMLInputElement, LabeledInputProps>(
@@ -14,12 +14,12 @@ export const LabeledInput = React.forwardRef<HTMLInputElement, LabeledInputProps
     return (
       <div
         className={cn(
-          'flex h-10 items-center rounded-lg border border-neutral-200 bg-background pl-3 pr-2 py-[9.5px] text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 dark:border-neutral-700',
+          'bg-background ring-offset-background focus-within:ring-ring flex h-10 items-center rounded-lg border border-neutral-200 py-[9.5px] pr-2 pl-3 text-sm focus-within:ring-2 focus-within:ring-offset-2 dark:border-neutral-700',
           containerClassName || 'w-full'
         )}
       >
-        <div className="flex items-center gap-3 text-sm leading-normal tracking-[0.07px] flex-1 min-w-0">
-          <span className="text-neutral-500 whitespace-nowrap dark:text-neutral-400">{label}</span>
+        <div className="flex min-w-0 flex-1 items-center gap-3 text-sm leading-normal tracking-[0.07px]">
+          <span className="whitespace-nowrap text-neutral-500 dark:text-neutral-400">{label}</span>
           <input
             ref={ref}
             type="text"
@@ -27,7 +27,7 @@ export const LabeledInput = React.forwardRef<HTMLInputElement, LabeledInputProps
             onChange={(e) => onChange(e.target.value)}
             placeholder={placeholder}
             className={cn(
-              'font-mono bg-transparent text-neutral-900 dark:text-neutral-100 outline-hidden flex-1 min-w-0 placeholder:text-muted-foreground',
+              'placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent font-mono text-neutral-900 outline-hidden dark:text-neutral-100',
               inputClassName,
               className
             )}
@@ -35,9 +35,8 @@ export const LabeledInput = React.forwardRef<HTMLInputElement, LabeledInputProps
           />
         </div>
       </div>
-    );
+    )
   }
-);
+)
 
-LabeledInput.displayName = 'LabeledInput';
-
+LabeledInput.displayName = 'LabeledInput'

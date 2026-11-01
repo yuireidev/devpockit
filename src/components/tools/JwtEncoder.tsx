@@ -1,158 +1,161 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import { CodePanel, type CodeOutputTab } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { SecretInput } from '@/components/ui/secret-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import { CodePanel, type CodeOutputTab } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { SecretInput } from '@/components/ui/secret-input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
 import {
   DEFAULT_JWT_ENCODER_OPTIONS,
   JWT_ENCODER_ALGORITHMS,
   JWT_EXPIRATION_OPTIONS,
   JWT_TEMPLATES,
-  type JwtEncoderOptions
-} from '@/config/jwt-encoder-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import { encodeJwt, formatJson, getDefaultHeader, validateJson, type JwtEncodeResult } from '@/libs/jwt-encoder';
-import { cn } from '@/libs/utils';
-import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useMemo, useState } from 'react';
+  type JwtEncoderOptions,
+} from '@/config/jwt-encoder-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { encodeJwt, formatJson, getDefaultHeader, validateJson, type JwtEncodeResult } from '@/libs/jwt-encoder'
+import { cn } from '@/libs/utils'
+import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { useEffect, useMemo, useState } from 'react'
 
 interface JwtEncoderProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
-  const { toolState, updateToolState } = useToolState('jwt-encoder', instanceId);
+  const { toolState, updateToolState } = useToolState('jwt-encoder', instanceId)
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<JwtEncoderOptions>(((toolState?.options as JwtEncoderOptions)) ?? (DEFAULT_JWT_ENCODER_OPTIONS));
-  const [encodedResult, setEncodedResult] = useState<JwtEncodeResult | null>((toolState?.encodedResult as JwtEncodeResult) ?? (null));
-  const [isEncoding, setIsEncoding] = useState(false);
-  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
-  const [activeTab, setActiveTab] = useState<'token' | 'header' | 'payload'>((toolState?.activeTab as 'token' | 'header' | 'payload' | undefined) ?? 'token');
-
+  const [options, setOptions] = useState<JwtEncoderOptions>(
+    (toolState?.options as JwtEncoderOptions) ?? DEFAULT_JWT_ENCODER_OPTIONS
+  )
+  const [encodedResult, setEncodedResult] = useState<JwtEncodeResult | null>(
+    (toolState?.encodedResult as JwtEncodeResult) ?? null
+  )
+  const [isEncoding, setIsEncoding] = useState(false)
+  const [error, setError] = useState<string>((toolState?.error as string) ?? '')
+  const [activeTab, setActiveTab] = useState<'token' | 'header' | 'payload'>(
+    (toolState?.activeTab as 'token' | 'header' | 'payload' | undefined) ?? 'token'
+  )
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [headerWrapText, setHeaderWrapText] = useState(true);
-  const [payloadWrapText, setPayloadWrapText] = useState(true);
-  const [outputWrapText, setOutputWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [headerWrapText, setHeaderWrapText] = useState(true)
+  const [payloadWrapText, setPayloadWrapText] = useState(true)
+  const [outputWrapText, setOutputWrapText] = useState(true)
 
   // Hydrate state from toolState after mount (client-side only)
-
 
   // Update persistent state whenever local state changes
   useEffect(() => {
     updateToolState({
-        options,
-        encodedResult: encodedResult || undefined,
-        error,
-        activeTab
-      });
+      options,
+      encodedResult: encodedResult || undefined,
+      error,
+      activeTab,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, encodedResult, error, activeTab]);
+  }, [options, encodedResult, error, activeTab])
 
   // Reset local state when tool state is cleared
 
-
   const handleAlgorithmChange = (algorithm: JwtEncoderOptions['algorithm']) => {
-    setOptions(prev => {
-      let header = getDefaultHeader(algorithm);
-      const validation = validateJson(prev.header);
+    setOptions((prev) => {
+      let header = getDefaultHeader(algorithm)
+      const validation = validateJson(prev.header)
       if (validation.isValid) {
         try {
-          const headerObject = JSON.parse(prev.header) as Record<string, unknown>;
-          header = { ...header, ...headerObject, alg: algorithm };
+          const headerObject = JSON.parse(prev.header) as Record<string, unknown>
+          header = { ...header, ...headerObject, alg: algorithm }
         } catch {
           // Keep the default header for malformed JSON.
         }
       }
-      return { ...prev, algorithm, header: JSON.stringify(header, null, 2) };
-    });
-  };
+      return { ...prev, algorithm, header: JSON.stringify(header, null, 2) }
+    })
+  }
 
   const handleEncode = async () => {
     // Validate header JSON
-    const headerValidation = validateJson(options.header);
+    const headerValidation = validateJson(options.header)
     if (!headerValidation.isValid) {
-      setError(`Invalid header JSON: ${headerValidation.error}`);
-      return;
+      setError(`Invalid header JSON: ${headerValidation.error}`)
+      return
     }
 
     // Validate payload JSON
-    const payloadValidation = validateJson(options.payload);
+    const payloadValidation = validateJson(options.payload)
     if (!payloadValidation.isValid) {
-      setError(`Invalid payload JSON: ${payloadValidation.error}`);
-      return;
+      setError(`Invalid payload JSON: ${payloadValidation.error}`)
+      return
     }
 
     // Validate secret
     if (!options.secret || options.secret.trim().length === 0) {
-      setError('Secret is required for signing the token');
-      return;
+      setError('Secret is required for signing the token')
+      return
     }
 
-    setIsEncoding(true);
-    setError('');
+    setIsEncoding(true)
+    setError('')
 
     try {
       // Simulate async operation for better UX
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-      const result = await encodeJwt(options);
-      setEncodedResult(result);
+      const result = await encodeJwt(options)
+      setEncodedResult(result)
 
       if (!result.isValid) {
-        setError(result.error || 'Failed to encode JWT');
+        setError(result.error || 'Failed to encode JWT')
       } else {
-        setError('');
+        setError('')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to encode JWT');
-      setEncodedResult(null);
+      setError(err instanceof Error ? err.message : 'Failed to encode JWT')
+      setEncodedResult(null)
     } finally {
-      setIsEncoding(false);
+      setIsEncoding(false)
     }
-  };
+  }
 
-  const handleLoadTemplate = (template: typeof JWT_TEMPLATES[0]) => {
-    setOptions(prev => ({
+  const handleLoadTemplate = (template: (typeof JWT_TEMPLATES)[0]) => {
+    setOptions((prev) => ({
       ...prev,
       header: JSON.stringify(template.header, null, 2),
-      payload: JSON.stringify(template.payload, null, 2)
-    }));
-    setError('');
-    setEncodedResult(null);
-  };
+      payload: JSON.stringify(template.payload, null, 2),
+    }))
+    setError('')
+    setEncodedResult(null)
+  }
 
   const handleHeaderChange = (value: string) => {
-    setOptions(prev => ({ ...prev, header: value }));
+    setOptions((prev) => ({ ...prev, header: value }))
     // Try to format JSON on blur
-    const validation = validateJson(value);
+    const validation = validateJson(value)
     if (validation.isValid) {
-      const formatted = formatJson(value);
-      setOptions(prev => ({ ...prev, header: formatted }));
+      const formatted = formatJson(value)
+      setOptions((prev) => ({ ...prev, header: formatted }))
     }
-  };
+  }
 
   const handlePayloadChange = (value: string) => {
-    setOptions(prev => ({ ...prev, payload: value }));
+    setOptions((prev) => ({ ...prev, payload: value }))
     // Try to format JSON on blur
-    const validation = validateJson(value);
+    const validation = validateJson(value)
     if (validation.isValid) {
-      const formatted = formatJson(value);
-      setOptions(prev => ({ ...prev, payload: formatted }));
+      const formatted = formatJson(value)
+      setOptions((prev) => ({ ...prev, payload: formatted }))
     }
-  };
+  }
 
   // Prepare tabs for CodePanel
   const outputTabs: CodeOutputTab[] = useMemo(() => {
     if (!encodedResult || !encodedResult.isValid) {
-      return [];
+      return []
     }
 
     return [
@@ -160,28 +163,28 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
         id: 'token',
         label: 'Token',
         value: encodedResult.token,
-        language: 'plaintext'
+        language: 'plaintext',
       },
       {
         id: 'header',
         label: 'Header',
         value: JSON.stringify(encodedResult.header, null, 2),
-        language: 'json'
+        language: 'json',
       },
       {
         id: 'payload',
         label: 'Payload',
         value: JSON.stringify(encodedResult.payload, null, 2),
-        language: 'json'
-      }
-    ];
-  }, [encodedResult]);
+        language: 'json',
+      },
+    ]
+  }, [encodedResult])
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           JWT Encoder
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -190,17 +193,14 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Main Controls Row */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Algorithm Selection */}
-              <Select
-                value={options.algorithm}
-                onValueChange={handleAlgorithmChange}
-              >
+              <Select value={options.algorithm} onValueChange={handleAlgorithmChange}>
                 <SelectTrigger label="Algorithm:" className="min-w-[300px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -217,7 +217,7 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
               <SecretInput
                 label="Secret:"
                 value={options.secret}
-                onChange={(value) => setOptions(prev => ({ ...prev, secret: value }))}
+                onChange={(value) => setOptions((prev) => ({ ...prev, secret: value }))}
                 placeholder="Enter secret for signing"
                 name="jwt-secret"
                 id="jwt-secret-input"
@@ -226,11 +226,11 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
             </div>
 
             {/* Auto-generate Options Row */}
-            <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex flex-wrap items-center gap-4">
               <div className="flex items-center gap-2">
                 <Switch
                   checked={options.autoGenerateIat}
-                  onCheckedChange={(checked) => setOptions(prev => ({ ...prev, autoGenerateIat: checked }))}
+                  onCheckedChange={(checked) => setOptions((prev) => ({ ...prev, autoGenerateIat: checked }))}
                   size="sm"
                 />
                 <span className="text-sm text-neutral-600 dark:text-neutral-400">Auto-generate iat (Issued At)</span>
@@ -240,8 +240,8 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
               <Select
                 value={options.expirationMinutes === null ? 'null' : options.expirationMinutes.toString()}
                 onValueChange={(value) => {
-                  const expirationValue = value === 'null' ? null : parseInt(value, 10);
-                  setOptions(prev => ({ ...prev, expirationMinutes: expirationValue }));
+                  const expirationValue = value === 'null' ? null : parseInt(value, 10)
+                  setOptions((prev) => ({ ...prev, expirationMinutes: expirationValue }))
                 }}
               >
                 <SelectTrigger label="Expiration:" className="min-w-[220px]">
@@ -249,7 +249,10 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
                 </SelectTrigger>
                 <SelectContent>
                   {JWT_EXPIRATION_OPTIONS.map((opt) => (
-                    <SelectItem key={opt.value === null ? 'null' : opt.value.toString()} value={opt.value === null ? 'null' : opt.value.toString()}>
+                    <SelectItem
+                      key={opt.value === null ? 'null' : opt.value.toString()}
+                      value={opt.value === null ? 'null' : opt.value.toString()}
+                    >
                       {opt.label}
                     </SelectItem>
                   ))}
@@ -259,7 +262,8 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
           </div>
 
           {/* Header Input Panel */}
-          <CodePanel fillHeight={true}
+          <CodePanel
+            fillHeight={true}
             title="Header (JSON)"
             value={options.header}
             onChange={handleHeaderChange}
@@ -273,7 +277,8 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
           />
 
           {/* Payload Input Panel */}
-          <CodePanel fillHeight={true}
+          <CodePanel
+            fillHeight={true}
             title="Payload (JSON)"
             value={options.payload}
             onChange={handlePayloadChange}
@@ -287,13 +292,9 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
             headerActions={
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 px-3 text-xs"
-                  >
+                  <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                     Load Template
-                    <ChevronDownIcon className="h-3 w-3 ml-1" />
+                    <ChevronDownIcon className="ml-1 h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
@@ -306,15 +307,10 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
               </DropdownMenu>
             }
             footerRightContent={
-              <Button
-                onClick={handleEncode}
-                disabled={isEncoding}
-                variant="default"
-                size="sm"
-              >
+              <Button onClick={handleEncode} disabled={isEncoding} variant="default" size="sm">
                 {isEncoding ? (
                   <>
-                    <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
                     Encoding...
                   </>
                 ) : (
@@ -326,7 +322,8 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
 
           {/* Output Panel */}
           {encodedResult && encodedResult.isValid ? (
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               tabs={outputTabs}
               activeTab={activeTab}
               onTabChange={(tabId) => setActiveTab(tabId as typeof activeTab)}
@@ -346,16 +343,13 @@ export function JwtEncoder({ className, instanceId }: JwtEncoderProps) {
             />
           ) : (
             error && (
-              <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-                <div className="text-sm text-red-700 dark:text-red-300">
-                  {error}
-                </div>
+              <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+                <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
               </div>
             )
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }
-

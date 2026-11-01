@@ -1,225 +1,229 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import type { CodeOutputTab } from '@/components/ui/code-panel';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { JsonTreeView, type JsonValue } from '@/components/ui/json-tree-view';
-import { Label } from '@/components/ui/label';
-import { LoadFileButton } from '@/components/ui/load-file-button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import type { CodeOutputTab } from '@/components/ui/code-panel'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { JsonTreeView, type JsonValue } from '@/components/ui/json-tree-view'
+import { Label } from '@/components/ui/label'
+import { LoadFileButton } from '@/components/ui/load-file-button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   DEFAULT_JSON_PATH_OPTIONS,
   JSON_PATH_COMMON_PATTERNS,
   JSON_PATH_EXAMPLES,
   JSON_PATH_SORT_OPTIONS,
-  type JsonPathFinderOptions
-} from '@/config/json-path-finder-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import { sortObjectKeys } from '@/libs/json-formatter';
+  type JsonPathFinderOptions,
+} from '@/config/json-path-finder-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { sortObjectKeys } from '@/libs/json-formatter'
+import { evaluateJsonPath, formatJsonPathResults, validateJsonPath, type JsonPathResult } from '@/libs/json-path-finder'
+import { cn } from '@/libs/utils'
 import {
-  evaluateJsonPath,
-  formatJsonPathResults,
-  validateJsonPath,
-  type JsonPathResult
-} from '@/libs/json-path-finder';
-import { cn } from '@/libs/utils';
-import { ArrowDownTrayIcon, ArrowPathIcon, ChevronDownIcon, LinkIcon, MagnifyingGlassIcon, ArrowsPointingOutIcon, ArrowsPointingInIcon, XMarkIcon } from '@heroicons/react/24/outline';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  ChevronDownIcon,
+  LinkIcon,
+  MagnifyingGlassIcon,
+  ArrowsPointingOutIcon,
+  ArrowsPointingInIcon,
+  XMarkIcon,
+} from '@heroicons/react/24/outline'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 interface JsonPathFinderProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
-  const { toolState, updateToolState } = useToolState('json-path-finder', instanceId);
+  const { toolState, updateToolState } = useToolState('json-path-finder', instanceId)
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<JsonPathFinderOptions>((toolState?.options as JsonPathFinderOptions) ?? (DEFAULT_JSON_PATH_OPTIONS));
-  const [jsonInput, setJsonInput] = useState<string>((toolState?.jsonInput as string) ?? (''));
-  const [pathInput, setPathInput] = useState<string>((toolState?.pathInput as string) ?? (''));
-  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
-  const [result, setResult] = useState<JsonPathResult | null>((toolState?.result as JsonPathResult) ?? (null));
+  const [options, setOptions] = useState<JsonPathFinderOptions>(
+    (toolState?.options as JsonPathFinderOptions) ?? DEFAULT_JSON_PATH_OPTIONS
+  )
+  const [jsonInput, setJsonInput] = useState<string>((toolState?.jsonInput as string) ?? '')
+  const [pathInput, setPathInput] = useState<string>((toolState?.pathInput as string) ?? '')
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? '')
+  const [isEvaluating, setIsEvaluating] = useState(false)
+  const [error, setError] = useState<string>((toolState?.error as string) ?? '')
+  const [result, setResult] = useState<JsonPathResult | null>((toolState?.result as JsonPathResult) ?? null)
 
-  const [activeTab, setActiveTab] = useState<string>((toolState?.activeTab as string) ?? ('tree'));
-  const [getExpandedJson, setGetExpandedJson] = useState<(() => string) | null>(null);
+  const [activeTab, setActiveTab] = useState<string>((toolState?.activeTab as string) ?? 'tree')
+  const [getExpandedJson, setGetExpandedJson] = useState<(() => string) | null>(null)
   // Tree View search state
-  const [treeSearchTerm, setTreeSearchTerm] = useState<string>('');
+  const [treeSearchTerm, setTreeSearchTerm] = useState<string>('')
 
   // URL loader state
-  const [urlInputVisible, setUrlInputVisible] = useState(false);
-  const [urlValue, setUrlValue] = useState('');
-  const [isFetchingUrl, setIsFetchingUrl] = useState(false);
+  const [urlInputVisible, setUrlInputVisible] = useState(false)
+  const [urlValue, setUrlValue] = useState('')
+  const [isFetchingUrl, setIsFetchingUrl] = useState(false)
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [inputWrapText, setInputWrapText] = useState(true);
-  const [outputWrapText, setOutputWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [inputWrapText, setInputWrapText] = useState(true)
+  const [outputWrapText, setOutputWrapText] = useState(true)
 
   // Hydrate state from toolState after mount (client-side only)
-
 
   // Update persistent state whenever local state changes
   useEffect(() => {
     updateToolState({
-        options,
-        jsonInput,
-        pathInput,
-        output,
-        error,
-        result: result || undefined,
-        activeTab
-      });
+      options,
+      jsonInput,
+      pathInput,
+      output,
+      error,
+      result: result || undefined,
+      activeTab,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, jsonInput, pathInput, output, error, result, activeTab]);
+  }, [options, jsonInput, pathInput, output, error, result, activeTab])
 
   // Reset local state when tool state is cleared
 
-
   const handleEvaluate = async () => {
     if (!jsonInput.trim()) {
-      setError('Please enter JSON data');
-      setOutput('');
-      setResult(null);
-      return;
+      setError('Please enter JSON data')
+      setOutput('')
+      setResult(null)
+      return
     }
 
     if (!pathInput.trim()) {
-      setError('Please enter a JSONPath expression');
-      setOutput('');
-      setResult(null);
-      return;
+      setError('Please enter a JSONPath expression')
+      setOutput('')
+      setResult(null)
+      return
     }
 
-    setIsEvaluating(true);
-    setError('');
+    setIsEvaluating(true)
+    setError('')
 
     try {
       // Validate JSONPath syntax
-      const pathValidation = validateJsonPath(pathInput);
+      const pathValidation = validateJsonPath(pathInput)
       if (!pathValidation.isValid) {
-        setError(pathValidation.error || 'Invalid JSONPath expression');
-        setOutput('');
-        setResult(null);
-        return;
+        setError(pathValidation.error || 'Invalid JSONPath expression')
+        setOutput('')
+        setResult(null)
+        return
       }
 
       // Parse JSON
-      let jsonData: JsonValue;
+      let jsonData: JsonValue
       try {
-        jsonData = JSON.parse(jsonInput) as JsonValue;
+        jsonData = JSON.parse(jsonInput) as JsonValue
       } catch (parseError) {
-        setError(parseError instanceof Error ? parseError.message : 'Invalid JSON format');
-        setOutput('');
-        setResult(null);
-        return;
+        setError(parseError instanceof Error ? parseError.message : 'Invalid JSON format')
+        setOutput('')
+        setResult(null)
+        return
       }
 
       // Apply key sorting if enabled
       if (options.sortKeys !== 'none') {
-        jsonData = sortObjectKeys(jsonData, options.sortKeys);
+        jsonData = sortObjectKeys(jsonData, options.sortKeys)
       }
 
       // Simulate async operation for better UX
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
       // Evaluate JSONPath
-      const pathResult = evaluateJsonPath(jsonData, pathInput);
+      const pathResult = evaluateJsonPath(jsonData, pathInput)
 
       if (pathResult.success) {
-        setResult(pathResult);
-        setOutput(formatJsonPathResults(pathResult));
+        setResult(pathResult)
+        setOutput(formatJsonPathResults(pathResult))
       } else {
-        setError(pathResult.error || 'JSONPath evaluation failed');
-        setOutput('');
-        setResult(null);
+        setError(pathResult.error || 'JSONPath evaluation failed')
+        setOutput('')
+        setResult(null)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Evaluation failed');
-      setOutput('');
-      setResult(null);
+      setError(err instanceof Error ? err.message : 'Evaluation failed')
+      setOutput('')
+      setResult(null)
     } finally {
-      setIsEvaluating(false);
+      setIsEvaluating(false)
     }
-  };
+  }
 
-  const handleLoadExample = (example: typeof JSON_PATH_EXAMPLES[0]) => {
-    setJsonInput(example.json);
-    setPathInput(example.path);
-    setError('');
-    setOutput('');
-    setResult(null);
-  };
+  const handleLoadExample = (example: (typeof JSON_PATH_EXAMPLES)[0]) => {
+    setJsonInput(example.json)
+    setPathInput(example.path)
+    setError('')
+    setOutput('')
+    setResult(null)
+  }
 
-  const handleLoadPattern = (pattern: typeof JSON_PATH_COMMON_PATTERNS[0]) => {
-    setPathInput(pattern.example);
+  const handleLoadPattern = (pattern: (typeof JSON_PATH_COMMON_PATTERNS)[0]) => {
+    setPathInput(pattern.example)
     setTimeout(() => {
-      const pathInputElement = document.querySelector('input[placeholder*="JSONPath"]') as HTMLInputElement;
+      const pathInputElement = document.querySelector('input[placeholder*="JSONPath"]') as HTMLInputElement
       if (pathInputElement) {
-        pathInputElement.focus();
+        pathInputElement.focus()
       }
-    }, 100);
-  };
+    }, 100)
+  }
 
   const handleLoadUrl = useCallback(async () => {
-    const url = urlValue.trim();
-    if (!url) return;
-    setIsFetchingUrl(true);
-    setError('');
+    const url = urlValue.trim()
+    if (!url) return
+    setIsFetchingUrl(true)
+    setError('')
     try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`);
-      const text = await res.text();
-      setJsonInput(text);
-      setOutput('');
-      setResult(null);
-      setUrlInputVisible(false);
-      setUrlValue('');
+      const res = await fetch(url)
+      if (!res.ok) throw new Error(`HTTP ${res.status}: ${res.statusText}`)
+      const text = await res.text()
+      setJsonInput(text)
+      setOutput('')
+      setResult(null)
+      setUrlInputVisible(false)
+      setUrlValue('')
     } catch (err) {
-      const msg = err instanceof Error ? err.message : 'Failed to fetch URL';
+      const msg = err instanceof Error ? err.message : 'Failed to fetch URL'
       setError(
         msg.includes('Failed to fetch') || msg.includes('NetworkError')
           ? `Could not fetch URL — the server may not allow cross-origin requests (CORS). Try downloading the file and uploading it instead.`
           : msg
-      );
+      )
     } finally {
-      setIsFetchingUrl(false);
+      setIsFetchingUrl(false)
     }
-  }, [urlValue]);
+  }, [urlValue])
 
   const handleDownloadResults = useCallback(() => {
-    if (!output) return;
-    const blob = new Blob([output], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'jsonpath-results.json';
-    a.click();
-    URL.revokeObjectURL(url);
-  }, [output]);
+    if (!output) return
+    const blob = new Blob([output], { type: 'application/json' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = 'jsonpath-results.json'
+    a.click()
+    URL.revokeObjectURL(url)
+  }, [output])
 
-  const getCharacterCount = (text: string): number => text.length;
+  const getCharacterCount = (text: string): number => text.length
 
   const getLineCount = (text: string): number => {
-    if (!text) return 0;
-    return text.split('\n').length;
-  };
+    if (!text) return 0
+    return text.split('\n').length
+  }
 
   // Parse JSON safely, applying sort if configured
   const parsedJsonData = useMemo(() => {
-    if (!jsonInput.trim()) return null;
+    if (!jsonInput.trim()) return null
     try {
-      const parsed = JSON.parse(jsonInput);
-      return options.sortKeys !== 'none' ? sortObjectKeys(parsed, options.sortKeys) : parsed;
+      const parsed = JSON.parse(jsonInput)
+      return options.sortKeys !== 'none' ? sortObjectKeys(parsed, options.sortKeys) : parsed
     } catch {
-      return null;
+      return null
     }
-  }, [jsonInput, options.sortKeys]);
+  }, [jsonInput, options.sortKeys])
 
   // Create output tabs - Always show both tabs
   const outputTabs: CodeOutputTab[] = useMemo(() => {
@@ -228,96 +232,109 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
         id: 'tree',
         label: 'Tree View',
         value: '',
-        language: 'json'
+        language: 'json',
       },
       {
         id: 'results',
         label: 'Results',
         value: output || '',
-        language: 'json'
-      }
-    ];
-  }, [output]);
+        language: 'json',
+      },
+    ]
+  }, [output])
 
-  const selectedOutputTab = outputTabs.find(tab => tab.id === activeTab)?.id
-    ?? outputTabs.find(tab => tab.id === 'tree')?.id
-    ?? outputTabs[0]?.id
-    ?? activeTab;
+  const selectedOutputTab =
+    outputTabs.find((tab) => tab.id === activeTab)?.id ??
+    outputTabs.find((tab) => tab.id === 'tree')?.id ??
+    outputTabs[0]?.id ??
+    activeTab
 
   // Tree View expand/collapse controls registered by JsonTreeView (used by footer buttons)
-  const [treeExpandAll, setTreeExpandAll] = useState<(() => void) | null>(null);
-  const [treeCollapseAll, setTreeCollapseAll] = useState<(() => void) | null>(null);
-  const registerTreeExpandAll = useCallback((fn: () => void) => setTreeExpandAll(() => fn), []);
-  const registerTreeCollapseAll = useCallback((fn: () => void) => setTreeCollapseAll(() => fn), []);
+  const [treeExpandAll, setTreeExpandAll] = useState<(() => void) | null>(null)
+  const [treeCollapseAll, setTreeCollapseAll] = useState<(() => void) | null>(null)
+  const registerTreeExpandAll = useCallback((fn: () => void) => setTreeExpandAll(() => fn), [])
+  const registerTreeCollapseAll = useCallback((fn: () => void) => setTreeCollapseAll(() => fn), [])
   const handleTreeExpandAll = useCallback(() => {
-    treeExpandAll?.();
-  }, [treeExpandAll]);
+    treeExpandAll?.()
+  }, [treeExpandAll])
   const handleTreeCollapseAll = useCallback(() => {
-    treeCollapseAll?.();
-  }, [treeCollapseAll]);
+    treeCollapseAll?.()
+  }, [treeCollapseAll])
 
-  const treeHighlightedPaths = useMemo(() => result?.paths || [], [result]);
+  const treeHighlightedPaths = useMemo(() => result?.paths || [], [result])
 
   const handleTreePathClick = useCallback((path: string) => {
-    navigator.clipboard.writeText(path).catch(console.error);
-  }, []);
+    navigator.clipboard.writeText(path).catch(console.error)
+  }, [])
 
   const handleRegisterGetExpandedJson = useCallback((fn: () => string) => {
-    setGetExpandedJson(() => fn);
-  }, []);
+    setGetExpandedJson(() => fn)
+  }, [])
 
   // Custom tab content renderer
-  const renderCustomTabContent = useCallback((tabId: string): React.ReactNode => {
-    if (tabId === 'tree') {
-      if (parsedJsonData !== null) {
+  const renderCustomTabContent = useCallback(
+    (tabId: string): React.ReactNode => {
+      if (tabId === 'tree') {
+        if (parsedJsonData !== null) {
+          return (
+            <div className="h-full w-full">
+              <JsonTreeView
+                data={parsedJsonData}
+                highlightedPaths={treeHighlightedPaths}
+                onPathClick={handleTreePathClick}
+                onGetExpandedJson={handleRegisterGetExpandedJson}
+                maxDepth={3}
+                theme={theme}
+                searchTerm={treeSearchTerm}
+                onExpandAll={registerTreeExpandAll}
+                onCollapseAll={registerTreeCollapseAll}
+              />
+            </div>
+          )
+        }
         return (
-          <div className="h-full w-full">
-            <JsonTreeView
-              data={parsedJsonData}
-              highlightedPaths={treeHighlightedPaths}
-              onPathClick={handleTreePathClick}
-              onGetExpandedJson={handleRegisterGetExpandedJson}
-              maxDepth={3}
-              theme={theme}
-              searchTerm={treeSearchTerm}
-              onExpandAll={registerTreeExpandAll}
-              onCollapseAll={registerTreeCollapseAll}
-            />
+          <div className="flex h-full w-full items-center justify-center text-neutral-500 dark:text-neutral-400">
+            <div className="text-center">
+              <p className="text-sm">Enter JSON data to view the tree structure</p>
+            </div>
           </div>
-        );
+        )
       }
-      return (
-        <div className="h-full w-full flex items-center justify-center text-neutral-500 dark:text-neutral-400">
-          <div className="text-center">
-            <p className="text-sm">Enter JSON data to view the tree structure</p>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  }, [parsedJsonData, treeHighlightedPaths, handleTreePathClick, handleRegisterGetExpandedJson, theme, treeSearchTerm, registerTreeExpandAll, registerTreeCollapseAll]);
+      return null
+    },
+    [
+      parsedJsonData,
+      treeHighlightedPaths,
+      handleTreePathClick,
+      handleRegisterGetExpandedJson,
+      theme,
+      treeSearchTerm,
+      registerTreeExpandAll,
+      registerTreeCollapseAll,
+    ]
+  )
 
   // Custom copy handler for tree view
   const handleTreeViewCopy = useCallback(async (): Promise<string | null> => {
     if (selectedOutputTab === 'tree') {
       if (getExpandedJson) {
         try {
-          const json = getExpandedJson();
-          return json || '';
+          const json = getExpandedJson()
+          return json || ''
         } catch {
-          return null;
+          return null
         }
       }
-      return '';
+      return ''
     }
-    return null;
-  }, [selectedOutputTab, getExpandedJson]);
+    return null
+  }, [selectedOutputTab, getExpandedJson])
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           JSON Path Finder
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -326,8 +343,8 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* JSONPath Input */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="jsonpath-input" className="text-sm font-medium">
@@ -341,8 +358,8 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                 onChange={(e) => setPathInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    handleEvaluate();
+                    e.preventDefault()
+                    handleEvaluate()
                   }
                 }}
                 className="flex-1 font-mono text-sm"
@@ -356,7 +373,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               >
                 {isEvaluating ? (
                   <>
-                    <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
                     Evaluating...
                   </>
                 ) : (
@@ -365,16 +382,12 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-10 px-3 text-xs"
-                  >
+                  <Button variant="outline" size="sm" className="h-10 px-3 text-xs">
                     Patterns
-                    <ChevronDownIcon className="h-3 w-3 ml-1" />
+                    <ChevronDownIcon className="ml-1 h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto w-64">
+                <DropdownMenuContent align="end" className="max-h-[300px] w-64 overflow-y-auto">
                   {JSON_PATH_COMMON_PATTERNS.map((pattern, index) => (
                     <DropdownMenuItem
                       key={index}
@@ -382,15 +395,13 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                       className="flex flex-col items-start gap-1"
                     >
                       <span className="font-mono text-xs">{pattern.pattern}</span>
-                      <span className="text-xs text-muted-foreground">{pattern.description}</span>
+                      <span className="text-muted-foreground text-xs">{pattern.description}</span>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Press Ctrl+Enter (Cmd+Enter on Mac) to evaluate
-            </p>
+            <p className="text-muted-foreground text-xs">Press Ctrl+Enter (Cmd+Enter on Mac) to evaluate</p>
           </div>
 
           {/* URL Loader (shown when "From URL" is active) */}
@@ -401,10 +412,13 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                 value={urlValue}
                 onChange={(e) => setUrlValue(e.target.value)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter') handleLoadUrl();
-                  if (e.key === 'Escape') { setUrlInputVisible(false); setUrlValue(''); }
+                  if (e.key === 'Enter') handleLoadUrl()
+                  if (e.key === 'Escape') {
+                    setUrlInputVisible(false)
+                    setUrlValue('')
+                  }
                 }}
-                className="flex-1 font-mono text-sm h-9"
+                className="h-9 flex-1 font-mono text-sm"
                 autoFocus
               />
               <Button
@@ -414,14 +428,13 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                 size="sm"
                 className="h-9 px-4"
               >
-                {isFetchingUrl ? (
-                  <ArrowPathIcon className="h-4 w-4 animate-spin" />
-                ) : (
-                  'Load'
-                )}
+                {isFetchingUrl ? <ArrowPathIcon className="h-4 w-4 animate-spin" /> : 'Load'}
               </Button>
               <Button
-                onClick={() => { setUrlInputVisible(false); setUrlValue(''); }}
+                onClick={() => {
+                  setUrlInputVisible(false)
+                  setUrlValue('')
+                }}
                 variant="ghost"
                 size="sm"
                 className="h-9 px-2"
@@ -432,9 +445,10 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
           )}
 
           {/* Side-by-side Editor Panels */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Input Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="JSON Input"
               value={jsonInput}
               onChange={setJsonInput}
@@ -451,7 +465,7 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                         Load Examples
-                        <ChevronDownIcon className="h-3 w-3 ml-1" />
+                        <ChevronDownIcon className="ml-1 h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto">
@@ -462,12 +476,8 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                           className="flex flex-col items-start gap-1"
                         >
                           <span className="font-medium">{example.name}</span>
-                          <span className="text-xs text-muted-foreground font-mono">
-                            {example.path}
-                          </span>
-                          <span className="text-xs text-muted-foreground">
-                            {example.description}
-                          </span>
+                          <span className="text-muted-foreground font-mono text-xs">{example.path}</span>
+                          <span className="text-muted-foreground text-xs">{example.description}</span>
                         </DropdownMenuItem>
                       ))}
                     </DropdownMenuContent>
@@ -476,10 +486,10 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                   <LoadFileButton
                     accept=".json,application/json,text/plain"
                     onFileLoad={(content) => {
-                      setJsonInput(content);
-                      setError('');
-                      setOutput('');
-                      setResult(null);
+                      setJsonInput(content)
+                      setError('')
+                      setOutput('')
+                      setResult(null)
                     }}
                   />
 
@@ -487,20 +497,19 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                     variant={urlInputVisible ? 'default' : 'outline'}
                     size="sm"
                     className="h-8 px-3 text-xs"
-                    onClick={() => setUrlInputVisible(v => !v)}
+                    onClick={() => setUrlInputVisible((v) => !v)}
                   >
-                    <LinkIcon className="h-3.5 w-3.5 mr-1" />
+                    <LinkIcon className="mr-1 h-3.5 w-3.5" />
                     From URL
                   </Button>
                 </div>
               }
-              footerLeftContent={
-                <span>{getCharacterCount(jsonInput)} characters</span>
-              }
+              footerLeftContent={<span>{getCharacterCount(jsonInput)} characters</span>}
             />
 
             {/* Output Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               tabs={outputTabs}
               activeTab={selectedOutputTab}
               onTabChange={setActiveTab}
@@ -517,29 +526,24 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                   {selectedOutputTab === 'tree' && result ? (
                     <span
                       className={cn(
-                        'px-2.5 py-1 rounded-full text-xs font-semibold shrink-0',
+                        'shrink-0 rounded-full px-2.5 py-1 text-xs font-semibold',
                         result.success && result.count > 0
-                          ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
+                          ? 'border border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300'
                           : result.success && result.count === 0
-                          ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
-                          : ''
+                            ? 'border border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-950/30 dark:text-orange-300'
+                            : ''
                       )}
                     >
                       {result.success && result.count > 0
                         ? `Found ${result.count} match${result.count !== 1 ? 'es' : ''}`
                         : result.success && result.count === 0
-                        ? 'No matches found'
-                        : ''}
+                          ? 'No matches found'
+                          : ''}
                     </span>
                   ) : null}
                   {selectedOutputTab === 'results' && output ? (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 text-xs"
-                      onClick={handleDownloadResults}
-                    >
-                      <ArrowDownTrayIcon className="h-3.5 w-3.5 mr-1" />
+                    <Button variant="outline" size="sm" className="h-8 px-3 text-xs" onClick={handleDownloadResults}>
+                      <ArrowDownTrayIcon className="mr-1 h-3.5 w-3.5" />
                       Download
                     </Button>
                   ) : undefined}
@@ -550,10 +554,10 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                   <Select
                     value={options.sortKeys}
                     onValueChange={(value: 'none' | 'asc' | 'desc') =>
-                      setOptions(prev => ({ ...prev, sortKeys: value }))
+                      setOptions((prev) => ({ ...prev, sortKeys: value }))
                     }
                   >
-                    <SelectTrigger className="h-8 text-xs w-[150px] shrink-0">
+                    <SelectTrigger className="h-8 w-[150px] shrink-0 text-xs">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -567,42 +571,47 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
                 ) : undefined
               }
               footerLeftContent={
-                <div className="flex-1 flex items-center gap-2">
+                <div className="flex flex-1 items-center gap-2">
                   {selectedOutputTab === 'tree' && (
                     <>
-                      <div className="flex-1 relative min-w-0">
-                        <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" aria-hidden="true" />
+                      <div className="relative min-w-0 flex-1">
+                        <MagnifyingGlassIcon
+                          className="pointer-events-none absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 text-neutral-400"
+                          aria-hidden="true"
+                        />
                         <Input
                           type="text"
                           placeholder="Search keys, values, or paths..."
                           value={treeSearchTerm}
                           onChange={(e) => setTreeSearchTerm(e.target.value)}
-                          className="pl-8 h-8 text-sm w-full"
+                          className="h-8 w-full pl-8 text-sm"
                         />
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleTreeExpandAll}
-                        className="h-8 px-2 text-xs shrink-0"
+                        className="h-8 shrink-0 px-2 text-xs"
                       >
-                        <ArrowsPointingOutIcon className="h-3 w-3 mr-1" />
+                        <ArrowsPointingOutIcon className="mr-1 h-3 w-3" />
                         Expand All
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleTreeCollapseAll}
-                        className="h-8 px-2 text-xs shrink-0"
+                        className="h-8 shrink-0 px-2 text-xs"
                       >
-                        <ArrowsPointingInIcon className="h-3 w-3 mr-1" />
+                        <ArrowsPointingInIcon className="mr-1 h-3 w-3" />
                         Collapse All
                       </Button>
                     </>
                   )}
                   {selectedOutputTab === 'results' && output && result && (
                     <>
-                      <span>{result.count} match{result.count !== 1 ? 'es' : ''}</span>
+                      <span>
+                        {result.count} match{result.count !== 1 ? 'es' : ''}
+                      </span>
                       <span>{getCharacterCount(output)} characters</span>
                       <span>{getLineCount(output)} lines</span>
                     </>
@@ -614,15 +623,12 @@ export function JsonPathFinder({ className, instanceId }: JsonPathFinderProps) {
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+            <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+              <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           )}
-
         </div>
       </div>
     </div>
-  );
+  )
 }
