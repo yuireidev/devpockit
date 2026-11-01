@@ -366,7 +366,7 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
                 id="command-palette-results"
                 role="listbox"
                 aria-label="Pinned and recent tools"
-                className="scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent dark:scrollbar-thumb-neutral-600 max-h-full space-y-1 overflow-y-auto"
+                className="max-h-full scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent space-y-1 overflow-y-auto dark:scrollbar-thumb-neutral-600"
                 ref={resultsRef}
               >
                 <div
@@ -401,7 +401,7 @@ export function CommandPalette({ open, onOpenChange, onToolSelect }: CommandPale
                 id="command-palette-results"
                 role="listbox"
                 aria-label="Search results"
-                className="scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent dark:scrollbar-thumb-neutral-600 max-h-full space-y-1 overflow-y-auto"
+                className="max-h-full scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent space-y-1 overflow-y-auto dark:scrollbar-thumb-neutral-600"
                 ref={resultsRef}
               >
                 <div
