@@ -65,12 +65,11 @@ a patch bump. No special path.
 
 | Workflow            | Trigger                                   | Action                                                                  |
 | ------------------- | ----------------------------------------- | ----------------------------------------------------------------------- |
-| `ci.yml`            | PR / push to `main`                       | Lint, type-check, test, build                                           |
+| `ci.yml`            | PR / push to `main`                       | Lint, type-check, test, build; PR builds upload a preview artifact      |
 | `version-check.yml` | Tag push; PR into `main`                  | Tag matches `package.json`; `release/*` PRs must bump                   |
 | `auto-tag.yml`      | Push to `main`                            | Tag merge commit when `package.json` is newer, then run release         |
 | `release.yml`       | Tag push, manual dispatch, `auto-tag.yml` | Build + GitHub Release (no deploy)                                      |
 | `deploy.yml`        | Manual dispatch                           | Build + deploy to Pages for a chosen tag (works upstream and for forks) |
-| `preview.yml`       | PR into `main`                            | Build + upload artifact (no Pages deploy)                               |
 
 ## Rollback
 

@@ -14,6 +14,9 @@ on:
       - opened
       - synchronize
       - reopened
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -33,8 +36,9 @@ jobs:
           echo "version $TAG matches"
       - name: Release branch must bump version
         if: github.event_name == 'pull_request'
+        env:
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
-          HEAD_BRANCH="${{ github.event.pull_request.head.ref }}"
           case "$HEAD_BRANCH" in
             release/*|chore/release-*) ;;
             *)
