@@ -123,8 +123,8 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
       case 'python-list': {
         // Single line Python list with single quotes
         const formatted = values.map((item) => {
-          // Escape single quotes in the item
-          const escaped = item.replace(/'/g, "\\'")
+          // Escape backslashes and single quotes in the item
+          const escaped = item.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
           // Check if it's a number
           const num = Number(item)
           if (!isNaN(num) && item.trim() === num.toString()) {
@@ -138,8 +138,8 @@ export function ListComparison({ className, instanceId }: ListComparisonProps) {
       case 'javascript-array': {
         // Single line JavaScript array with single quotes
         const formatted = values.map((item) => {
-          // Escape single quotes in the item
-          const escaped = item.replace(/'/g, "\\'")
+          // Escape backslashes and single quotes in the item
+          const escaped = item.replace(/\\/g, '\\\\').replace(/'/g, "\\'")
           // Check if it's a number
           const num = Number(item)
           if (!isNaN(num) && item.trim() === num.toString()) {
