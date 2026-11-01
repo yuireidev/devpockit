@@ -116,7 +116,7 @@ export function TopNavTabs({
       {/* Scrollable tabs container */}
       <div
         ref={scrollContainerRef}
-        className="scrollbar-thin scrollbar-thumb-neutral-300 dark:scrollbar-thumb-neutral-600 scrollbar-track-transparent flex flex-1 items-center overflow-x-auto"
+        className="flex flex-1 scrollbar-thin scrollbar-thumb-neutral-300 scrollbar-track-transparent items-center overflow-x-auto dark:scrollbar-thumb-neutral-600"
         style={{ scrollbarWidth: 'thin' }}
       >
         {tabs.map((tab) => {
