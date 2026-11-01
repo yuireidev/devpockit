@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- CSV ↔ Markdown Table Converter: convert CSV or spreadsheet paste (TSV) to GitHub-flavored Markdown tables and back to CSV/TSV, with header synthesis, alignment, BOM/CRLF handling, escape-aware round-trips, and non-blocking parse warnings
+
+### Planned
+
+- Additional developer tools
+- Performance optimizations
+- Enhanced accessibility features
+- Internationalization support
+
 ## [0.4.0] - 2026-11-01
 
 ### Changed
@@ -15,13 +26,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Standardized formatting and added CI checks for formatting and changed files.
 - Updated deployment and release workflows to use Node.js 26.
 - Added agent-agnostic workflow documentation and Playwright guidance.
-
-### Planned
-
-- Additional developer tools
-- Performance optimizations
-- Enhanced accessibility features
-- Internationalization support
 
 ## [0.3.1] - 2026-10-20
 

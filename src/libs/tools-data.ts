@@ -28,6 +28,7 @@ import {
   Database,
   ClipboardPaste,
   Cookie,
+  Table,
   type LucideIcon,
 } from 'lucide-react'
 
@@ -68,6 +69,7 @@ export const toolIcons: Record<string, LucideIcon> = {
   'hash-generator': Hash,
   'http-status-cheatsheet': ListOrdered,
   'headers-cookies-explainer': Cookie,
+  'csv-markdown-converter': Table,
 }
 
 export const toolCategories: ToolCategory[] = [
@@ -409,6 +411,19 @@ export const toolCategories: ToolCategory[] = [
         component: 'NumberBaseConverter',
         supportsDesktop: true,
         supportsMobile: true,
+      },
+      {
+        id: 'csv-markdown-converter',
+        name: 'CSV ↔ Markdown Table Converter',
+        description: 'Convert CSV or spreadsheet paste (TSV) to GitHub-flavored Markdown tables — and back to CSV/TSV',
+        category: 'converters',
+        icon: '📊',
+        isPopular: false,
+        path: '/tools/converters/csv-markdown-converter',
+        component: 'CsvMarkdownConverter',
+        supportsDesktop: true,
+        supportsMobile: true,
+        desktopRecommended: true,
       },
     ],
   },
