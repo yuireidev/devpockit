@@ -4,22 +4,27 @@ import type {
   CsvMarkdownOutputFormat,
 } from '@/config/csv-markdown-converter-config'
 
+/** How the input table is encoded. */
 export type TableInputKind = 'tsv' | 'csv' | 'markdown'
 
+/** Categories of non-blocking parse and rendering warnings. */
 export type CsvMarkdownWarningCode =
   'unclosed-quote' | 'quote-in-unquoted-field' | 'ragged-rows' | 'blank-header' | 'tsv-cell-collapsed'
 
+/** A field or shape problem found while parsing or rendering, surfaced instead of blocking. */
 export interface CsvMarkdownWarning {
   code: CsvMarkdownWarningCode
   message: string
   line?: number
 }
 
+/** Number of retained body rows and columns in the converted table. */
 export interface CsvMarkdownStats {
   rows: number
   cols: number
 }
 
+/** Outcome of a conversion; `output` is populated only when `success` is true. */
 export interface CsvMarkdownResult {
   output: string
   success: boolean
@@ -32,8 +37,8 @@ export interface CsvMarkdownResult {
 /** Hard cap for any input, independent of the live-preview threshold. */
 const MAX_INPUT_BYTES = 10 * 1024 * 1024
 /** Inputs above this size or row count require an explicit Convert action. */
-export const LIVE_PREVIEW_LIMIT_BYTES = 2 * 1024 * 1024
-export const LIVE_PREVIEW_ROW_LIMIT = 50_000
+const LIVE_PREVIEW_LIMIT_BYTES = 2 * 1024 * 1024
+const LIVE_PREVIEW_ROW_LIMIT = 50_000
 
 const TRAILING_NEWLINE = '\n'
 
@@ -74,9 +79,13 @@ function countPhysicalLines(text: string): number {
  * conservative physical-line proxy so it stays cheap; quoted newlines may pause early,
  * which is safe because the explicit Convert action is always available.
  */
-export function isLargeInput(text: string): boolean {
+export function isLargeInput(text: string, firstRowIsHeader = true): boolean {
   if (utf8ByteLength(text) > LIVE_PREVIEW_LIMIT_BYTES) return true
-  return text.length >= LIVE_PREVIEW_ROW_LIMIT && countPhysicalLines(text) > LIVE_PREVIEW_ROW_LIMIT
+  if (text.length < LIVE_PREVIEW_ROW_LIMIT) return false
+
+  const lines = countPhysicalLines(stripTrailingBlankLines(normalizeInput(text)))
+  const dataRows = Math.max(0, lines - (firstRowIsHeader ? 1 : 0))
+  return dataRows > LIVE_PREVIEW_ROW_LIMIT
 }
 
 function stripTrailingBlankLines(text: string): string {
@@ -305,11 +314,20 @@ function alignmentMarker(width: number, alignment: CsvMarkdownAlignment): string
   return '-'.repeat(Math.max(3, width))
 }
 
+const RAGGED_ROWS_MESSAGE = 'Some rows had fewer cells than the widest row; they were padded with empty cells.'
+
+function padRaggedRows(rows: string[][]): { rows: string[][]; padded: boolean } {
+  const cols = rows.reduce((max, row) => Math.max(max, row.length), 0)
+  const padded = rows.some((row) => row.length < cols)
+  if (!padded) return { rows, padded }
+  return { rows: rows.map((row) => [...row, ...Array(cols - row.length).fill('')]), padded }
+}
+
+/** Rendered GFM table plus the warnings and retained body dimensions. */
 export interface MarkdownTableResult {
   output: string
   warnings: CsvMarkdownWarning[]
-  rows: number
-  cols: number
+  stats: CsvMarkdownStats
 }
 
 /** Builds a GFM table, synthesizing header names and reporting data-shaping warnings. */
@@ -317,29 +335,23 @@ export function toMarkdown(rows: string[][], options: CsvMarkdownConverterOption
   if (rows.length === 0) throw new Error('No data rows to convert.')
 
   const warnings: CsvMarkdownWarning[] = []
-  const headerSource = options.firstRowIsHeader ? rows[0] : null
-  let body = options.firstRowIsHeader ? rows.slice(1) : rows
+  const { rows: paddedRows, padded } = padRaggedRows(rows)
+  const cols = paddedRows[0]?.length ?? 0
+  if (cols === 0) throw new Error('No columns to convert.')
+  if (padded) warnings.push({ code: 'ragged-rows', message: RAGGED_ROWS_MESSAGE })
+
+  const headerSource = options.firstRowIsHeader ? paddedRows[0] : null
+  let body = options.firstRowIsHeader ? paddedRows.slice(1) : paddedRows
 
   if (options.skipEmptyRows) {
     body = body.filter((row) => row.some((cell) => cell.trim().length > 0))
   }
 
-  const cols = rows.reduce((max, row) => Math.max(max, row.length), 0)
-  if (cols === 0) throw new Error('No columns to convert.')
-
-  if (rows.some((row) => row.length < cols)) {
-    warnings.push({
-      code: 'ragged-rows',
-      message: 'Some rows had fewer cells than the widest row; they were padded with empty cells.',
-    })
-  }
-
-  const padRow = (row: string[]) => [...row, ...Array(Math.max(0, cols - row.length)).fill('')]
   const isBlank = (cell: string) => cell.trim().length === 0
 
   let header: string[]
   if (headerSource) {
-    header = padRow(headerSource)
+    header = [...headerSource]
     const blankHeader = header.some(isBlank)
     header = header.map((cell, index) => (isBlank(cell) ? `Column ${index + 1}` : cell))
     if (blankHeader) {
@@ -356,7 +368,6 @@ export function toMarkdown(rows: string[][], options: CsvMarkdownConverterOption
     })
   }
 
-  body = body.map(padRow)
   const escapedHeader = header.map(escapeMarkdownCell)
   const escapedBody = body.map((row) => row.map(escapeMarkdownCell))
 
@@ -380,14 +391,7 @@ export function toMarkdown(rows: string[][], options: CsvMarkdownConverterOption
     ...escapedBody.map(render),
   ].join('\n')
 
-  return { output, warnings, rows: body.length, cols }
-}
-
-function padRaggedRows(rows: string[][]): { rows: string[][]; padded: boolean } {
-  const cols = rows.reduce((max, row) => Math.max(max, row.length), 0)
-  const padded = rows.some((row) => row.length < cols)
-  if (!padded) return { rows, padded }
-  return { rows: rows.map((row) => [...row, ...Array(cols - row.length).fill('')]), padded }
+  return { output, warnings, stats: { rows: body.length, cols } }
 }
 
 function quoteCsvCell(cell: string): string {
@@ -400,6 +404,7 @@ export function toCSV(rows: string[][]): string {
   return rows.map((row) => row.map(quoteCsvCell).join(',')).join('\n')
 }
 
+/** TSV output plus the number of cells whose tabs or line breaks were collapsed. */
 export interface TsvResult {
   output: string
   collapsed: number
@@ -442,7 +447,7 @@ export function convertCsvMarkdown(input: string, options: CsvMarkdownConverterO
       if (parsed.padded) {
         warnings.push({
           code: 'ragged-rows',
-          message: 'Some rows had fewer cells than the widest row; they were padded with empty cells.',
+          message: RAGGED_ROWS_MESSAGE,
         })
       }
       const rows = parsed.rows
@@ -492,7 +497,7 @@ export function convertCsvMarkdown(input: string, options: CsvMarkdownConverterO
       success: true,
       detectedInput: kind,
       warnings,
-      stats: { rows: table.rows, cols: table.cols },
+      stats: table.stats,
     }
   } catch (error) {
     return fail(error instanceof Error ? error.message : 'Conversion failed')

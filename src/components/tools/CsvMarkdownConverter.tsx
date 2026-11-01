@@ -29,6 +29,7 @@ interface CsvMarkdownConverterProps {
   instanceId: string
 }
 
+/** Bidirectional CSV/TSV to GFM Markdown table converter. */
 export function CsvMarkdownConverter({ className, instanceId }: CsvMarkdownConverterProps) {
   const { toolState, updateToolState } = useToolState('csv-markdown-converter', instanceId)
 
@@ -49,7 +50,7 @@ export function CsvMarkdownConverter({ className, instanceId }: CsvMarkdownConve
   const [outputWrap, setOutputWrap] = useState(true)
 
   const isMdToCsv = options.direction === 'md-to-csv'
-  const isLarge = useMemo(() => isLargeInput(input), [input])
+  const isLarge = useMemo(() => isLargeInput(input, options.firstRowIsHeader), [input, options.firstRowIsHeader])
 
   useEffect(() => {
     updateToolState({ options, input, output, error, warnings, stats, detected })
@@ -89,7 +90,7 @@ export function CsvMarkdownConverter({ className, instanceId }: CsvMarkdownConve
 
   const handleInputChange = (value: string) => {
     setInput(value)
-    if (!value.trim() || isLargeInput(value)) {
+    if (!value.trim() || isLargeInput(value, options.firstRowIsHeader)) {
       clearResult()
     }
   }

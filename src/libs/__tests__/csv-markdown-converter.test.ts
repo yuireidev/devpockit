@@ -2,6 +2,7 @@ import { DEFAULT_CSV_MARKDOWN_OPTIONS } from '@/config/csv-markdown-converter-co
 import {
   convertCsvMarkdown,
   detectTableInput,
+  isLargeInput,
   parseCSV,
   parseMarkdownTable,
   parseTSV,
@@ -41,6 +42,22 @@ describe('detectTableInput', () => {
 
   it('keeps quote state across lines when looking for an unquoted tab', () => {
     expect(detectTableInput('"a\n\tb",c\n1,2')).toBe('csv')
+  })
+})
+
+describe('isLargeInput', () => {
+  const tableWithDataRows = (dataRows: number) => 'h\n' + Array.from({ length: dataRows }, () => 'x').join('\n')
+
+  it('keeps exactly the row limit on live preview', () => {
+    expect(isLargeInput(tableWithDataRows(50_000))).toBe(false)
+  })
+
+  it('pauses live preview above the row limit', () => {
+    expect(isLargeInput(tableWithDataRows(50_001))).toBe(true)
+  })
+
+  it('does not discount a header when the first row is data', () => {
+    expect(isLargeInput(tableWithDataRows(50_000), false)).toBe(true)
   })
 })
 
