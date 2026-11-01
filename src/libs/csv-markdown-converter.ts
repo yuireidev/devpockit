@@ -295,7 +295,12 @@ function escapeMarkdownCell(cell: string): string {
 }
 
 function markdownCellWidth(cell: string): number {
-  return cell.replace(/\\\\/g, '\\').replace(/\\\|/g, '|').length
+  let width = 0
+  for (let i = 0; i < cell.length; i++) {
+    if (cell[i] === '\\' && (cell[i + 1] === '\\' || cell[i + 1] === '|')) i++
+    width++
+  }
+  return width
 }
 
 function padCell(cell: string, width: number, alignment: CsvMarkdownAlignment): string {
