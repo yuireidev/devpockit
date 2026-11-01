@@ -1,4 +1,4 @@
-name: Preview
+name: 'CI: Preview Build'
 # Builds PRs and uploads artifact only (no Pages deploy — single site).
 # Download artifact from Actions tab to preview locally: npx serve out/
 on:

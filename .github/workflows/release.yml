@@ -1,6 +1,6 @@
 # Release: build + GitHub Release for a version. No Pages deploy (see deploy.yml).
 # Triggered by: tag push (v*), manual dispatch, or auto-tag.yml via workflow_call.
-name: Create Release
+name: 'Release: Publish'
 on:
   push:
     tags:

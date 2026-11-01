@@ -1,4 +1,4 @@
-name: Format Check
+name: 'CI: Formatting'
 
 on:
   push:

@@ -2,7 +2,7 @@
 # - Tag push: tag must equal package.json (tag is truth, package.json mirrors it).
 # - PR into main: only release/* or chore/release-* head branches must bump the
 #   version above the latest tag. Feature/fix PRs skip (fail-closed for releases).
-name: Version Check
+name: 'Release: Version Check'
 on:
   push:
     tags:
