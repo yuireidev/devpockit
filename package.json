@@ -77,7 +77,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "cron-parser": "^5.10.2",
-    "diff": "^8.0.3",
+    "diff": "^9.0.0",
     "ipaddr.js": "^2.5.0",
     "jose": "^6.2.14",
     "jsqr": "^1.4.0",
