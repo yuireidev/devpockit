@@ -7,6 +7,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- CSV ↔ Markdown Table Converter: convert CSV or spreadsheet paste (TSV) to GitHub-flavored Markdown tables and back to CSV/TSV, with header synthesis, alignment, BOM/CRLF handling, escape-aware round-trips, and non-blocking parse warnings
+
 ### Planned
 
 - Additional developer tools

@@ -79,6 +79,7 @@ For detailed setup instructions, see [CONTRIBUTING.md](CONTRIBUTING.md).
 - **List Format Converter** - Convert lists between different formats
 - **Schema Converter** - Convert between JSON Schema, Spark Schema, TypeScript, Python, SQL
 - **Number Base Converter** - Convert between binary, octal, decimal, hexadecimal
+- **CSV ↔ Markdown Table Converter** - Convert CSV or spreadsheet paste to Markdown tables, and back to CSV/TSV
 
 ### Network Tools
 
