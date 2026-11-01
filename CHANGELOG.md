@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-11-01
+
+### Changed
+
+- Updated the app tooling stack, including Next.js, React state handling, ESLint, and production and development dependencies.
+- Standardized formatting and added CI checks for formatting and changed files.
+- Updated deployment and release workflows to use Node.js 26.
+- Added agent-agnostic workflow documentation and Playwright guidance.
+
 ### Planned
 
 - Additional developer tools
