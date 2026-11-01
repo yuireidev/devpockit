@@ -1,11 +1,46 @@
-export type NumberBase = 2 | 8 | 10 | 16 | 3 | 4 | 5 | 6 | 7 | 9 | 11 | 12 | 13 | 14 | 15 | 17 | 18 | 19 | 20 | 21 | 22 | 23 | 24 | 25 | 26 | 27 | 28 | 29 | 30 | 31 | 32 | 33 | 34 | 35 | 36;
+export type NumberBase =
+  | 2
+  | 8
+  | 10
+  | 16
+  | 3
+  | 4
+  | 5
+  | 6
+  | 7
+  | 9
+  | 11
+  | 12
+  | 13
+  | 14
+  | 15
+  | 17
+  | 18
+  | 19
+  | 20
+  | 21
+  | 22
+  | 23
+  | 24
+  | 25
+  | 26
+  | 27
+  | 28
+  | 29
+  | 30
+  | 31
+  | 32
+  | 33
+  | 34
+  | 35
+  | 36
 
 export interface BaseOption {
-  value: NumberBase;
-  label: string;
-  prefix: string;
-  description: string;
-  maxDigits?: number;
+  value: NumberBase
+  label: string
+  prefix: string
+  description: string
+  maxDigits?: number
 }
 
 export const SUPPORTED_BASES: BaseOption[] = [
@@ -13,23 +48,23 @@ export const SUPPORTED_BASES: BaseOption[] = [
   { value: 8, label: 'Octal', prefix: '0o', description: 'Base 8 (0-7)' },
   { value: 10, label: 'Decimal', prefix: '', description: 'Base 10 (0-9)' },
   { value: 16, label: 'Hexadecimal', prefix: '0x', description: 'Base 16 (0-9, A-F)' },
-];
+]
 
-export const CUSTOM_BASES: BaseOption[] = Array.from({ length: 20 }, (_, i) => i + 17).map(base => ({
+export const CUSTOM_BASES: BaseOption[] = Array.from({ length: 20 }, (_, i) => i + 17).map((base) => ({
   value: base as NumberBase,
   label: `Base ${base}`,
   prefix: '',
-  description: `Base ${base} (0-${String.fromCharCode(54 + base)})`
-}));
+  description: `Base ${base} (0-${String.fromCharCode(54 + base)})`,
+}))
 
-export const ALL_BASES: BaseOption[] = [...SUPPORTED_BASES, ...CUSTOM_BASES];
+export const ALL_BASES: BaseOption[] = [...SUPPORTED_BASES, ...CUSTOM_BASES]
 
 export interface NumberBaseOptions {
-  inputBase: NumberBase;
-  outputBases: NumberBase[];
-  showPrefix: boolean;
-  uppercase: boolean;
-  batchMode: boolean;
+  inputBase: NumberBase
+  outputBases: NumberBase[]
+  showPrefix: boolean
+  uppercase: boolean
+  batchMode: boolean
 }
 
 export const DEFAULT_OPTIONS: NumberBaseOptions = {
@@ -38,7 +73,7 @@ export const DEFAULT_OPTIONS: NumberBaseOptions = {
   showPrefix: true,
   uppercase: false,
   batchMode: false,
-};
+}
 
 export const BASE_EXAMPLES: Record<NumberBase, string[]> = {
   2: ['1010', '1111', '1000000', '11111111'],
@@ -76,17 +111,16 @@ export const BASE_EXAMPLES: Record<NumberBase, string[]> = {
   34: ['10', 'XX', '1000'],
   35: ['10', 'YY', '1000'],
   36: ['10', 'ZZ', '1000'],
-};
+}
 
 export const NUMBER_BASE_QUANTITY_LIMITS = {
   min: 1,
   max: 1000,
-  default: 1
-};
+  default: 1,
+}
 
 export const BIT_VISUALIZATION_OPTIONS = {
   maxBits: 64,
   groupSize: 8,
   showLabels: true,
-};
-
+}

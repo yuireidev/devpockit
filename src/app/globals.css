@@ -28,10 +28,10 @@
 
   /* Font Families */
   --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
-  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo,
-    Monaco, Consolas, 'Liberation Mono', 'Courier New', monospace;
-  --font-serif: var(--font-dm-serif), Georgia, Cambria, 'Times New Roman', Times,
-    serif;
+  --font-mono:
+    var(--font-geist-mono), ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, 'Liberation Mono', 'Courier New',
+    monospace;
+  --font-serif: var(--font-dm-serif), Georgia, Cambria, 'Times New Roman', Times, serif;
 
   /* Custom Colors using CSS variables for light/dark mode support */
   --color-border: hsl(var(--border));

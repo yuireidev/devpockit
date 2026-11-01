@@ -1,70 +1,70 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { CronFieldBuilder } from '@/components/tools/CronFieldBuilder';
-import { Button } from '@/components/ui/button';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LabeledInput } from '@/components/ui/labeled-input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { CronFieldBuilder } from '@/components/tools/CronFieldBuilder'
+import { Button } from '@/components/ui/button'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { LabeledInput } from '@/components/ui/labeled-input'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   CRON_PRESETS,
   DEFAULT_CRON_PARSER_OPTIONS,
   TIMEZONES,
   type CronParserOptions,
-  type CronFieldValue
-} from '@/config/cron-parser-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import { buildCronExpression, parseCronToBuilder, validateCronExpression } from '@/libs/cron-builder';
-import { EXPORT_FORMATS, exportCronExpression } from '@/libs/cron-exporter';
-import { parseCronExpression } from '@/libs/cron-parser';
-import { cn } from '@/libs/utils';
-import { ArrowDownTrayIcon, ChevronDownIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline';
-import { Check } from 'lucide-react';
-import { useEffect, useState } from 'react';
+  type CronFieldValue,
+} from '@/config/cron-parser-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { buildCronExpression, parseCronToBuilder, validateCronExpression } from '@/libs/cron-builder'
+import { EXPORT_FORMATS, exportCronExpression } from '@/libs/cron-exporter'
+import { parseCronExpression } from '@/libs/cron-parser'
+import { cn } from '@/libs/utils'
+import { ArrowDownTrayIcon, ChevronDownIcon, ClipboardDocumentIcon } from '@heroicons/react/24/outline'
+import { Check } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
 interface CronParserProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function CronParser({ className, instanceId }: CronParserProps) {
-  const { toolState, updateToolState } = useToolState('cron-parser', instanceId);
+  const { toolState, updateToolState } = useToolState('cron-parser', instanceId)
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options, setOptions] = useState<CronParserOptions>((toolState?.options as CronParserOptions) ?? (DEFAULT_CRON_PARSER_OPTIONS));
-  const [expression, setExpression] = useState<string>((toolState?.expression as string) ?? (''));
-  const [preview, setPreview] = useState<string>((toolState?.preview as string) ?? (''));
-  const [isValidating, setIsValidating] = useState(false);
-  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
+  const [options, setOptions] = useState<CronParserOptions>(
+    (toolState?.options as CronParserOptions) ?? DEFAULT_CRON_PARSER_OPTIONS
+  )
+  const [expression, setExpression] = useState<string>((toolState?.expression as string) ?? '')
+  const [preview, setPreview] = useState<string>((toolState?.preview as string) ?? '')
+  const [isValidating, setIsValidating] = useState(false)
+  const [error, setError] = useState<string>((toolState?.error as string) ?? '')
 
-  const [copied, setCopied] = useState(false);
-  const [exportFormat, setExportFormat] = useState<string>('plain');
-  const [compareTimezone, setCompareTimezone] = useState<string>((toolState?.compareTimezone as string) ?? ('UTC'));
-  const [nextRunCount, setNextRunCount] = useState<number>((toolState?.nextRunCount as number) ?? (5));
+  const [copied, setCopied] = useState(false)
+  const [exportFormat, setExportFormat] = useState<string>('plain')
+  const [compareTimezone, setCompareTimezone] = useState<string>((toolState?.compareTimezone as string) ?? 'UTC')
+  const [nextRunCount, setNextRunCount] = useState<number>((toolState?.nextRunCount as number) ?? 5)
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [wrapText, setWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [wrapText, setWrapText] = useState(true)
 
   // Hydrate state from toolState after mount (client-side only)
-
 
   // Update persistent state whenever local state changes
   useEffect(() => {
     updateToolState({
-        options,
-        expression,
-        preview,
-        error,
-        compareTimezone,
-        nextRunCount
-      });
+      options,
+      expression,
+      preview,
+      error,
+      compareTimezone,
+      nextRunCount,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, expression, preview, error, compareTimezone, nextRunCount]);
+  }, [options, expression, preview, error, compareTimezone, nextRunCount])
 
   // Reset local state when tool state is cleared
-
 
   const updatePreview = async (
     expr: string,
@@ -73,50 +73,50 @@ export function CronParser({ className, instanceId }: CronParserProps) {
     previewRunCount: number = nextRunCount
   ) => {
     if (!expr.trim()) {
-      setPreview('');
-      setError('');
-      return;
+      setPreview('')
+      setError('')
+      return
     }
 
-    setIsValidating(true);
-    setError('');
+    setIsValidating(true)
+    setError('')
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 200));
+      await new Promise((resolve) => setTimeout(resolve, 200))
 
-      const validation = validateCronExpression(expr);
+      const validation = validateCronExpression(expr)
       if (!validation.isValid) {
-        setError(validation.error || 'Invalid cron expression');
-        setPreview('');
-        return;
+        setError(validation.error || 'Invalid cron expression')
+        setPreview('')
+        return
       }
 
-      const timezone = previewOptions.timezone === 'local' ? undefined : previewOptions.timezone;
-      const runCount = previewRunCount === 0 ? 0 : previewRunCount;
-      const result = parseCronExpression(expr, runCount > 0 ? runCount : 1, timezone);
+      const timezone = previewOptions.timezone === 'local' ? undefined : previewOptions.timezone
+      const runCount = previewRunCount === 0 ? 0 : previewRunCount
+      const result = parseCronExpression(expr, runCount > 0 ? runCount : 1, timezone)
       if (result.isValid) {
-        let previewText = `📅 Human Readable:\n${result.humanReadable}\n\n`;
+        let previewText = `📅 Human Readable:\n${result.humanReadable}\n\n`
 
         if (result.nextRuns.length > 0 && runCount > 0) {
-          const cronTzLabel = previewOptions.timezone === 'local'
-            ? Intl.DateTimeFormat().resolvedOptions().timeZone
-            : previewOptions.timezone || 'UTC';
-          const compareTzLabel = previewTimezone === 'local'
-            ? Intl.DateTimeFormat().resolvedOptions().timeZone
-            : previewTimezone || 'UTC';
+          const cronTzLabel =
+            previewOptions.timezone === 'local'
+              ? Intl.DateTimeFormat().resolvedOptions().timeZone
+              : previewOptions.timezone || 'UTC'
+          const compareTzLabel =
+            previewTimezone === 'local' ? Intl.DateTimeFormat().resolvedOptions().timeZone : previewTimezone || 'UTC'
 
           // Check if timezones are the same
-          const cronTzValue = previewOptions.timezone === 'local'
-            ? Intl.DateTimeFormat().resolvedOptions().timeZone
-            : previewOptions.timezone || 'UTC';
-          const compareTzValue = previewTimezone === 'local'
-            ? Intl.DateTimeFormat().resolvedOptions().timeZone
-            : previewTimezone || 'UTC';
-          const timezonesMatch = cronTzValue === compareTzValue;
+          const cronTzValue =
+            previewOptions.timezone === 'local'
+              ? Intl.DateTimeFormat().resolvedOptions().timeZone
+              : previewOptions.timezone || 'UTC'
+          const compareTzValue =
+            previewTimezone === 'local' ? Intl.DateTimeFormat().resolvedOptions().timeZone : previewTimezone || 'UTC'
+          const timezonesMatch = cronTzValue === compareTzValue
 
-          previewText += `⏰ Next ${result.nextRuns.length} Execution Times:\n\n`;
+          previewText += `⏰ Next ${result.nextRuns.length} Execution Times:\n\n`
           result.nextRuns.forEach((run, index) => {
-            const date = new Date(run);
+            const date = new Date(run)
 
             // Format in cron timezone
             const cronFormatted = date.toLocaleString('en-US', {
@@ -128,14 +128,14 @@ export function CronParser({ className, instanceId }: CronParserProps) {
               minute: '2-digit',
               second: '2-digit',
               timeZoneName: 'short',
-              timeZone: timezone || undefined
-            });
+              timeZone: timezone || undefined,
+            })
 
-            previewText += `${index + 1}. Cron Timezone (${cronTzLabel}):\n   ${cronFormatted}\n`;
+            previewText += `${index + 1}. Cron Timezone (${cronTzLabel}):\n   ${cronFormatted}\n`
 
             // Only show comparison if timezones are different
             if (!timezonesMatch) {
-              const compareTz = previewTimezone === 'local' ? undefined : previewTimezone;
+              const compareTz = previewTimezone === 'local' ? undefined : previewTimezone
               const compareFormatted = date.toLocaleString('en-US', {
                 weekday: 'long',
                 year: 'numeric',
@@ -145,92 +145,93 @@ export function CronParser({ className, instanceId }: CronParserProps) {
                 minute: '2-digit',
                 second: '2-digit',
                 timeZoneName: 'short',
-                timeZone: compareTz || undefined
-              });
-              previewText += `   Compare Timezone (${compareTzLabel}):\n   ${compareFormatted}\n`;
+                timeZone: compareTz || undefined,
+              })
+              previewText += `   Compare Timezone (${compareTzLabel}):\n   ${compareFormatted}\n`
             }
 
-            previewText += '\n';
-          });
+            previewText += '\n'
+          })
         }
 
-        setPreview(previewText);
+        setPreview(previewText)
       } else {
-        setError(result.error || 'Invalid cron expression');
-        setPreview('');
+        setError(result.error || 'Invalid cron expression')
+        setPreview('')
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to validate cron expression');
-      setPreview('');
+      setError(err instanceof Error ? err.message : 'Failed to validate cron expression')
+      setPreview('')
     } finally {
-      setIsValidating(false);
+      setIsValidating(false)
     }
-  };
+  }
 
   const updateBuilderOptions = (nextOptions: CronParserOptions) => {
-    setOptions(nextOptions);
-    const nextExpression = buildCronExpression(nextOptions);
-    setExpression(nextExpression);
-    void updatePreview(nextExpression, nextOptions);
-  };
+    setOptions(nextOptions)
+    const nextExpression = buildCronExpression(nextOptions)
+    setExpression(nextExpression)
+    void updatePreview(nextExpression, nextOptions)
+  }
 
-  const handleLoadPreset = (preset: typeof CRON_PRESETS[0]) => {
-    updateBuilderOptions(preset.options);
-    setError('');
-  };
+  const handleLoadPreset = (preset: (typeof CRON_PRESETS)[0]) => {
+    updateBuilderOptions(preset.options)
+    setError('')
+  }
 
   const handleCopyExpression = async () => {
     if (expression) {
-      await navigator.clipboard.writeText(expression);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      await navigator.clipboard.writeText(expression)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
     }
-  };
+  }
 
   const handleExport = async () => {
-    if (!expression) return;
+    if (!expression) return
 
-    const exported = exportCronExpression(expression, exportFormat, options);
-    const blob = new Blob([exported], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    const format = EXPORT_FORMATS.find(f => f.id === exportFormat);
-    a.download = `cron-expression.${format?.extension || 'txt'}`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+    const exported = exportCronExpression(expression, exportFormat, options)
+    const blob = new Blob([exported], { type: 'text/plain' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    const format = EXPORT_FORMATS.find((f) => f.id === exportFormat)
+    a.download = `cron-expression.${format?.extension || 'txt'}`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }
 
   const updateField = (fieldName: keyof CronParserOptions, value: CronFieldValue) => {
-    updateBuilderOptions({ ...options, [fieldName]: value });
-  };
+    updateBuilderOptions({ ...options, [fieldName]: value })
+  }
 
   const handleExpressionInput = (value: string) => {
-    setExpression(value);
-    const parsed = parseCronToBuilder(value);
+    setExpression(value)
+    const parsed = parseCronToBuilder(value)
     if (parsed) {
-      setOptions(parsed);
+      setOptions(parsed)
     }
-    void updatePreview(value, parsed ?? options);
-  };
+    void updatePreview(value, parsed ?? options)
+  }
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           Cron Expression Parser
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
-          Build and parse cron expressions visually with a step-by-step form builder. Get real-time validation and preview.
+          Build and parse cron expressions visually with a step-by-step form builder. Get real-time validation and
+          preview.
         </p>
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-6 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-6">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Expression Display */}
@@ -251,36 +252,29 @@ export function CronParser({ className, instanceId }: CronParserProps) {
               >
                 {copied ? (
                   <>
-                    <Check className="h-4 w-4 mr-2" />
+                    <Check className="mr-2 h-4 w-4" />
                     Copied!
                   </>
                 ) : (
                   <>
-                    <ClipboardDocumentIcon className="h-4 w-4 mr-2" />
+                    <ClipboardDocumentIcon className="mr-2 h-4 w-4" />
                     Copy
                   </>
                 )}
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-10 px-3 text-xs"
-                  >
+                  <Button variant="outline" size="sm" className="h-10 px-3 text-xs">
                     Load Preset
-                    <ChevronDownIcon className="h-3 w-3 ml-1" />
+                    <ChevronDownIcon className="ml-1 h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto">
                   {CRON_PRESETS.map((preset, index) => (
-                    <DropdownMenuItem
-                      key={index}
-                      onClick={() => handleLoadPreset(preset)}
-                    >
+                    <DropdownMenuItem key={index} onClick={() => handleLoadPreset(preset)}>
                       <div className="flex flex-col">
                         <span>{preset.name}</span>
-                        <span className="text-xs text-muted-foreground font-mono">{preset.expression}</span>
+                        <span className="text-muted-foreground font-mono text-xs">{preset.expression}</span>
                       </div>
                     </DropdownMenuItem>
                   ))}
@@ -295,46 +289,46 @@ export function CronParser({ className, instanceId }: CronParserProps) {
               fieldName="minute"
               field={options.minute}
               onChange={(value) => updateField('minute', value)}
-              className="min-w-[480px] max-w-[480px]"
+              className="max-w-[480px] min-w-[480px]"
             />
             <CronFieldBuilder
               fieldName="hour"
               field={options.hour}
               onChange={(value) => updateField('hour', value)}
-              className="min-w-[480px] max-w-[480px]"
+              className="max-w-[480px] min-w-[480px]"
             />
             <CronFieldBuilder
               fieldName="day"
               field={options.day}
               onChange={(value) => updateField('day', value)}
-              className="min-w-[480px] max-w-[480px]"
+              className="max-w-[480px] min-w-[480px]"
             />
             <CronFieldBuilder
               fieldName="month"
               field={options.month}
               onChange={(value) => updateField('month', value)}
-              className="min-w-[480px] max-w-[480px]"
+              className="max-w-[480px] min-w-[480px]"
             />
             <CronFieldBuilder
               fieldName="weekday"
               field={options.weekday}
               onChange={(value) => updateField('weekday', value)}
-              className="min-w-[480px] max-w-[480px]"
+              className="max-w-[480px] min-w-[480px]"
             />
           </div>
 
           {/* Timezone Options */}
-          <div className="flex items-center gap-3 flex-nowrap">
+          <div className="flex flex-nowrap items-center gap-3">
             <Select
               value={nextRunCount === 0 ? 'none' : nextRunCount.toString()}
               onValueChange={(value) => {
                 if (value === 'none') {
-                  setNextRunCount(0);
-                  void updatePreview(expression, options, compareTimezone, 0);
+                  setNextRunCount(0)
+                  void updatePreview(expression, options, compareTimezone, 0)
                 } else {
-                  const count = parseInt(value);
-                  setNextRunCount(count);
-                  void updatePreview(expression, options, compareTimezone, count);
+                  const count = parseInt(value)
+                  setNextRunCount(count)
+                  void updatePreview(expression, options, compareTimezone, count)
                 }
               }}
             >
@@ -368,8 +362,8 @@ export function CronParser({ className, instanceId }: CronParserProps) {
             <Select
               value={compareTimezone}
               onValueChange={(value) => {
-                setCompareTimezone(value);
-                void updatePreview(expression, options, value);
+                setCompareTimezone(value)
+                void updatePreview(expression, options, value)
               }}
             >
               <SelectTrigger label="Compare Timezone:" className="w-[310px]" valueAlign="center">
@@ -386,7 +380,8 @@ export function CronParser({ className, instanceId }: CronParserProps) {
           </div>
 
           {/* Preview Panel */}
-          <CodePanel fillHeight={true}
+          <CodePanel
+            fillHeight={true}
             title="Preview"
             value={preview || (isValidating ? 'Validating...' : '// Build your cron expression above to see preview')}
             language="plaintext"
@@ -404,11 +399,8 @@ export function CronParser({ className, instanceId }: CronParserProps) {
             }
             footerRightContent={
               <div className="flex items-center gap-3">
-                <Select
-                  value={exportFormat}
-                  onValueChange={setExportFormat}
-                >
-                  <SelectTrigger className="min-w-[180px] h-8 text-xs">
+                <Select value={exportFormat} onValueChange={setExportFormat}>
+                  <SelectTrigger className="h-8 min-w-[180px] text-xs">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -426,7 +418,7 @@ export function CronParser({ className, instanceId }: CronParserProps) {
                   disabled={!expression}
                   className="h-8 px-3 text-xs"
                 >
-                  <ArrowDownTrayIcon className="h-4 w-4 mr-2" />
+                  <ArrowDownTrayIcon className="mr-2 h-4 w-4" />
                   Export
                 </Button>
               </div>
@@ -435,16 +427,12 @@ export function CronParser({ className, instanceId }: CronParserProps) {
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+            <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+              <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           )}
-
         </div>
       </div>
     </div>
-  );
+  )
 }
-

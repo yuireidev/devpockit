@@ -8,6 +8,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Planned
+
 - Additional developer tools
 - Performance optimizations
 - Enhanced accessibility features
@@ -16,14 +17,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.1] - 2026-10-20
 
 ### Added
+
 - Sidebar toggle keyboard shortcut (`⌘B` / `Ctrl+B`) with platform-correct, hydration-safe labels, guarded against firing while typing in inputs, textareas, or contenteditable elements (including code editors), and documented via key hints on the sidebar tooltip, header trigger, and About panel
 - Pure keyboard helpers (`isEditableKeyboardTarget`, `SIDEBAR_TOGGLE_SHORTCUT_LABELS`) in `src/libs/keyboard.ts` with unit tests, and `useKeyboardShortcut` support for `palette` / `sidebar` kinds
 
 ### Changed
+
 - Branch model: single-branch flow (GitHub Flow) with release-ledger tagging — short-lived `release/X.Y.Z` branches carry the version bump and changelog; CI tags release merges into `main`
 - CI: removed orphaned release-drafter config and `deploy-pages` workflow, trimmed CI artifact retention, pinned pnpm via the `packageManager` field
 
 ### Fixed
+
 - JSON / YAML Path Finder: Tree View footer aligned with the left panel (search and Expand/Collapse controls moved to the CodePanel footer), tree colors synchronized with the code editor's Shiki theme, and match badge moved to the tree header
 - Restored `with:` lines in workflow YAML that a sed cleanup had removed
 - `release.yml` input-based version selection for `workflow_call`
@@ -31,26 +35,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [0.3.0] - 2026-10-19
 
 ### Added
+
 - Auto-tag release flow: `auto-tag.yml` tags merge commits on `main` and runs the release via reusable workflow
 - Manual Pages deploy: `deploy.yml` with tag picker, usable by upstream and forks
 - Version guard: PRs into `main` fail without a semver bump (`no-release` label escapes)
 
 ### Changed
+
 - Release workflow split: `release.yml` builds + creates GitHub Release only, no automatic deploy
 - `scripts/release.sh` no longer tags locally; CI owns tagging
 
 ### Fixed
+
 - Pinned `@commitlint/cli` and `@commitlint/config-conventional` to exact 21.2.4 for Dependabot resolution
 - Removed tracked 1Password plugin pointer (`.op/` stays local-only)
 
 ## [0.2.3] - 2026-10-19
 
 ### Changed
+
 - Migrated repository from `hypkey/devpockit` to `yuireidev/devpockit` with production domain `devpockit.yuirei.com`
 - Rewrote release workflow into staged `build → github-release → deploy` jobs with SBOM generation
 - Release notes now combine Keep-a-Changelog entries with auto-generated GitHub diff notes
 
 ### Added
+
 - Tag-truth versioning: `scripts/resolve-version.sh` (`git tag → package.json → dev` fallback) so forks show a version without tags
 - `pnpm release:{patch|minor|major}` helper (`scripts/release.sh`) for atomic version bump + changelog draft + tag
 - `pnpm changelog:ai` helper (`scripts/ai-changelog.sh`) to draft Keep-a-Changelog entries from commits
@@ -58,9 +67,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Release Drafter config and commitlint for Conventional Commits
 
 ### Fixed
+
 - Workflow YAML parse errors from flow-style `${{ }}` mappings (rewrote in block style)
 
 ### Security
+
 - Added `.op/` to `.gitignore` so 1Password local plugin credential pointers stay untracked
 
 ## [0.1.0] - 2026-01-05
@@ -68,6 +79,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 #### Core Infrastructure
+
 - Next.js 15 setup with App Router
 - TypeScript configuration with strict mode
 - Tailwind CSS for styling
@@ -80,21 +92,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Mobile-first layout
 
 #### Text Tools
+
 - **Lorem Ipsum Generator**: Generate placeholder text in Latin or Bacon Ipsum format
 - **Regex Tester**: Test and debug regular expressions with real-time matching, group extraction, and code generation
 - **Diff Checker**: Compare two texts side-by-side and highlight differences with syntax highlighting
 
 #### Formatters
+
 - **JSON Formatter**: Format and beautify JSON data with minify/beautify options
 - **XML Formatter**: Format and beautify XML data with error handling
 
 #### Cryptography & Security Tools
+
 - **UUID Generator**: Generate unique identifiers in v1, v4, and v5 formats with bulk generation support
 - **JWT Decoder**: Decode and analyze JWT tokens with header, payload, and signature viewing
 - **JWT Encoder**: Create and encode JWT tokens with custom headers and payloads
 - **Hash Generator**: Generate cryptographic hashes using SHA-1, SHA-256, SHA-512, and SHA-3 algorithms with salt support
 
 #### Encoders & Decoders
+
 - **QR Code Generator**: Generate QR codes for text, URLs, contacts, WiFi, SMS, and email with customizable options
 - **QR Code Decoder**: Decode QR codes from uploaded images with support for multiple formats and structured data parsing
 - **QR Code Scanner**: Scan QR codes using device camera with real-time detection and instant results
@@ -103,6 +119,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Base Encoder/Decoder**: Encode and decode text using Base64, Base32, Base16 (hex), Base85, and other base encodings
 
 #### Converters
+
 - **Cron Expression Parser**: Build and parse cron expressions visually with a step-by-step form builder
 - **Data Format Converter**: Convert between JSON, YAML, Python Dictionary, TypeScript Map, and XML formats
 - **Timestamp Converter**: Convert between Unix timestamps, ISO 8601, RFC 2822, and other date formats across timezones
@@ -111,12 +128,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Number Base Converter**: Convert numbers between different bases (binary, octal, decimal, hexadecimal) with bit visualization and range calculator
 
 #### Network Tools
+
 - **CIDR Analyzer**: Analyze CIDR notation and get detailed network information including subnets and statistics
 - **IP to CIDR Converter**: Convert an IP address to CIDR notation with network suggestions
 - **IP Address Lookup**: Look up information about your current public IP address including location and network details
 - **System Information**: View detailed information about your browser, device, display, network, and system capabilities
 
 #### Utilities
+
 - **List Comparison**: Compare two lists of strings and numbers to find differences, intersections, unions, and more
 - **JSON Path Finder**: Query and extract data from JSON using JSONPath expressions
 - **XML Path Finder**: Query and extract data from XML using XPath expressions
@@ -124,6 +143,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **JSON/YAML Schema Generator**: Generate JSON Schema (Draft 7) from JSON or YAML data
 
 #### User Interface Features
+
 - Sidebar navigation with expandable categories
 - Tool categorization system
 - Search functionality for tools
@@ -139,6 +159,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Keyboard shortcuts support
 
 #### Developer Experience
+
 - Comprehensive TypeScript type definitions
 - Reusable component library
 - Custom React hooks
@@ -191,4 +212,3 @@ Each release should follow this structure:
 ---
 
 For detailed information about each tool, please refer to the [README.md](README.md) file.
-

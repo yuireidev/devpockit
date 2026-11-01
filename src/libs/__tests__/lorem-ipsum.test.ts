@@ -8,12 +8,12 @@ describe('Lorem Ipsum Generation', () => {
         type: 'latin',
         unit: 'words',
         quantity: 5,
-        format: 'plain'
+        format: 'plain',
       })
 
       const words = result.split(' ')
       expect(words).toHaveLength(5)
-      words.forEach(word => {
+      words.forEach((word) => {
         expect(LATIN_WORDS).toContain(word)
       })
     })
@@ -23,14 +23,14 @@ describe('Lorem Ipsum Generation', () => {
         type: 'latin',
         unit: 'sentences',
         quantity: 2,
-        format: 'plain'
+        format: 'plain',
       })
 
       // Split by periods and filter out empty strings
-      const sentences = result.split('.').filter(s => s.trim().length > 0)
+      const sentences = result.split('.').filter((s) => s.trim().length > 0)
       expect(sentences).toHaveLength(2)
 
-      sentences.forEach(sentence => {
+      sentences.forEach((sentence) => {
         const trimmed = sentence.trim()
         expect(trimmed).toMatch(/^[A-Z]/) // Should start with capital letter
       })
@@ -41,10 +41,10 @@ describe('Lorem Ipsum Generation', () => {
         type: 'latin',
         unit: 'paragraphs',
         quantity: 2,
-        format: 'plain'
+        format: 'plain',
       })
 
-      const paragraphs = result.split('\n\n').filter(p => p.length > 0)
+      const paragraphs = result.split('\n\n').filter((p) => p.length > 0)
       expect(paragraphs).toHaveLength(2)
     })
 
@@ -53,7 +53,7 @@ describe('Lorem Ipsum Generation', () => {
         type: 'latin',
         unit: 'words',
         quantity: 3,
-        format: 'html'
+        format: 'html',
       })
 
       expect(result).toMatch(/^<p>.*<\/p>$/)
@@ -66,14 +66,14 @@ describe('Lorem Ipsum Generation', () => {
         type: 'latin',
         unit: 'words',
         quantity: 10,
-        format: 'plain'
+        format: 'plain',
       })
 
       const baconResult = generateLoremIpsum({
         type: 'bacon',
         unit: 'words',
         quantity: 10,
-        format: 'plain'
+        format: 'plain',
       })
 
       const latinWords = latinResult.split(' ')
@@ -83,11 +83,11 @@ describe('Lorem Ipsum Generation', () => {
       expect(latinWords).not.toEqual(baconWords)
 
       // All words should be from their respective lists
-      latinWords.forEach(word => {
+      latinWords.forEach((word) => {
         expect(LATIN_WORDS).toContain(word)
       })
 
-      baconWords.forEach(word => {
+      baconWords.forEach((word) => {
         expect(BACON_WORDS).toContain(word)
       })
     })
@@ -95,12 +95,12 @@ describe('Lorem Ipsum Generation', () => {
     it('should handle different quantities', () => {
       const quantities = [1, 5, 10, 50, 100]
 
-      quantities.forEach(quantity => {
+      quantities.forEach((quantity) => {
         const result = generateLoremIpsum({
           type: 'latin',
           unit: 'words',
           quantity,
-          format: 'plain'
+          format: 'plain',
         })
 
         const words = result.split(' ')
@@ -113,12 +113,12 @@ describe('Lorem Ipsum Generation', () => {
         type: 'latin',
         unit: 'sentences',
         quantity: 10,
-        format: 'plain'
+        format: 'plain',
       })
 
-      const sentences = result.split('. ').filter(s => s.length > 0)
+      const sentences = result.split('. ').filter((s) => s.length > 0)
 
-      sentences.forEach(sentence => {
+      sentences.forEach((sentence) => {
         const words = sentence.replace('.', '').split(' ')
         expect(words.length).toBeGreaterThanOrEqual(5)
         expect(words.length).toBeLessThanOrEqual(12)
@@ -130,13 +130,13 @@ describe('Lorem Ipsum Generation', () => {
         type: 'latin',
         unit: 'paragraphs',
         quantity: 5,
-        format: 'plain'
+        format: 'plain',
       })
 
-      const paragraphs = result.split('\n\n').filter(p => p.length > 0)
+      const paragraphs = result.split('\n\n').filter((p) => p.length > 0)
 
-      paragraphs.forEach(paragraph => {
-        const sentences = paragraph.split('. ').filter(s => s.length > 0)
+      paragraphs.forEach((paragraph) => {
+        const sentences = paragraph.split('. ').filter((s) => s.length > 0)
         expect(sentences.length).toBeGreaterThanOrEqual(4)
         expect(sentences.length).toBeLessThanOrEqual(10)
       })

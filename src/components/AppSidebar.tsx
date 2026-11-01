@@ -1,12 +1,8 @@
-"use client"
+'use client'
 
-import { SearchTools } from "@/components/layout/SearchTools"
-import { useToolActivity } from "@/components/providers/ToolActivityProvider"
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible"
+import { SearchTools } from '@/components/layout/SearchTools'
+import { useToolActivity } from '@/components/providers/ToolActivityProvider'
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import {
   Sidebar,
@@ -25,17 +21,13 @@ import {
   SidebarSeparator,
   SidebarTrigger,
   useSidebar,
-} from "@/components/ui/sidebar"
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip"
+} from '@/components/ui/sidebar'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { CODE_EDITOR_THEMES, type CodeEditorTheme } from '@/config/code-editor-themes'
 import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
 import { useKeyboardShortcut } from '@/hooks/useKeyboardShortcut'
-import { toolCategories } from "@/libs/tools-data"
-import { cn } from "@/libs/utils"
+import { toolCategories } from '@/libs/tools-data'
+import { cn } from '@/libs/utils'
 import {
   ArrowLeftRight,
   ChevronRight,
@@ -54,11 +46,11 @@ import {
   Star,
   Sun,
   type LucideIcon,
-} from "lucide-react"
-import { useTheme } from "next-themes"
-import Image from "next/image"
-import { usePathname, useRouter } from "next/navigation"
-import * as React from "react"
+} from 'lucide-react'
+import { useTheme } from 'next-themes'
+import Image from 'next/image'
+import { usePathname, useRouter } from 'next/navigation'
+import * as React from 'react'
 
 const subscribeToHydration = () => () => {}
 const getClientHydrationSnapshot = () => true
@@ -66,9 +58,7 @@ const getServerHydrationSnapshot = () => false
 
 const getExpandedCategoryIds = (selectedTool?: string) => {
   if (!selectedTool) return []
-  const category = toolCategories.find(cat =>
-    cat.tools.some(tool => tool.id === selectedTool)
-  )
+  const category = toolCategories.find((cat) => cat.tools.some((tool) => tool.id === selectedTool))
   return category ? [category.id] : []
 }
 
@@ -76,12 +66,12 @@ const getExpandedCategoryIds = (selectedTool?: string) => {
 const getCategoryIcon = (categoryId: string): LucideIcon => {
   const iconMap: Record<string, LucideIcon> = {
     'text-tools': FileText,
-    'formatters': Code,
-    'cryptography': Lock,
-    'encoders': RefreshCw,
-    'converters': ArrowLeftRight,
-    'network': Globe,
-    'utilities': Settings,
+    formatters: Code,
+    cryptography: Lock,
+    encoders: RefreshCw,
+    converters: ArrowLeftRight,
+    network: Globe,
+    utilities: Settings,
   }
   return iconMap[categoryId] || FileText
 }
@@ -90,10 +80,10 @@ interface AppSidebarProps extends React.ComponentProps<typeof Sidebar> {
   selectedTool?: string
   onToolSelect?: (toolId: string) => void
   onHomeClick?: () => void
-  onLogoClick?: () => void  // Clears all state and navigates home
-  onAboutClick?: () => void  // Handles About page navigation
-  onSearchClick?: () => void  // Opens command palette
-  onClearAllAndGoHome?: () => void  // Clears all tabs and navigates home
+  onLogoClick?: () => void // Clears all state and navigates home
+  onAboutClick?: () => void // Handles About page navigation
+  onSearchClick?: () => void // Opens command palette
+  onClearAllAndGoHome?: () => void // Clears all tabs and navigates home
 }
 
 export function AppSidebar({
@@ -118,7 +108,9 @@ export function AppSidebar({
     getClientHydrationSnapshot,
     getServerHydrationSnapshot
   )
-  const [openCategories, setOpenCategories] = React.useState<Set<string>>(() => new Set(getExpandedCategoryIds(selectedTool)))
+  const [openCategories, setOpenCategories] = React.useState<Set<string>>(
+    () => new Set(getExpandedCategoryIds(selectedTool))
+  )
   const [previousSelectedTool, setPreviousSelectedTool] = React.useState(selectedTool)
   const [isLogoHovered, setIsLogoHovered] = React.useState(false)
 
@@ -126,9 +118,9 @@ export function AppSidebar({
     setPreviousSelectedTool(selectedTool)
     const expandedCategories = getExpandedCategoryIds(selectedTool)
     if (expandedCategories.length > 0) {
-      setOpenCategories(prev => {
+      setOpenCategories((prev) => {
         const newSet = new Set(prev)
-        expandedCategories.forEach(catId => newSet.add(catId))
+        expandedCategories.forEach((catId) => newSet.add(catId))
         return newSet
       })
     }
@@ -138,9 +130,7 @@ export function AppSidebar({
     if (onToolSelect) {
       onToolSelect(toolId)
     } else {
-      const tool = toolCategories
-        .flatMap(cat => cat.tools)
-        .find(t => t.id === toolId)
+      const tool = toolCategories.flatMap((cat) => cat.tools).find((t) => t.id === toolId)
       if (tool) {
         router.push(`/tools/${tool.category}/${toolId}`)
       }
@@ -164,7 +154,7 @@ export function AppSidebar({
   }
 
   const handleCategoryToggle = (categoryId: string, isOpen: boolean) => {
-    setOpenCategories(prev => {
+    setOpenCategories((prev) => {
       const newSet = new Set(prev)
       if (isOpen) {
         newSet.add(categoryId)
@@ -175,7 +165,7 @@ export function AppSidebar({
     })
   }
 
-  const isCollapsed = state === "collapsed"
+  const isCollapsed = state === 'collapsed'
 
   return (
     <Sidebar collapsible="icon" {...props}>
@@ -185,56 +175,45 @@ export function AppSidebar({
             <TooltipTrigger asChild>
               <div
                 className={cn(
-                  "w-8 h-8 shrink-0 flex items-center justify-center transition-all cursor-pointer",
-                  isCollapsed && "hover:bg-sidebar-accent rounded-md"
+                  'flex h-8 w-8 shrink-0 cursor-pointer items-center justify-center transition-all',
+                  isCollapsed && 'hover:bg-sidebar-accent rounded-md'
                 )}
                 onMouseEnter={() => setIsLogoHovered(true)}
                 onMouseLeave={() => setIsLogoHovered(false)}
                 onClick={isCollapsed ? toggleSidebar : handleLogoClick}
               >
                 {isCollapsed && isLogoHovered ? (
-                  <PanelLeft className="h-4 w-4 text-sidebar-foreground" />
+                  <PanelLeft className="text-sidebar-foreground h-4 w-4" />
                 ) : (
                   <Image
                     src={`${process.env.NEXT_PUBLIC_BASE_PATH || ''}/assets/devpockit-logo.svg`}
                     alt="DevPockit Logo"
                     width={32}
                     height={32}
-                    className="w-8 h-8"
+                    className="h-8 w-8"
                   />
                 )}
               </div>
             </TooltipTrigger>
             {isCollapsed ? (
-              <TooltipContent side="right">
-                Expand sidebar · {sidebarShortcut}
-              </TooltipContent>
+              <TooltipContent side="right">Expand sidebar · {sidebarShortcut}</TooltipContent>
             ) : (
-              <TooltipContent side="right">
-                Go to home
-              </TooltipContent>
+              <TooltipContent side="right">Go to home</TooltipContent>
             )}
           </Tooltip>
-          <div
-            className="flex-1 min-w-0 group-data-[collapsible=icon]:hidden cursor-pointer"
-            onClick={handleLogoClick}
-          >
-            <div className="flex items-baseline gap-2 hover:opacity-80 transition-opacity">
-              <span className="font-serif text-[24px] leading-[24px] tracking-normal text-sidebar-foreground">
+          <div className="min-w-0 flex-1 cursor-pointer group-data-[collapsible=icon]:hidden" onClick={handleLogoClick}>
+            <div className="flex items-baseline gap-2 transition-opacity hover:opacity-80">
+              <span className="text-sidebar-foreground font-serif text-[24px] leading-[24px] tracking-normal">
                 DevPockit
               </span>
-              <span className="text-xs text-muted-foreground">
-                v{process.env.NEXT_PUBLIC_APP_VERSION}
-              </span>
+              <span className="text-muted-foreground text-xs">v{process.env.NEXT_PUBLIC_APP_VERSION}</span>
             </div>
           </div>
           <Tooltip>
             <TooltipTrigger asChild>
-              <SidebarTrigger className={cn("ml-auto", isCollapsed && "hidden")} />
+              <SidebarTrigger className={cn('ml-auto', isCollapsed && 'hidden')} />
             </TooltipTrigger>
-            <TooltipContent side="right">
-              Toggle sidebar · {sidebarShortcut}
-            </TooltipContent>
+            <TooltipContent side="right">Toggle sidebar · {sidebarShortcut}</TooltipContent>
           </Tooltip>
         </div>
         <div className="mt-1 group-data-[collapsible=icon]:hidden">
@@ -247,15 +226,13 @@ export function AppSidebar({
               <TooltipTrigger asChild>
                 <button
                   onClick={() => onSearchClick?.()}
-                  className="w-full h-9 flex items-center justify-center rounded-md hover:bg-sidebar-accent transition-colors"
+                  className="hover:bg-sidebar-accent flex h-9 w-full items-center justify-center rounded-md transition-colors"
                   aria-label="Search tools"
                 >
-                  <Search className="h-4 w-4 text-sidebar-foreground" />
+                  <Search className="text-sidebar-foreground h-4 w-4" />
                 </button>
               </TooltipTrigger>
-              <TooltipContent side="right">
-                Search tools
-              </TooltipContent>
+              <TooltipContent side="right">Search tools</TooltipContent>
             </Tooltip>
           </div>
         )}
@@ -270,9 +247,9 @@ export function AppSidebar({
                   isActive={pathname === '/'}
                   onClick={() => {
                     if (onClearAllAndGoHome) {
-                      onClearAllAndGoHome();
+                      onClearAllAndGoHome()
                     } else {
-                      handleHomeClick();
+                      handleHomeClick()
                     }
                   }}
                 >
@@ -289,7 +266,7 @@ export function AppSidebar({
           const isOpen = openCategories.has(category.id)
 
           return (
-            <SidebarGroup key={category.id} className={index === 0 ? "mt-1" : ""}>
+            <SidebarGroup key={category.id} className={index === 0 ? 'mt-1' : ''}>
               <SidebarGroupContent>
                 <Collapsible
                   asChild
@@ -303,14 +280,16 @@ export function AppSidebar({
                         tooltip={{
                           children: (
                             <div className="flex flex-col gap-1">
-                              <div className="font-semibold border-b border-neutral-200 dark:border-neutral-700 pb-1 mb-1 text-neutral-900 dark:text-neutral-100">{category.name}</div>
+                              <div className="mb-1 border-b border-neutral-200 pb-1 font-semibold text-neutral-900 dark:border-neutral-700 dark:text-neutral-100">
+                                {category.name}
+                              </div>
                               {category.tools.map((tool) => (
                                 <div
                                   key={tool.id}
-                                  className="flex items-center gap-1 -mx-2 rounded-md px-2 py-1 text-xs"
+                                  className="-mx-2 flex items-center gap-1 rounded-md px-2 py-1 text-xs"
                                 >
                                   <div
-                                    className="min-w-0 flex-1 cursor-pointer rounded-md py-1 px-2 -mx-1 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
+                                    className="-mx-1 min-w-0 flex-1 cursor-pointer rounded-md px-2 py-1 hover:bg-neutral-100 hover:text-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-700 dark:hover:text-neutral-100"
                                     onClick={(e) => {
                                       e.stopPropagation()
                                       handleToolSelect(tool.id)
@@ -346,7 +325,7 @@ export function AppSidebar({
                               ))}
                             </div>
                           ),
-                          className: "w-56",
+                          className: 'w-56',
                         }}
                       >
                         <IconComponent className="h-4 w-4" />
@@ -370,12 +349,10 @@ export function AppSidebar({
                                 <button
                                   type="button"
                                   className={cn(
-                                    'flex h-7 w-7 shrink-0 items-center justify-center rounded-md text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground',
+                                    'text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground flex h-7 w-7 shrink-0 items-center justify-center rounded-md',
                                     isPinned(tool.id) && 'text-orange-600 dark:text-orange-400'
                                   )}
-                                  aria-label={
-                                    isPinned(tool.id) ? `Unpin ${tool.name}` : `Pin ${tool.name}`
-                                  }
+                                  aria-label={isPinned(tool.id) ? `Unpin ${tool.name}` : `Pin ${tool.name}`}
                                   aria-pressed={isPinned(tool.id)}
                                   onClick={(e) => {
                                     e.preventDefault()
@@ -405,39 +382,39 @@ export function AppSidebar({
           )
         })}
       </SidebarContent>
-      <SidebarFooter className="px-2 pt-2 pb-5 gap-2 group-data-[collapsible=icon]:items-center">
+      <SidebarFooter className="gap-2 px-2 pt-2 pb-5 group-data-[collapsible=icon]:items-center">
         {/* Top Separator */}
-        <SidebarSeparator className="my-1 -mx-2 w-auto self-stretch" />
+        <SidebarSeparator className="-mx-2 my-1 w-auto self-stretch" />
 
         {/* About and Support us menu items */}
         <SidebarMenu className="group-data-[collapsible=icon]:w-auto">
           <SidebarMenuItem>
             <SidebarMenuButton
-              tooltip={isCollapsed ? "About" : undefined}
+              tooltip={isCollapsed ? 'About' : undefined}
               onClick={() => {
                 if (onAboutClick) {
-                  onAboutClick();
+                  onAboutClick()
                 } else {
-                  router.push('/about');
+                  router.push('/about')
                 }
               }}
             >
               <Info className="h-4 w-4" />
-              <span className={cn(isCollapsed && "hidden")}>About</span>
+              <span className={cn(isCollapsed && 'hidden')}>About</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
           <SidebarMenuItem>
             <a href="https://buymeacoffee.com/hypkey" target="_blank" rel="noopener noreferrer">
-              <SidebarMenuButton tooltip={isCollapsed ? "Support us" : undefined}>
+              <SidebarMenuButton tooltip={isCollapsed ? 'Support us' : undefined}>
                 <Heart className="h-4 w-4" />
-                <span className={cn(isCollapsed && "hidden")}>Support us</span>
+                <span className={cn(isCollapsed && 'hidden')}>Support us</span>
               </SidebarMenuButton>
             </a>
           </SidebarMenuItem>
         </SidebarMenu>
 
         {/* Separator */}
-        <SidebarSeparator className="my-1 -mx-2 w-auto self-stretch" />
+        <SidebarSeparator className="-mx-2 my-1 w-auto self-stretch" />
 
         {/* Theme Toggle - Different layouts for collapsed vs expanded */}
         {isCollapsed ? (
@@ -448,7 +425,7 @@ export function AppSidebar({
                 <button
                   onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
                   className={cn(
-                    'flex items-center justify-center h-8 w-8 rounded-[8px] transition-colors bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700'
+                    'flex h-8 w-8 items-center justify-center rounded-[8px] bg-neutral-100 transition-colors hover:bg-neutral-200 dark:bg-neutral-800 dark:hover:bg-neutral-700'
                   )}
                 >
                   {mounted && theme === 'dark' ? (
@@ -465,16 +442,14 @@ export function AppSidebar({
           </div>
         ) : (
           /* Expanded: Combined Theme Toggle and Code Editor Theme Selector */
-          <div className="flex items-center gap-2 pl-1.5 pr-[8px] pt-1">
+          <div className="flex items-center gap-2 pt-1 pr-[8px] pl-1.5">
             {/* Dark/Light Mode Toggle */}
-            <div className="bg-neutral-100 dark:bg-neutral-800 rounded-[10px] p-[3px] flex items-center flex-shrink-0">
+            <div className="flex flex-shrink-0 items-center rounded-[10px] bg-neutral-100 p-[3px] dark:bg-neutral-800">
               <button
                 onClick={() => setTheme('light')}
                 className={cn(
-                  'flex items-center justify-center min-h-[29px] min-w-[29px] px-2 py-1 rounded-[8px] transition-colors',
-                  mounted && theme === 'light'
-                    ? 'bg-white dark:bg-neutral-900 shadow-xs'
-                    : 'bg-transparent'
+                  'flex min-h-[29px] min-w-[29px] items-center justify-center rounded-[8px] px-2 py-1 transition-colors',
+                  mounted && theme === 'light' ? 'bg-white shadow-xs dark:bg-neutral-900' : 'bg-transparent'
                 )}
                 title="Light mode"
               >
@@ -483,10 +458,8 @@ export function AppSidebar({
               <button
                 onClick={() => setTheme('dark')}
                 className={cn(
-                  'flex items-center justify-center min-h-[29px] min-w-[29px] px-2 py-1 rounded-[8px] transition-colors',
-                  mounted && theme === 'dark'
-                    ? 'bg-white dark:bg-neutral-900 shadow-xs'
-                    : 'bg-transparent'
+                  'flex min-h-[29px] min-w-[29px] items-center justify-center rounded-[8px] px-2 py-1 transition-colors',
+                  mounted && theme === 'dark' ? 'bg-white shadow-xs dark:bg-neutral-900' : 'bg-transparent'
                 )}
                 title="Dark mode"
               >
@@ -496,16 +469,13 @@ export function AppSidebar({
 
             {/* Code Editor Theme Selector */}
             <div className="flex-1">
-              <Select
-                value={codeEditorTheme}
-                onValueChange={(value) => setCodeEditorTheme(value as CodeEditorTheme)}
-              >
-                <SelectTrigger borderless className="h-[35px] w-full text-xs bg-neutral-100 dark:bg-neutral-800">
-                <div className="flex items-center gap-2">
-                  <Code className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" />
-                  <SelectValue />
-                </div>
-              </SelectTrigger>
+              <Select value={codeEditorTheme} onValueChange={(value) => setCodeEditorTheme(value as CodeEditorTheme)}>
+                <SelectTrigger borderless className="h-[35px] w-full bg-neutral-100 text-xs dark:bg-neutral-800">
+                  <div className="flex items-center gap-2">
+                    <Code className="h-3.5 w-3.5 text-neutral-600 dark:text-neutral-400" />
+                    <SelectValue />
+                  </div>
+                </SelectTrigger>
                 <SelectContent container={typeof document !== 'undefined' ? document.body : undefined}>
                   {Object.values(CODE_EDITOR_THEMES).map((themeConfig) => (
                     <SelectItem key={themeConfig.name} value={themeConfig.name}>

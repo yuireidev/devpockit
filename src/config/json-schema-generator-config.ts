@@ -1,10 +1,10 @@
 export interface JsonSchemaGeneratorOptions {
-  strictTypes: boolean;
-  includeExamples: boolean;
-  includeDescriptions: boolean;
-  makeRequired: boolean;
-  arrayItemsRequired: boolean;
-  additionalProperties: boolean;
+  strictTypes: boolean
+  includeExamples: boolean
+  includeDescriptions: boolean
+  makeRequired: boolean
+  arrayItemsRequired: boolean
+  additionalProperties: boolean
 }
 
 export const DEFAULT_SCHEMA_OPTIONS: JsonSchemaGeneratorOptions = {
@@ -13,8 +13,8 @@ export const DEFAULT_SCHEMA_OPTIONS: JsonSchemaGeneratorOptions = {
   includeDescriptions: true,
   makeRequired: false,
   arrayItemsRequired: false,
-  additionalProperties: true
-};
+  additionalProperties: true,
+}
 
 export const SCHEMA_GENERATOR_EXAMPLES = [
   {
@@ -25,7 +25,7 @@ export const SCHEMA_GENERATOR_EXAMPLES = [
   "email": "john@example.com",
   "active": true
 }`,
-    description: 'Generate schema for a simple user object'
+    description: 'Generate schema for a simple user object',
   },
   {
     name: 'Nested Object',
@@ -43,7 +43,7 @@ export const SCHEMA_GENERATOR_EXAMPLES = [
     }
   }
 }`,
-    description: 'Generate schema for nested objects'
+    description: 'Generate schema for nested objects',
   },
   {
     name: 'Array of Objects',
@@ -54,7 +54,7 @@ export const SCHEMA_GENERATOR_EXAMPLES = [
     {"id": 3, "name": "Charlie", "role": "user"}
   ]
 }`,
-    description: 'Generate schema for arrays of objects'
+    description: 'Generate schema for arrays of objects',
   },
   {
     name: 'API Response',
@@ -72,7 +72,7 @@ export const SCHEMA_GENERATOR_EXAMPLES = [
     }
   }
 }`,
-    description: 'Generate schema for API response structure'
+    description: 'Generate schema for API response structure',
   },
   {
     name: 'YAML Example',
@@ -85,9 +85,9 @@ export const SCHEMA_GENERATOR_EXAMPLES = [
     - developer
     - admin
 `,
-    description: 'Generate schema from YAML data'
-  }
-];
+    description: 'Generate schema from YAML data',
+  },
+]
 
 export const SCHEMA_GENERATOR_DESCRIPTIONS = {
   title: 'JSON/YAML Schema Generator',
@@ -97,14 +97,13 @@ export const SCHEMA_GENERATOR_DESCRIPTIONS = {
     'Generate JSON Schema from YAML data',
     'Auto-detect input format',
     'Customizable schema options',
-    'Support for nested objects and arrays'
+    'Support for nested objects and arrays',
   ],
   useCases: [
     'Create API documentation',
     'Validate data structures',
     'Generate TypeScript types',
     'Document data formats',
-    'API contract specification'
-  ]
-};
-
+    'API contract specification',
+  ],
+}

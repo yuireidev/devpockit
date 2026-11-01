@@ -4,30 +4,30 @@
  */
 
 export interface IpCidrExample {
-  name: string;
-  description: string;
-  cidr: string;
-  category: string;
-  useCase: string;
-  hosts: number;
-  networkClass: string;
+  name: string
+  description: string
+  cidr: string
+  category: string
+  useCase: string
+  hosts: number
+  networkClass: string
 }
 
 export interface CommonNetwork {
-  name: string;
-  cidr: string;
-  description: string;
-  hosts: number;
-  category: string;
-  isPrivate: boolean;
+  name: string
+  cidr: string
+  description: string
+  hosts: number
+  category: string
+  isPrivate: boolean
 }
 
 export interface NetworkClass {
-  name: string;
-  range: string;
-  defaultSubnet: string;
-  description: string;
-  hosts: number;
+  name: string
+  range: string
+  defaultSubnet: string
+  description: string
+  hosts: number
 }
 
 // Default tool options
@@ -40,8 +40,8 @@ export const DEFAULT_IP_CIDR_OPTIONS = {
   maxSubnets: 8,
   includePrivate: true,
   includePublic: true,
-  includeIPv6: true
-};
+  includeIPv6: true,
+}
 
 // Common IPv4 CIDR examples
 export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
@@ -53,7 +53,7 @@ export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
     category: 'Private',
     useCase: 'Home networks, small offices',
     hosts: 254,
-    networkClass: 'C'
+    networkClass: 'C',
   },
   {
     name: 'Corporate Network',
@@ -62,7 +62,7 @@ export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
     category: 'Private',
     useCase: 'Corporate networks, data centers',
     hosts: 65534,
-    networkClass: 'A'
+    networkClass: 'A',
   },
   {
     name: 'VPN Network',
@@ -71,7 +71,7 @@ export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
     category: 'Private',
     useCase: 'VPN tunnels, point-to-point links',
     hosts: 2,
-    networkClass: 'B'
+    networkClass: 'B',
   },
   {
     name: 'DMZ Network',
@@ -80,7 +80,7 @@ export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
     category: 'Private',
     useCase: 'DMZ servers, public-facing services',
     hosts: 14,
-    networkClass: 'C'
+    networkClass: 'C',
   },
   {
     name: 'Guest Network',
@@ -89,7 +89,7 @@ export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
     category: 'Private',
     useCase: 'Guest access, visitor networks',
     hosts: 254,
-    networkClass: 'C'
+    networkClass: 'C',
   },
 
   // Public Networks
@@ -100,7 +100,7 @@ export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
     category: 'Public',
     useCase: 'ISP allocations, web hosting',
     hosts: 254,
-    networkClass: 'C'
+    networkClass: 'C',
   },
   {
     name: 'Cloud Provider',
@@ -109,7 +109,7 @@ export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
     category: 'Public',
     useCase: 'Cloud services, CDN networks',
     hosts: 1022,
-    networkClass: 'C'
+    networkClass: 'C',
   },
   {
     name: 'Data Center',
@@ -118,7 +118,7 @@ export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
     category: 'Public',
     useCase: 'Data centers, hosting providers',
     hosts: 4094,
-    networkClass: 'C'
+    networkClass: 'C',
   },
 
   // Special Purpose
@@ -129,7 +129,7 @@ export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
     category: 'Special',
     useCase: 'Local testing, loopback interfaces',
     hosts: 1,
-    networkClass: 'A'
+    networkClass: 'A',
   },
   {
     name: 'Multicast',
@@ -138,7 +138,7 @@ export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
     category: 'Special',
     useCase: 'Multicast applications, streaming',
     hosts: 268435456,
-    networkClass: 'D'
+    networkClass: 'D',
   },
   {
     name: 'Link Local',
@@ -147,9 +147,9 @@ export const IP_CIDR_EXAMPLES: IpCidrExample[] = [
     category: 'Special',
     useCase: 'APIPA, automatic configuration',
     hosts: 65534,
-    networkClass: 'B'
-  }
-];
+    networkClass: 'B',
+  },
+]
 
 // IPv6 examples
 export const IPV6_EXAMPLES: IpCidrExample[] = [
@@ -160,7 +160,7 @@ export const IPV6_EXAMPLES: IpCidrExample[] = [
     category: 'IPv6',
     useCase: 'Global IPv6 networks, internet',
     hosts: 79228162514264337593543950336,
-    networkClass: 'IPv6'
+    networkClass: 'IPv6',
   },
   {
     name: 'IPv6 Link Local',
@@ -169,7 +169,7 @@ export const IPV6_EXAMPLES: IpCidrExample[] = [
     category: 'IPv6',
     useCase: 'Local network communication',
     hosts: 18446744073709551616,
-    networkClass: 'IPv6'
+    networkClass: 'IPv6',
   },
   {
     name: 'IPv6 Unique Local',
@@ -178,7 +178,7 @@ export const IPV6_EXAMPLES: IpCidrExample[] = [
     category: 'IPv6',
     useCase: 'Private IPv6 networks',
     hosts: 340282366920938463463374607431768211456,
-    networkClass: 'IPv6'
+    networkClass: 'IPv6',
   },
   {
     name: 'IPv6 Multicast',
@@ -187,9 +187,9 @@ export const IPV6_EXAMPLES: IpCidrExample[] = [
     category: 'IPv6',
     useCase: 'IPv6 multicast applications',
     hosts: 340282366920938463463374607431768211456,
-    networkClass: 'IPv6'
-  }
-];
+    networkClass: 'IPv6',
+  },
+]
 
 // Common network blocks
 export const COMMON_NETWORKS: CommonNetwork[] = [
@@ -200,7 +200,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Class A private network (RFC 1918)',
     hosts: 16777214,
     category: 'Private',
-    isPrivate: true
+    isPrivate: true,
   },
   {
     name: 'Class B Private',
@@ -208,7 +208,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Class B private network (RFC 1918)',
     hosts: 1048574,
     category: 'Private',
-    isPrivate: true
+    isPrivate: true,
   },
   {
     name: 'Class C Private',
@@ -216,7 +216,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Class C private network (RFC 1918)',
     hosts: 65534,
     category: 'Private',
-    isPrivate: true
+    isPrivate: true,
   },
 
   // Common subnet sizes
@@ -226,7 +226,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Standard /24 network (254 hosts)',
     hosts: 254,
     category: 'Common',
-    isPrivate: true
+    isPrivate: true,
   },
   {
     name: '/25 Network',
@@ -234,7 +234,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Half /24 network (126 hosts)',
     hosts: 126,
     category: 'Common',
-    isPrivate: true
+    isPrivate: true,
   },
   {
     name: '/26 Network',
@@ -242,7 +242,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Quarter /24 network (62 hosts)',
     hosts: 62,
     category: 'Common',
-    isPrivate: true
+    isPrivate: true,
   },
   {
     name: '/27 Network',
@@ -250,7 +250,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Eighth /24 network (30 hosts)',
     hosts: 30,
     category: 'Common',
-    isPrivate: true
+    isPrivate: true,
   },
   {
     name: '/28 Network',
@@ -258,7 +258,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Sixteenth /24 network (14 hosts)',
     hosts: 14,
     category: 'Common',
-    isPrivate: true
+    isPrivate: true,
   },
   {
     name: '/30 Network',
@@ -266,7 +266,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Point-to-point network (2 hosts)',
     hosts: 2,
     category: 'Common',
-    isPrivate: true
+    isPrivate: true,
   },
   {
     name: '/32 Network',
@@ -274,7 +274,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Single host network (1 host)',
     hosts: 1,
     category: 'Common',
-    isPrivate: true
+    isPrivate: true,
   },
 
   // Special purpose networks
@@ -284,7 +284,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Loopback addresses (RFC 3330)',
     hosts: 16777214,
     category: 'Special',
-    isPrivate: false
+    isPrivate: false,
   },
   {
     name: 'Link Local',
@@ -292,7 +292,7 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Link-local addresses (RFC 3927)',
     hosts: 65534,
     category: 'Special',
-    isPrivate: false
+    isPrivate: false,
   },
   {
     name: 'Multicast',
@@ -300,9 +300,9 @@ export const COMMON_NETWORKS: CommonNetwork[] = [
     description: 'Multicast addresses (RFC 3171)',
     hosts: 268435456,
     category: 'Special',
-    isPrivate: false
-  }
-];
+    isPrivate: false,
+  },
+]
 
 // Network classes
 export const NETWORK_CLASSES: NetworkClass[] = [
@@ -311,37 +311,37 @@ export const NETWORK_CLASSES: NetworkClass[] = [
     range: '1.0.0.0 - 126.255.255.255',
     defaultSubnet: '/8',
     description: 'Large networks, government, major corporations',
-    hosts: 16777214
+    hosts: 16777214,
   },
   {
     name: 'Class B',
     range: '128.0.0.0 - 191.255.255.255',
     defaultSubnet: '/16',
     description: 'Medium networks, universities, large companies',
-    hosts: 65534
+    hosts: 65534,
   },
   {
     name: 'Class C',
     range: '192.0.0.0 - 223.255.255.255',
     defaultSubnet: '/24',
     description: 'Small networks, small businesses, home networks',
-    hosts: 254
+    hosts: 254,
   },
   {
     name: 'Class D',
     range: '224.0.0.0 - 239.255.255.255',
     defaultSubnet: '/4',
     description: 'Multicast addresses',
-    hosts: 268435456
+    hosts: 268435456,
   },
   {
     name: 'Class E',
     range: '240.0.0.0 - 255.255.255.255',
     defaultSubnet: '/4',
     description: 'Reserved for future use',
-    hosts: 268435456
-  }
-];
+    hosts: 268435456,
+  },
+]
 
 // Subnet mask reference
 export const SUBNET_MASKS = [
@@ -369,13 +369,14 @@ export const SUBNET_MASKS = [
   { cidr: '/29', mask: '255.255.255.248', hosts: 6, class: 'C' },
   { cidr: '/30', mask: '255.255.255.252', hosts: 2, class: 'C' },
   { cidr: '/31', mask: '255.255.255.254', hosts: 0, class: 'C' },
-  { cidr: '/32', mask: '255.255.255.255', hosts: 1, class: 'C' }
-];
+  { cidr: '/32', mask: '255.255.255.255', hosts: 1, class: 'C' },
+]
 
 // Tool descriptions
 export const IP_CIDR_TOOL_DESCRIPTIONS = {
   title: 'IP Address CIDR Converter',
-  description: 'Convert between IP addresses and CIDR notation, analyze network properties, and calculate subnet information.',
+  description:
+    'Convert between IP addresses and CIDR notation, analyze network properties, and calculate subnet information.',
   features: [
     'IP to CIDR conversion',
     'CIDR to IP range conversion',
@@ -384,7 +385,7 @@ export const IP_CIDR_TOOL_DESCRIPTIONS = {
     'IPv4 and IPv6 support',
     'Private and public network detection',
     'Network class identification',
-    'Host count calculations'
+    'Host count calculations',
   ],
   useCases: [
     'Network planning and design',
@@ -392,43 +393,18 @@ export const IP_CIDR_TOOL_DESCRIPTIONS = {
     'IP address management',
     'Network troubleshooting',
     'Security policy configuration',
-    'Cloud infrastructure planning'
-  ]
-};
+    'Cloud infrastructure planning',
+  ],
+}
 
 // Example sets for different scenarios
 export const IP_CIDR_EXAMPLE_SETS = {
-  'Home Networks': [
-    '192.168.1.0/24',
-    '192.168.0.0/16',
-    '10.0.0.0/8',
-    '172.16.0.0/12'
-  ],
-  'Corporate Networks': [
-    '10.0.0.0/16',
-    '10.1.0.0/16',
-    '10.2.0.0/16',
-    '172.16.0.0/12'
-  ],
-  'Cloud Networks': [
-    '10.0.0.0/8',
-    '172.16.0.0/12',
-    '192.168.0.0/16',
-    '203.0.113.0/24'
-  ],
-  'Point-to-Point': [
-    '192.168.1.0/30',
-    '10.0.0.0/30',
-    '172.16.0.0/30',
-    '203.0.113.0/30'
-  ],
-  'IPv6 Networks': [
-    '2001:db8::/32',
-    'fe80::/64',
-    'fd00::/8',
-    'ff00::/8'
-  ]
-};
+  'Home Networks': ['192.168.1.0/24', '192.168.0.0/16', '10.0.0.0/8', '172.16.0.0/12'],
+  'Corporate Networks': ['10.0.0.0/16', '10.1.0.0/16', '10.2.0.0/16', '172.16.0.0/12'],
+  'Cloud Networks': ['10.0.0.0/8', '172.16.0.0/12', '192.168.0.0/16', '203.0.113.0/24'],
+  'Point-to-Point': ['192.168.1.0/30', '10.0.0.0/30', '172.16.0.0/30', '203.0.113.0/30'],
+  'IPv6 Networks': ['2001:db8::/32', 'fe80::/64', 'fd00::/8', 'ff00::/8'],
+}
 
 // Validation rules
 export const IP_CIDR_VALIDATION_RULES = {
@@ -436,29 +412,31 @@ export const IP_CIDR_VALIDATION_RULES = {
     format: 'Must be in dotted decimal notation (e.g., 192.168.1.1)',
     range: 'Each octet must be between 0 and 255',
     private: 'Private ranges: 10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16',
-    special: 'Special addresses: 127.0.0.0/8 (loopback), 169.254.0.0/16 (link-local)'
+    special: 'Special addresses: 127.0.0.0/8 (loopback), 169.254.0.0/16 (link-local)',
   },
   ipv6: {
     format: 'Must be in colon-separated hexadecimal notation',
     compression: 'Double colon (::) can be used once to compress consecutive zeros',
-    examples: '2001:db8::1, fe80::1, ::1'
+    examples: '2001:db8::1, fe80::1, ::1',
   },
   cidr: {
     format: 'Must include IP address and prefix length (e.g., 192.168.1.0/24)',
     prefixRange: 'IPv4: /0 to /32, IPv6: /0 to /128',
-    networkBits: 'Prefix length indicates number of network bits'
-  }
-};
+    networkBits: 'Prefix length indicates number of network bits',
+  },
+}
 
 // Educational content
 export const IP_CIDR_EDUCATIONAL_CONTENT = {
   whatIsCidr: {
     title: 'What is CIDR?',
-    content: 'CIDR (Classless Inter-Domain Routing) is a method for allocating IP addresses and routing IP packets. It allows for more flexible allocation of IP addresses than the traditional class-based system.'
+    content:
+      'CIDR (Classless Inter-Domain Routing) is a method for allocating IP addresses and routing IP packets. It allows for more flexible allocation of IP addresses than the traditional class-based system.',
   },
   howItWorks: {
     title: 'How CIDR Works',
-    content: 'CIDR uses a prefix length to indicate how many bits represent the network portion of an IP address. The remaining bits represent the host portion. For example, 192.168.1.0/24 means the first 24 bits are the network, and the last 8 bits are for hosts.'
+    content:
+      'CIDR uses a prefix length to indicate how many bits represent the network portion of an IP address. The remaining bits represent the host portion. For example, 192.168.1.0/24 means the first 24 bits are the network, and the last 8 bits are for hosts.',
   },
   benefits: {
     title: 'Benefits of CIDR',
@@ -467,8 +445,8 @@ export const IP_CIDR_EDUCATIONAL_CONTENT = {
       'Reduced routing table sizes',
       'Flexible subnet sizing',
       'Better network organization',
-      'Easier network management'
-    ]
+      'Easier network management',
+    ],
   },
   commonUses: {
     title: 'Common Uses',
@@ -477,10 +455,10 @@ export const IP_CIDR_EDUCATIONAL_CONTENT = {
       'Subnet creation and management',
       'Firewall rule configuration',
       'Cloud infrastructure setup',
-      'Network troubleshooting'
-    ]
-  }
-};
+      'Network troubleshooting',
+    ],
+  },
+}
 
 // Help text for the tool
 export const IP_CIDR_HELP_TEXT = {
@@ -489,8 +467,8 @@ export const IP_CIDR_HELP_TEXT = {
   analysis: 'View detailed network analysis including subnet mask, host count, and network class',
   subnets: 'Calculate subnet divisions for network planning',
   statistics: 'Get network statistics and recommendations',
-  copy: 'Copy results to clipboard for use in configuration files'
-};
+  copy: 'Copy results to clipboard for use in configuration files',
+}
 
 // Categories for organizing examples
 export const IP_CIDR_CATEGORIES = [
@@ -498,8 +476,8 @@ export const IP_CIDR_CATEGORIES = [
   { name: 'Public Networks', description: 'Internet-routable address ranges', icon: '🌐' },
   { name: 'Special Purpose', description: 'Loopback, multicast, and reserved ranges', icon: '⚙️' },
   { name: 'Common Sizes', description: 'Frequently used subnet sizes', icon: '📏' },
-  { name: 'IPv6 Networks', description: 'IPv6 address examples', icon: '🔢' }
-];
+  { name: 'IPv6 Networks', description: 'IPv6 address examples', icon: '🔢' },
+]
 
 // Quick reference for common calculations
 export const IP_CIDR_QUICK_REFERENCE = {
@@ -510,5 +488,5 @@ export const IP_CIDR_QUICK_REFERENCE = {
   '/28 Network': '14 hosts, 255.255.255.240 mask',
   '/29 Network': '6 hosts, 255.255.255.248 mask',
   '/30 Network': '2 hosts, 255.255.255.252 mask',
-  '/32 Network': '1 host, 255.255.255.255 mask'
-};
+  '/32 Network': '1 host, 255.255.255.255 mask',
+}

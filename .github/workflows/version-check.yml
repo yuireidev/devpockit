@@ -2,7 +2,7 @@
 # - Tag push: tag must equal package.json (tag is truth, package.json mirrors it).
 # - PR into main: only release/* or chore/release-* head branches must bump the
 #   version above the latest tag. Feature/fix PRs skip (fail-closed for releases).
-name: Version Check
+name: 'Release: Version Check'
 on:
   push:
     tags:
@@ -14,6 +14,9 @@ on:
       - opened
       - synchronize
       - reopened
+permissions:
+  contents: read
+
 jobs:
   check:
     runs-on: ubuntu-latest
@@ -33,8 +36,9 @@ jobs:
           echo "version $TAG matches"
       - name: Release branch must bump version
         if: github.event_name == 'pull_request'
+        env:
+          HEAD_BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
-          HEAD_BRANCH="${{ github.event.pull_request.head.ref }}"
           case "$HEAD_BRANCH" in
             release/*|chore/release-*) ;;
             *)

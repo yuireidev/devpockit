@@ -1,4 +1,4 @@
-import { ToolCategory } from '@/types/tools';
+import { ToolCategory } from '@/types/tools'
 import {
   ArrowLeftRight,
   Braces,
@@ -28,8 +28,8 @@ import {
   Database,
   ClipboardPaste,
   Cookie,
-  type LucideIcon
-} from 'lucide-react';
+  type LucideIcon,
+} from 'lucide-react'
 
 // Icon mapping for tools
 export const toolIcons: Record<string, LucideIcon> = {
@@ -68,7 +68,7 @@ export const toolIcons: Record<string, LucideIcon> = {
   'hash-generator': Hash,
   'http-status-cheatsheet': ListOrdered,
   'headers-cookies-explainer': Cookie,
-};
+}
 
 export const toolCategories: ToolCategory[] = [
   {
@@ -93,7 +93,8 @@ export const toolCategories: ToolCategory[] = [
       {
         id: 'regex-tester',
         name: 'Regex Tester',
-        description: 'Test and debug regular expressions with real-time matching, group extraction, and code generation',
+        description:
+          'Test and debug regular expressions with real-time matching, group extraction, and code generation',
         category: 'text-tools',
         icon: '🔍',
         isPopular: true,
@@ -149,18 +150,18 @@ export const toolCategories: ToolCategory[] = [
     color: 'green',
     description: 'Code and data formatting tools',
     tools: [
-          {
-            id: 'json-formatter',
-            name: 'JSON Formatter',
-            description: 'Format and beautify JSON data',
-            category: 'formatters',
-            icon: '{ }',
-            isPopular: true,
-            path: '/tools/formatters/json-formatter',
-            component: 'JsonFormatter',
-            supportsDesktop: true,
-            supportsMobile: true,
-          },
+      {
+        id: 'json-formatter',
+        name: 'JSON Formatter',
+        description: 'Format and beautify JSON data',
+        category: 'formatters',
+        icon: '{ }',
+        isPopular: true,
+        path: '/tools/formatters/json-formatter',
+        component: 'JsonFormatter',
+        supportsDesktop: true,
+        supportsMobile: true,
+      },
       {
         id: 'xml-formatter',
         name: 'XML Formatter',
@@ -233,7 +234,8 @@ export const toolCategories: ToolCategory[] = [
       {
         id: 'hash-generator',
         name: 'Hash Generator',
-        description: 'Generate cryptographic hashes using SHA-1, SHA-256, SHA-512, and SHA-3 algorithms with salt support',
+        description:
+          'Generate cryptographic hashes using SHA-1, SHA-256, SHA-512, and SHA-3 algorithms with salt support',
         category: 'cryptography',
         icon: '🔐',
         isPopular: true,
@@ -266,7 +268,8 @@ export const toolCategories: ToolCategory[] = [
       {
         id: 'qr-code-decoder',
         name: 'QR Code Decoder',
-        description: 'Decode QR codes from uploaded images with support for multiple formats and structured data parsing',
+        description:
+          'Decode QR codes from uploaded images with support for multiple formats and structured data parsing',
         category: 'encoders',
         icon: '🔍',
         isPopular: true,
@@ -371,7 +374,8 @@ export const toolCategories: ToolCategory[] = [
       {
         id: 'list-converter',
         name: 'List Format Converter',
-        description: 'Convert lists between different formats: line-by-line, comma-separated, JSON array, Python list, and more',
+        description:
+          'Convert lists between different formats: line-by-line, comma-separated, JSON array, Python list, and more',
         category: 'converters',
         icon: '🔄',
         isPopular: true,
@@ -396,7 +400,8 @@ export const toolCategories: ToolCategory[] = [
       {
         id: 'number-base-converter',
         name: 'Number Base Converter',
-        description: 'Convert numbers between different bases (binary, octal, decimal, hexadecimal) with bit visualization and range calculator',
+        description:
+          'Convert numbers between different bases (binary, octal, decimal, hexadecimal) with bit visualization and range calculator',
         category: 'converters',
         icon: '🔢',
         isPopular: true,
@@ -466,8 +471,7 @@ export const toolCategories: ToolCategory[] = [
       {
         id: 'headers-cookies-explainer',
         name: 'Headers / Cookies explainer',
-        description:
-          'Paste HTTP headers or cookie strings to see a structured breakdown with glossary explanations',
+        description: 'Paste HTTP headers or cookie strings to see a structured breakdown with glossary explanations',
         category: 'network',
         icon: '🍪',
         isPopular: false,
@@ -560,42 +564,36 @@ export const toolCategories: ToolCategory[] = [
       },
     ],
   },
-];
+]
 
 export const getPopularTools = () => {
-  return toolCategories
-    .flatMap(category => category.tools)
-    .filter(tool => tool.isPopular);
-};
+  return toolCategories.flatMap((category) => category.tools).filter((tool) => tool.isPopular)
+}
 
 export const getAllTools = () => {
-  return toolCategories.flatMap(category => category.tools);
-};
+  return toolCategories.flatMap((category) => category.tools)
+}
 
 export const getToolById = (id: string) => {
-  return getAllTools().find(tool => tool.id === id);
-};
+  return getAllTools().find((tool) => tool.id === id)
+}
 
 export const getCategoryById = (id: string) => {
-  return toolCategories.find(category => category.id === id);
-};
+  return toolCategories.find((category) => category.id === id)
+}
 
 export const getCategories = () => {
-  return toolCategories;
-};
+  return toolCategories
+}
 
 export const getTools = () => {
-  return getAllTools();
-};
+  return getAllTools()
+}
 
 export const searchTools = (query: string) => {
-  const lowercaseQuery = query.toLowerCase();
+  const lowercaseQuery = query.toLowerCase()
   return getAllTools().filter(
-    tool =>
-      tool.name.toLowerCase().includes(lowercaseQuery) ||
-      tool.description.toLowerCase().includes(lowercaseQuery)
-  );
-};
-
-
-
+    (tool) =>
+      tool.name.toLowerCase().includes(lowercaseQuery) || tool.description.toLowerCase().includes(lowercaseQuery)
+  )
+}

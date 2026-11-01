@@ -1,45 +1,37 @@
-'use client';
+'use client'
 
-import { cn } from '@/libs/utils';
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState,
-  type ReactNode,
-} from 'react';
+import { cn } from '@/libs/utils'
+import { createContext, useCallback, useContext, useEffect, useRef, useState, type ReactNode } from 'react'
 
 interface AppToastContextValue {
-  showToast: (message: string) => void;
+  showToast: (message: string) => void
 }
 
-const AppToastContext = createContext<AppToastContextValue | null>(null);
+const AppToastContext = createContext<AppToastContextValue | null>(null)
 
-const TOAST_DURATION_MS = 2400;
+const TOAST_DURATION_MS = 2400
 
 export function AppToastProvider({ children }: { children: ReactNode }) {
-  const [message, setMessage] = useState<string | null>(null);
-  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [message, setMessage] = useState<string | null>(null)
+  const hideTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   const clearTimer = () => {
     if (hideTimerRef.current !== null) {
-      clearTimeout(hideTimerRef.current);
-      hideTimerRef.current = null;
+      clearTimeout(hideTimerRef.current)
+      hideTimerRef.current = null
     }
-  };
+  }
 
   const showToast = useCallback((next: string) => {
-    clearTimer();
-    setMessage(next);
+    clearTimer()
+    setMessage(next)
     hideTimerRef.current = setTimeout(() => {
-      setMessage(null);
-      hideTimerRef.current = null;
-    }, TOAST_DURATION_MS);
-  }, []);
+      setMessage(null)
+      hideTimerRef.current = null
+    }, TOAST_DURATION_MS)
+  }, [])
 
-  useEffect(() => () => clearTimer(), []);
+  useEffect(() => () => clearTimer(), [])
 
   return (
     <AppToastContext.Provider value={{ showToast }}>
@@ -62,9 +54,9 @@ export function AppToastProvider({ children }: { children: ReactNode }) {
         ) : null}
       </div>
     </AppToastContext.Provider>
-  );
+  )
 }
 
 export function useAppToast(): AppToastContextValue | null {
-  return useContext(AppToastContext);
+  return useContext(AppToastContext)
 }

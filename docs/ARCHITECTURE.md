@@ -79,42 +79,56 @@ devpockit/
 ### Directory Purposes
 
 #### `src/app/`
+
 Next.js App Router directory. Contains:
+
 - **Layout**: Root layout with theme provider and tool state provider
 - **Pages**: Route pages, including dynamic tool pages
 - **Global Styles**: Tailwind CSS and custom styles
 
 #### `src/components/`
+
 React components organized by purpose:
+
 - **`ui/`**: Reusable UI components from Shadcn/ui
 - **`tools/`**: Tool-specific React components (one per tool)
 - **`layout/`**: Layout components (sidebar, header, etc.)
 - **`pages/`**: Page-level components
 
 #### `src/libs/`
+
 Core business logic:
+
 - **`tools-data.ts`**: Central registry of all tools and categories
 - **`tool-components.ts`**: Dynamic component loader for static export compatibility
 - **`[tool-name].ts`**: Pure functions implementing tool logic (no React dependencies)
 
 #### `src/config/`
+
 Tool configuration files:
+
 - Tool-specific options, examples, and settings
 - Separated from logic for easier maintenance
 
 #### `src/hooks/`
+
 Custom React hooks:
+
 - Editor hooks (Monaco Editor integration)
 - Theme hooks
 - Reusable state management hooks
 
 #### `src/types/`
+
 TypeScript type definitions:
+
 - Shared interfaces and types
 - Tool type definitions
 
 #### `src/providers/`
+
 React context providers:
+
 - Tool state management
 - Theme management (via next-themes)
 
@@ -137,6 +151,7 @@ AppLayout (Root)
 ### Key Components
 
 #### AppLayout
+
 - **Purpose**: Root layout wrapper
 - **Responsibilities**:
   - Provides theme context
@@ -145,6 +160,7 @@ AppLayout (Root)
   - Handles responsive layout
 
 #### AppSidebar
+
 - **Purpose**: Navigation sidebar
 - **Responsibilities**:
   - Displays tool categories
@@ -153,6 +169,7 @@ AppLayout (Root)
   - Active tool highlighting
 
 #### DynamicToolRenderer
+
 - **Purpose**: Dynamically loads tool components
 - **Responsibilities**:
   - Maps tool ID to component name
@@ -161,6 +178,7 @@ AppLayout (Root)
   - Error boundaries for tools
 
 #### Tool Components
+
 - **Purpose**: Individual tool implementations
 - **Structure**:
   ```typescript
@@ -175,12 +193,14 @@ AppLayout (Root)
 ### Component Patterns
 
 #### Separation of Concerns
+
 - **Logic**: Pure functions in `src/libs/`
 - **Configuration**: Data in `src/config/`
 - **UI**: React components in `src/components/tools/`
 - **State**: React hooks and context
 
 #### Reusability
+
 - Shared UI components in `src/components/ui/`
 - Common patterns extracted to hooks
 - Configuration-driven tool options
@@ -205,6 +225,7 @@ export function formatJson(input: string, minify: boolean): string {
 ```
 
 **Principles**:
+
 - Pure functions (no side effects)
 - No React dependencies
 - Easy to test
@@ -218,14 +239,15 @@ Configuration data for the tool:
 // src/config/json-formatter-config.ts
 export const JSON_FORMAT_OPTIONS = {
   // Options, examples, defaults
-};
+}
 
 export const JSON_EXAMPLES = {
   // Example inputs
-};
+}
 ```
 
 **Contains**:
+
 - Default options
 - Example inputs
 - Validation rules
@@ -258,6 +280,7 @@ export function JsonFormatter() {
 ```
 
 **Responsibilities**:
+
 - User interface
 - State management
 - Event handling
@@ -316,14 +339,15 @@ For static export compatibility, tools are loaded dynamically:
 // src/libs/tool-components.ts
 export const getToolComponent = async (componentName: string) => {
   const componentMap = {
-    'JsonFormatter': () => import('@/components/tools/JsonFormatter'),
+    JsonFormatter: () => import('@/components/tools/JsonFormatter'),
     // ... other tools
-  };
-  return componentMap[componentName]();
-};
+  }
+  return componentMap[componentName]()
+}
 ```
 
 This allows:
+
 - Code splitting per tool
 - Smaller initial bundle
 - Static export compatibility
@@ -357,6 +381,7 @@ export function ToolStateProvider({ children }) {
 ```
 
 **Features**:
+
 - Persists tool state across navigation
 - Per-tool state isolation
 - LocalStorage integration (optional)
@@ -364,6 +389,7 @@ export function ToolStateProvider({ children }) {
 ### Local Component State
 
 Most tools use local React state:
+
 - Input values
 - Output results
 - UI state (expanded/collapsed)
@@ -372,6 +398,7 @@ Most tools use local React state:
 ### Theme State
 
 Managed by `next-themes`:
+
 - Dark/light mode
 - System preference detection
 - Persistent theme selection
@@ -390,6 +417,7 @@ Managed by `next-themes`:
 ### Dynamic Routes
 
 Next.js App Router dynamic routes:
+
 - `[category]`: Tool category (e.g., "formatters", "encoders")
 - `[toolId]`: Specific tool ID (e.g., "json-formatter")
 
@@ -424,10 +452,11 @@ For static hosting (GitHub Pages, etc.):
 module.exports = {
   output: 'export',
   trailingSlash: true,
-};
+}
 ```
 
 **Considerations**:
+
 - All routes must be statically generable
 - Dynamic imports for code splitting
 - No server-side features
@@ -442,6 +471,7 @@ out/            # Static export (if enabled)
 ### Deployment
 
 The application can be deployed as:
+
 - **Static Site**: Export to `out/` directory
 - **Node.js App**: Run `next start` with `.next/` directory
 - **Serverless**: Vercel, Netlify, etc.
@@ -487,17 +517,20 @@ The application can be deployed as:
 ## Performance Considerations
 
 ### Code Splitting
+
 - Route-based splitting (automatic)
 - Component-based splitting (dynamic imports)
 - Tool-level splitting (each tool is separate chunk)
 
 ### Optimization Techniques
+
 - **Lazy Loading**: Tools loaded on demand
 - **Memoization**: React.memo for expensive components
 - **Virtual Scrolling**: For long lists (if needed)
 - **Image Optimization**: Next.js Image component
 
 ### Bundle Size
+
 - Tree shaking enabled
 - Minimal dependencies
 - Shared code extracted
@@ -506,12 +539,14 @@ The application can be deployed as:
 ## Security Considerations
 
 ### Client-Side Security
+
 - **Input Validation**: All inputs validated
 - **XSS Prevention**: React's built-in escaping
 - **No Eval**: No use of eval() or similar
 - **Content Security Policy**: Can be configured
 
 ### Privacy
+
 - **No Tracking**: No analytics or tracking
 - **No Data Collection**: All processing local
 - **No External Requests**: Tools don't call APIs (except IP checker)
@@ -519,12 +554,14 @@ The application can be deployed as:
 ## Future Architecture Considerations
 
 ### Potential Enhancements
+
 - **Service Workers**: Offline support
 - **IndexedDB**: Local data persistence
 - **Web Workers**: Heavy computation off main thread
 - **Progressive Web App**: PWA capabilities
 
 ### Scalability
+
 - Current architecture supports 100+ tools
 - Dynamic loading ensures performance
 - Modular design allows easy extension
@@ -533,4 +570,3 @@ The application can be deployed as:
 
 For implementation details, see [CONTRIBUTING.md](../CONTRIBUTING.md).
 For development setup, see [CONTRIBUTING.md](../CONTRIBUTING.md#development-setup).
-

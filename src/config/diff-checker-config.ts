@@ -21,16 +21,16 @@ export const DIFF_CHECKER_OPTIONS = {
     { value: 'xml', label: 'XML' },
     { value: 'yaml', label: 'YAML' },
     { value: 'markdown', label: 'Markdown' },
-    { value: 'shell', label: 'Shell' }
-  ]
-} as const;
+    { value: 'shell', label: 'Shell' },
+  ],
+} as const
 
 export const DEFAULT_DIFF_OPTIONS = {
   ignoreWhitespace: false,
   language: 'plaintext',
   wordWrap: false,
-  syncScroll: true
-};
+  syncScroll: true,
+}
 
 export const DIFF_EXAMPLES = {
   javascript: {
@@ -65,5 +65,4 @@ message = "Welcome to DevPockit"
 result = greet(message)
 print(result)`,
   },
-};
-
+}

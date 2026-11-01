@@ -11,27 +11,27 @@ export type SchemaFormat =
   | 'protobuf'
   | 'avro'
   | 'duckdb'
-  | 'pyspark';
+  | 'pyspark'
 
 export interface SchemaConverterOptions {
-  sourceFormat: SchemaFormat;
-  targetFormat: SchemaFormat;
+  sourceFormat: SchemaFormat
+  targetFormat: SchemaFormat
   // Type mapping preferences
-  stringType: 'varchar' | 'text' | 'string';
-  numberType: 'int' | 'bigint' | 'decimal' | 'float' | 'double';
-  booleanType: 'bool' | 'boolean' | 'bit';
+  stringType: 'varchar' | 'text' | 'string'
+  numberType: 'int' | 'bigint' | 'decimal' | 'float' | 'double'
+  booleanType: 'bool' | 'boolean' | 'bit'
   // Naming conventions
-  fieldNaming: 'camelCase' | 'snake_case' | 'PascalCase' | 'kebab-case' | 'preserve';
+  fieldNaming: 'camelCase' | 'snake_case' | 'PascalCase' | 'kebab-case' | 'preserve'
   // SQL specific
-  sqlDialect: 'postgresql' | 'mysql' | 'sqlite' | 'mssql' | 'oracle';
+  sqlDialect: 'postgresql' | 'mysql' | 'sqlite' | 'mssql' | 'oracle'
   // TypeScript specific
-  typescriptStyle: 'interface' | 'type' | 'class';
+  typescriptStyle: 'interface' | 'type' | 'class'
   // Python specific
-  pythonStyle: 'dataclass' | 'pydantic' | 'attrs' | 'class';
+  pythonStyle: 'dataclass' | 'pydantic' | 'attrs' | 'class'
   // MongoDB specific
-  mongoValidation: boolean;
+  mongoValidation: boolean
   // BigQuery specific
-  bigQueryMode: 'standard' | 'legacy';
+  bigQueryMode: 'standard' | 'legacy'
 }
 
 export const DEFAULT_SCHEMA_CONVERTER_OPTIONS: SchemaConverterOptions = {
@@ -45,138 +45,138 @@ export const DEFAULT_SCHEMA_CONVERTER_OPTIONS: SchemaConverterOptions = {
   typescriptStyle: 'interface',
   pythonStyle: 'dataclass',
   mongoValidation: true,
-  bigQueryMode: 'standard'
-};
+  bigQueryMode: 'standard',
+}
 
 export const SCHEMA_FORMAT_OPTIONS = [
   {
     value: 'json-schema',
     label: 'JSON Schema',
     description: 'JSON Schema (Draft 7)',
-    language: 'json'
+    language: 'json',
   },
   {
     value: 'spark',
     label: 'Spark Schema (JSON)',
     description: 'Apache Spark DataFrame Schema',
-    language: 'json'
+    language: 'json',
   },
   {
     value: 'mongo',
     label: 'MongoDB Schema',
     description: 'MongoDB BSON Schema',
-    language: 'json'
+    language: 'json',
   },
   {
     value: 'bigquery',
     label: 'BigQuery Schema',
     description: 'Google BigQuery Schema',
-    language: 'json'
+    language: 'json',
   },
   {
     value: 'typescript',
     label: 'TypeScript',
     description: 'TypeScript Interface/Type/Class',
-    language: 'typescript'
+    language: 'typescript',
   },
   {
     value: 'python',
     label: 'Python',
     description: 'Python Class/Dataclass',
-    language: 'python'
+    language: 'python',
   },
   {
     value: 'sql',
     label: 'SQL Table',
     description: 'SQL Table Definition',
-    language: 'sql'
+    language: 'sql',
   },
   {
     value: 'pandas',
     label: 'Pandas Schema',
     description: 'Pandas DataFrame dtypes',
-    language: 'json'
+    language: 'json',
   },
   {
     value: 'polars',
     label: 'Polars Schema',
     description: 'Polars DataFrame schema',
-    language: 'json'
+    language: 'json',
   },
   {
     value: 'protobuf',
     label: 'Protocol Buffers',
     description: 'Protocol Buffers (.proto)',
-    language: 'protobuf'
+    language: 'protobuf',
   },
   {
     value: 'avro',
     label: 'Apache Avro',
     description: 'Apache Avro Schema (JSON)',
-    language: 'json'
+    language: 'json',
   },
   {
     value: 'duckdb',
     label: 'DuckDB Schema',
     description: 'DuckDB Table Schema',
-    language: 'sql'
+    language: 'sql',
   },
   {
     value: 'pyspark',
     label: 'PySpark Schema',
     description: 'PySpark DataFrame Schema (Python)',
-    language: 'python'
-  }
-];
+    language: 'python',
+  },
+]
 
 export const STRING_TYPE_OPTIONS = [
   { value: 'varchar', label: 'VARCHAR', description: 'Variable-length string' },
   { value: 'text', label: 'TEXT', description: 'Unlimited length text' },
-  { value: 'string', label: 'STRING', description: 'Generic string type' }
-];
+  { value: 'string', label: 'STRING', description: 'Generic string type' },
+]
 
 export const NUMBER_TYPE_OPTIONS = [
   { value: 'int', label: 'INT', description: '32-bit integer' },
   { value: 'bigint', label: 'BIGINT', description: '64-bit integer' },
   { value: 'decimal', label: 'DECIMAL', description: 'Fixed-point decimal' },
   { value: 'float', label: 'FLOAT', description: '32-bit floating point' },
-  { value: 'double', label: 'DOUBLE', description: '64-bit floating point' }
-];
+  { value: 'double', label: 'DOUBLE', description: '64-bit floating point' },
+]
 
 export const BOOLEAN_TYPE_OPTIONS = [
   { value: 'bool', label: 'BOOL', description: 'Boolean type' },
   { value: 'boolean', label: 'BOOLEAN', description: 'Boolean type (full name)' },
-  { value: 'bit', label: 'BIT', description: 'Bit type (0 or 1)' }
-];
+  { value: 'bit', label: 'BIT', description: 'Bit type (0 or 1)' },
+]
 
 export const FIELD_NAMING_OPTIONS = [
   { value: 'preserve', label: 'Preserve', description: 'Keep original naming' },
   { value: 'camelCase', label: 'camelCase', description: 'camelCase naming' },
   { value: 'snake_case', label: 'snake_case', description: 'snake_case naming' },
   { value: 'PascalCase', label: 'PascalCase', description: 'PascalCase naming' },
-  { value: 'kebab-case', label: 'kebab-case', description: 'kebab-case naming' }
-];
+  { value: 'kebab-case', label: 'kebab-case', description: 'kebab-case naming' },
+]
 
 export const SQL_DIALECT_OPTIONS = [
   { value: 'postgresql', label: 'PostgreSQL', description: 'PostgreSQL dialect' },
   { value: 'mysql', label: 'MySQL', description: 'MySQL dialect' },
   { value: 'sqlite', label: 'SQLite', description: 'SQLite dialect' },
   { value: 'mssql', label: 'SQL Server', description: 'Microsoft SQL Server' },
-  { value: 'oracle', label: 'Oracle', description: 'Oracle Database' }
-];
+  { value: 'oracle', label: 'Oracle', description: 'Oracle Database' },
+]
 
 export const TYPESCRIPT_STYLE_OPTIONS = [
   { value: 'interface', label: 'Interface', description: 'TypeScript interface' },
   { value: 'type', label: 'Type', description: 'TypeScript type alias' },
-  { value: 'class', label: 'Class', description: 'TypeScript class' }
-];
+  { value: 'class', label: 'Class', description: 'TypeScript class' },
+]
 
 export const PYTHON_STYLE_OPTIONS = [
   { value: 'dataclass', label: 'Dataclass', description: 'Python dataclass' },
   { value: 'pydantic', label: 'Pydantic', description: 'Pydantic model' },
   { value: 'attrs', label: 'Attrs', description: 'Attrs class' },
-  { value: 'class', label: 'Class', description: 'Standard Python class' }
-];
+  { value: 'class', label: 'Class', description: 'Standard Python class' },
+]
 
 export const SCHEMA_EXAMPLES = [
   {
@@ -206,7 +206,7 @@ export const SCHEMA_EXAMPLES = [
   },
   "required": ["id", "name", "email"]
 }`,
-    description: 'Basic user object with common field types'
+    description: 'Basic user object with common field types',
   },
   {
     name: 'Nested Product Schema',
@@ -244,7 +244,7 @@ export const SCHEMA_EXAMPLES = [
   },
   "required": ["id", "name", "price"]
 }`,
-    description: 'Product with nested category and array of tags'
+    description: 'Product with nested category and array of tags',
   },
   {
     name: 'Spark Schema Example',
@@ -282,7 +282,7 @@ export const SCHEMA_EXAMPLES = [
     }
   ]
 }`,
-    description: 'Spark DataFrame schema with array field'
+    description: 'Spark DataFrame schema with array field',
   },
   {
     name: 'TypeScript Interface Example',
@@ -294,7 +294,7 @@ export const SCHEMA_EXAMPLES = [
   age?: number;
   active: boolean;
 }`,
-    description: 'TypeScript interface definition'
+    description: 'TypeScript interface definition',
   },
   {
     name: 'Python Dataclass Example',
@@ -309,7 +309,7 @@ class User:
     email: str
     age: Optional[int] = None
     active: bool = True`,
-    description: 'Python dataclass definition'
+    description: 'Python dataclass definition',
   },
   {
     name: 'SQL Table Example',
@@ -321,7 +321,7 @@ class User:
     age INTEGER,
     active BOOLEAN DEFAULT TRUE
 );`,
-    description: 'SQL table definition'
+    description: 'SQL table definition',
   },
   {
     name: 'MongoDB Schema Example',
@@ -356,7 +356,7 @@ class User:
     }
   }
 }`,
-    description: 'MongoDB BSON schema with validation'
+    description: 'MongoDB BSON schema with validation',
   },
   {
     name: 'BigQuery Schema Example',
@@ -410,7 +410,7 @@ class User:
     ]
   }
 ]`,
-    description: 'BigQuery schema with nested and repeated fields'
+    description: 'BigQuery schema with nested and repeated fields',
   },
   {
     name: 'Pandas Schema Example',
@@ -422,7 +422,7 @@ class User:
   "email": "object",
   "active": "bool"
 }`,
-    description: 'Pandas DataFrame dtypes dictionary'
+    description: 'Pandas DataFrame dtypes dictionary',
   },
   {
     name: 'Polars Schema Example',
@@ -434,7 +434,7 @@ class User:
   "email": "Utf8",
   "active": "Bool"
 }`,
-    description: 'Polars DataFrame schema dictionary'
+    description: 'Polars DataFrame schema dictionary',
   },
   {
     name: 'Protocol Buffers Example',
@@ -449,7 +449,7 @@ message User {
   bool active = 5;
   repeated string tags = 6;
 }`,
-    description: 'Protocol Buffers message definition with common field types'
+    description: 'Protocol Buffers message definition with common field types',
   },
   {
     name: 'Apache Avro Example',
@@ -489,7 +489,7 @@ message User {
     }
   ]
 }`,
-    description: 'Apache Avro schema with union types for nullable fields'
+    description: 'Apache Avro schema with union types for nullable fields',
   },
   {
     name: 'DuckDB Schema Example',
@@ -502,7 +502,7 @@ message User {
     active BOOLEAN DEFAULT TRUE,
     tags VARCHAR[]
 );`,
-    description: 'DuckDB table schema with array type'
+    description: 'DuckDB table schema with array type',
   },
   {
     name: 'PySpark Schema Example',
@@ -517,23 +517,22 @@ schema = StructType([
     StructField("active", BooleanType(), True),
     StructField("tags", ArrayType(StringType()), True)
 ])`,
-    description: 'PySpark StructType schema definition'
-  }
-];
+    description: 'PySpark StructType schema definition',
+  },
+]
 
 export const SCHEMA_CONVERSION_MATRIX: Record<SchemaFormat, SchemaFormat[]> = {
   'json-schema': ['typescript', 'python', 'sql', 'spark', 'mongo', 'bigquery', 'protobuf', 'avro', 'duckdb', 'pyspark'],
-  'spark': ['json-schema', 'typescript', 'python', 'sql', 'protobuf', 'avro', 'duckdb', 'pyspark'],
-  'mongo': ['json-schema', 'typescript', 'python', 'sql', 'protobuf', 'avro', 'duckdb', 'pyspark'],
-  'bigquery': ['json-schema', 'typescript', 'python', 'sql', 'protobuf', 'avro', 'duckdb', 'pyspark'],
-  'typescript': ['json-schema', 'python', 'sql', 'spark', 'protobuf', 'avro', 'duckdb', 'pyspark'],
-  'python': ['json-schema', 'typescript', 'sql', 'spark', 'protobuf', 'avro', 'duckdb', 'pyspark'],
-  'sql': ['json-schema', 'typescript', 'python', 'spark', 'protobuf', 'avro', 'duckdb', 'pyspark'],
-  'pandas': ['json-schema', 'typescript', 'python', 'sql', 'protobuf', 'avro', 'duckdb', 'pyspark'],
-  'polars': ['json-schema', 'typescript', 'python', 'sql', 'protobuf', 'avro', 'duckdb', 'pyspark'],
-  'protobuf': ['json-schema', 'typescript', 'python', 'sql', 'spark', 'mongo', 'bigquery', 'avro', 'duckdb', 'pyspark'],
-  'avro': ['json-schema', 'typescript', 'python', 'sql', 'spark', 'mongo', 'bigquery', 'protobuf', 'duckdb', 'pyspark'],
-  'duckdb': ['json-schema', 'typescript', 'python', 'sql', 'spark', 'mongo', 'bigquery', 'protobuf', 'avro', 'pyspark'],
-  'pyspark': ['json-schema', 'typescript', 'python', 'sql', 'spark', 'mongo', 'bigquery', 'protobuf', 'avro', 'duckdb']
-};
-
+  spark: ['json-schema', 'typescript', 'python', 'sql', 'protobuf', 'avro', 'duckdb', 'pyspark'],
+  mongo: ['json-schema', 'typescript', 'python', 'sql', 'protobuf', 'avro', 'duckdb', 'pyspark'],
+  bigquery: ['json-schema', 'typescript', 'python', 'sql', 'protobuf', 'avro', 'duckdb', 'pyspark'],
+  typescript: ['json-schema', 'python', 'sql', 'spark', 'protobuf', 'avro', 'duckdb', 'pyspark'],
+  python: ['json-schema', 'typescript', 'sql', 'spark', 'protobuf', 'avro', 'duckdb', 'pyspark'],
+  sql: ['json-schema', 'typescript', 'python', 'spark', 'protobuf', 'avro', 'duckdb', 'pyspark'],
+  pandas: ['json-schema', 'typescript', 'python', 'sql', 'protobuf', 'avro', 'duckdb', 'pyspark'],
+  polars: ['json-schema', 'typescript', 'python', 'sql', 'protobuf', 'avro', 'duckdb', 'pyspark'],
+  protobuf: ['json-schema', 'typescript', 'python', 'sql', 'spark', 'mongo', 'bigquery', 'avro', 'duckdb', 'pyspark'],
+  avro: ['json-schema', 'typescript', 'python', 'sql', 'spark', 'mongo', 'bigquery', 'protobuf', 'duckdb', 'pyspark'],
+  duckdb: ['json-schema', 'typescript', 'python', 'sql', 'spark', 'mongo', 'bigquery', 'protobuf', 'avro', 'pyspark'],
+  pyspark: ['json-schema', 'typescript', 'python', 'sql', 'spark', 'mongo', 'bigquery', 'protobuf', 'avro', 'duckdb'],
+}

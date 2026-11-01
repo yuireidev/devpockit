@@ -3,21 +3,21 @@
  * Connects Shiki syntax highlighting to Monaco Editor
  */
 
-import { shikiToMonaco } from '@shikijs/monaco';
-import type * as Monaco from 'monaco-editor';
-import type { Highlighter } from 'shiki';
+import { shikiToMonaco } from '@shikijs/monaco'
+import type * as Monaco from 'monaco-editor'
+import type { Highlighter } from 'shiki'
 
 /**
  * Track if bridge has been connected to prevent duplicate connections
  */
-let isConnected = false;
-let connectedMonacoInstance: typeof Monaco | null = null;
+let isConnected = false
+let connectedMonacoInstance: typeof Monaco | null = null
 
 /**
  * Languages to register with Monaco
  * These should match the languages loaded in Shiki
  */
-const LANGUAGES_TO_REGISTER = ['json', 'xml', 'javascript', 'plaintext'] as const;
+const LANGUAGES_TO_REGISTER = ['json', 'xml', 'javascript', 'plaintext'] as const
 
 /**
  * Register languages with Monaco Editor
@@ -28,15 +28,15 @@ function registerLanguages(monaco: typeof Monaco): void {
   for (const langId of LANGUAGES_TO_REGISTER) {
     try {
       // Check if language is already registered
-      const languages = monaco.languages.getLanguages();
-      const isRegistered = languages.some((lang) => lang.id === langId);
+      const languages = monaco.languages.getLanguages()
+      const isRegistered = languages.some((lang) => lang.id === langId)
 
       if (!isRegistered) {
-        monaco.languages.register({ id: langId });
+        monaco.languages.register({ id: langId })
       }
     } catch (error) {
       // Language might already be registered, ignore error
-      console.warn(`Failed to register language ${langId}:`, error);
+      console.warn(`Failed to register language ${langId}:`, error)
     }
   }
 }
@@ -48,29 +48,26 @@ function registerLanguages(monaco: typeof Monaco): void {
  * @param highlighter - Shiki highlighter instance
  * @returns Promise that resolves when connection is complete
  */
-export async function connectShikiToMonaco(
-  monaco: typeof Monaco,
-  highlighter: Highlighter
-): Promise<void> {
+export async function connectShikiToMonaco(monaco: typeof Monaco, highlighter: Highlighter): Promise<void> {
   // Check if already connected with the same instance
   if (isConnected && connectedMonacoInstance === monaco) {
-    return;
+    return
   }
 
   try {
     // Register languages with Monaco first
-    registerLanguages(monaco);
+    registerLanguages(monaco)
 
     // Connect Shiki to Monaco
     // This registers Shiki's tokenization with Monaco's language services
-    shikiToMonaco(highlighter, monaco);
+    shikiToMonaco(highlighter, monaco)
 
     // Mark as connected
-    isConnected = true;
-    connectedMonacoInstance = monaco;
+    isConnected = true
+    connectedMonacoInstance = monaco
   } catch (error) {
-    console.error('Failed to connect Shiki to Monaco:', error);
-    throw new Error('Failed to connect Shiki syntax highlighting to Monaco Editor');
+    console.error('Failed to connect Shiki to Monaco:', error)
+    throw new Error('Failed to connect Shiki syntax highlighting to Monaco Editor')
   }
 }
 
@@ -79,7 +76,7 @@ export async function connectShikiToMonaco(
  * @returns true if connected, false otherwise
  */
 export function isShikiConnectedToMonaco(): boolean {
-  return isConnected;
+  return isConnected
 }
 
 /**
@@ -88,8 +85,8 @@ export function isShikiConnectedToMonaco(): boolean {
  * the highlighter if you reset this
  */
 export function resetMonacoShikiConnection(): void {
-  isConnected = false;
-  connectedMonacoInstance = null;
+  isConnected = false
+  connectedMonacoInstance = null
 }
 
 /**
@@ -99,15 +96,12 @@ export function resetMonacoShikiConnection(): void {
  * @param highlighter - Shiki highlighter instance
  * @returns Promise that resolves when integration is complete
  */
-export async function initializeMonacoShikiIntegration(
-  monaco: typeof Monaco,
-  highlighter: Highlighter
-): Promise<void> {
+export async function initializeMonacoShikiIntegration(monaco: typeof Monaco, highlighter: Highlighter): Promise<void> {
   // Ensure languages are registered
-  registerLanguages(monaco);
+  registerLanguages(monaco)
 
   // Connect Shiki to Monaco
-  await connectShikiToMonaco(monaco, highlighter);
+  await connectShikiToMonaco(monaco, highlighter)
 }
 
 /**
@@ -115,6 +109,5 @@ export async function initializeMonacoShikiIntegration(
  * @returns Monaco instance or null if not connected
  */
 export function getConnectedMonacoInstance(): typeof Monaco | null {
-  return connectedMonacoInstance;
+  return connectedMonacoInstance
 }
-

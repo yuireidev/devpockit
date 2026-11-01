@@ -1,7 +1,7 @@
 name: Bug Report
 description: Report a bug or unexpected behavior in DevPockit
-title: "[Bug]: "
-labels: ["bug"]
+title: '[Bug]: '
+labels: ['bug']
 body:
   - type: markdown
     attributes:
@@ -14,37 +14,37 @@ body:
       label: Which tool is affected?
       description: Select the tool where the bug occurs
       options:
-        - "Not tool-specific / General"
-        - "Lorem Ipsum Generator"
-        - "Regex Tester"
-        - "Diff Checker"
-        - "JSON Formatter"
-        - "XML Formatter"
-        - "UUID Generator"
-        - "JWT Decoder"
-        - "JWT Encoder"
-        - "Hash Generator"
-        - "QR Code Generator"
-        - "QR Code Decoder"
-        - "QR Code Scanner"
-        - "URL Encoder"
-        - "URL Decoder"
-        - "Base Encoder/Decoder"
-        - "Cron Expression Parser"
-        - "Data Format Converter"
-        - "Timestamp Converter"
-        - "List Format Converter"
-        - "Schema Converter"
-        - "Number Base Converter"
-        - "CIDR Analyzer"
-        - "IP to CIDR Converter"
-        - "IP Address Lookup"
-        - "System Information"
-        - "List Comparison"
-        - "JSON Path Finder"
-        - "XML Path Finder"
-        - "YAML Path Finder"
-        - "JSON/YAML Schema Generator"
+        - 'Not tool-specific / General'
+        - 'Lorem Ipsum Generator'
+        - 'Regex Tester'
+        - 'Diff Checker'
+        - 'JSON Formatter'
+        - 'XML Formatter'
+        - 'UUID Generator'
+        - 'JWT Decoder'
+        - 'JWT Encoder'
+        - 'Hash Generator'
+        - 'QR Code Generator'
+        - 'QR Code Decoder'
+        - 'QR Code Scanner'
+        - 'URL Encoder'
+        - 'URL Decoder'
+        - 'Base Encoder/Decoder'
+        - 'Cron Expression Parser'
+        - 'Data Format Converter'
+        - 'Timestamp Converter'
+        - 'List Format Converter'
+        - 'Schema Converter'
+        - 'Number Base Converter'
+        - 'CIDR Analyzer'
+        - 'IP to CIDR Converter'
+        - 'IP Address Lookup'
+        - 'System Information'
+        - 'List Comparison'
+        - 'JSON Path Finder'
+        - 'XML Path Finder'
+        - 'YAML Path Finder'
+        - 'JSON/YAML Schema Generator'
     validations:
       required: true
 
@@ -123,7 +123,7 @@ body:
     attributes:
       label: Browser Version
       description: Browser version (e.g., Chrome 120.0.0.0)
-      placeholder: "e.g., Chrome 120.0.0.0"
+      placeholder: 'e.g., Chrome 120.0.0.0'
     validations:
       required: false
 
@@ -147,7 +147,7 @@ body:
     attributes:
       label: OS Version
       description: Operating system version
-      placeholder: "e.g., macOS 14.2.1"
+      placeholder: 'e.g., macOS 14.2.1'
     validations:
       required: false
 
@@ -179,4 +179,3 @@ body:
           required: true
         - label: I have provided all the information requested above
           required: true
-

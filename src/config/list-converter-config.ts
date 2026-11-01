@@ -3,17 +3,17 @@
  * Options and settings for list format conversion tool
  */
 
-import type { InputFormat } from './list-comparison-config';
+import type { InputFormat } from './list-comparison-config'
 
-export type ListFormat = InputFormat;
+export type ListFormat = InputFormat
 
 export interface ListConverterOptions {
-  inputFormat: ListFormat;
-  outputFormat: ListFormat;
-  preserveTypes: boolean;
-  removeEmpty: boolean;
-  removeDuplicates: boolean;
-  sortOrder: 'none' | 'asc' | 'desc';
+  inputFormat: ListFormat
+  outputFormat: ListFormat
+  preserveTypes: boolean
+  removeEmpty: boolean
+  removeDuplicates: boolean
+  sortOrder: 'none' | 'asc' | 'desc'
 }
 
 export const LIST_CONVERTER_OPTIONS = {
@@ -28,7 +28,7 @@ export const LIST_CONVERTER_OPTIONS = {
     { value: 'javascript-array', label: 'JavaScript Array' },
     { value: 'yaml-array', label: 'YAML Array' },
   ] as const,
-} as const;
+} as const
 
 export const DEFAULT_LIST_CONVERTER_OPTIONS: ListConverterOptions = {
   inputFormat: 'line-by-line',
@@ -37,7 +37,7 @@ export const DEFAULT_LIST_CONVERTER_OPTIONS: ListConverterOptions = {
   removeEmpty: true,
   removeDuplicates: false,
   sortOrder: 'none',
-};
+}
 
 export const LIST_CONVERTER_EXAMPLES: Record<ListFormat, string> = {
   'line-by-line': `apple
@@ -53,5 +53,4 @@ cherry
   'python-list': `['apple', 'banana', 'cherry', 123, 456]`,
   'javascript-array': `['apple', 'banana', 'cherry', 123, 456]`,
   'yaml-array': `- apple\n- banana\n- cherry\n- 123\n- 456`,
-};
-
+}

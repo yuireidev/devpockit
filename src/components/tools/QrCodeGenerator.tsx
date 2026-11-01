@@ -1,15 +1,15 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { Textarea } from '@/components/ui/textarea'
 import {
   DEFAULT_QR_OPTIONS,
   QR_CODE_COLOR_PRESETS,
@@ -17,8 +17,8 @@ import {
   QR_CODE_EXAMPLES,
   QR_CODE_FORMATS,
   QR_CODE_SIZE_LIMITS,
-  QR_CODE_TYPES
-} from '@/config/qr-code-generator-config';
+  QR_CODE_TYPES,
+} from '@/config/qr-code-generator-config'
 import {
   copyQrCodeToClipboard,
   downloadQrCode,
@@ -30,57 +30,62 @@ import {
   type QrCodeOutputFormat,
   type QrCodeResult,
   type QrCodeType,
-} from '@/libs/qr-code-generator';
-import { cn } from '@/libs/utils';
-import { ArrowDownTrayIcon, ArrowPathIcon, ChevronDownIcon, ClipboardDocumentIcon, EyeIcon, EyeSlashIcon } from '@heroicons/react/24/outline';
-import { useEffect, useRef, useState } from 'react';
+} from '@/libs/qr-code-generator'
+import { cn } from '@/libs/utils'
+import {
+  ArrowDownTrayIcon,
+  ArrowPathIcon,
+  ChevronDownIcon,
+  ClipboardDocumentIcon,
+  EyeIcon,
+  EyeSlashIcon,
+} from '@heroicons/react/24/outline'
+import { useEffect, useRef, useState } from 'react'
 
 interface QrCodeGeneratorProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps) {
-  const { toolState, updateToolState } = useToolState('qr-code-generator', instanceId);
+  const { toolState, updateToolState } = useToolState('qr-code-generator', instanceId)
 
-  const [options, setOptions] = useState<QrCodeOptions>(
-    (toolState?.options as QrCodeOptions) || DEFAULT_QR_OPTIONS
-  );
-  const [input, setInput] = useState<QrCodeInput>(
-    (toolState?.input as QrCodeInput) || { text: '' }
-  );
-  const [output, setOutput] = useState<string>(toolState?.output || '');
+  const [options, setOptions] = useState<QrCodeOptions>((toolState?.options as QrCodeOptions) || DEFAULT_QR_OPTIONS)
+  const [input, setInput] = useState<QrCodeInput>((toolState?.input as QrCodeInput) || { text: '' })
+  const [output, setOutput] = useState<string>(toolState?.output || '')
   const [qrCodeResult, setQrCodeResult] = useState<QrCodeResult | null>(
     (toolState?.qrCodeResult as QrCodeResult) || null
-  );
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [error, setError] = useState<string>(toolState?.error || '');
+  )
+  const [isGenerating, setIsGenerating] = useState(false)
+  const [error, setError] = useState<string>(toolState?.error || '')
   const [stats, setStats] = useState<{
-    type: string;
-    size: number;
-    errorCorrection: string;
-    format: string;
-    dataUrlLength: number;
-    estimatedCapacity: number;
+    type: string
+    size: number
+    errorCorrection: string
+    format: string
+    dataUrlLength: number
+    estimatedCapacity: number
   } | null>(
     (toolState?.stats as {
-      type: string;
-      size: number;
-      errorCorrection: string;
-      format: string;
-      dataUrlLength: number;
-      estimatedCapacity: number;
+      type: string
+      size: number
+      errorCorrection: string
+      format: string
+      dataUrlLength: number
+      estimatedCapacity: number
     }) || null
-  );
-  const [copySuccess, setCopySuccess] = useState(false);
-  const [downloadSuccess, setDownloadSuccess] = useState(false);
-  const [sizeInput, setSizeInput] = useState<string>(() => ((toolState?.options as QrCodeOptions | undefined)?.size ?? DEFAULT_QR_OPTIONS.size).toString());
-  const [showWifiPassword, setShowWifiPassword] = useState(false);
+  )
+  const [copySuccess, setCopySuccess] = useState(false)
+  const [downloadSuccess, setDownloadSuccess] = useState(false)
+  const [sizeInput, setSizeInput] = useState<string>(() =>
+    ((toolState?.options as QrCodeOptions | undefined)?.size ?? DEFAULT_QR_OPTIONS.size).toString()
+  )
+  const [showWifiPassword, setShowWifiPassword] = useState(false)
 
-  const optionsRef = useRef(options);
+  const optionsRef = useRef(options)
   useEffect(() => {
-    optionsRef.current = options;
-  }, [options]);
+    optionsRef.current = options
+  }, [options])
 
   useEffect(() => {
     updateToolState({
@@ -89,175 +94,181 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
       output,
       error,
       qrCodeResult: qrCodeResult || undefined,
-      stats: stats || undefined
-    });
-  }, [options, input, output, error, qrCodeResult, stats, updateToolState]);
+      stats: stats || undefined,
+    })
+  }, [options, input, output, error, qrCodeResult, stats, updateToolState])
 
   const handleGenerateQrCode = async () => {
-    setIsGenerating(true);
-    setError('');
+    setIsGenerating(true)
+    setError('')
 
     try {
-      const result = await generateQrCode(input, optionsRef.current);
-      setQrCodeResult(result);
-      setOutput(result.dataUrl);
+      const result = await generateQrCode(input, optionsRef.current)
+      setQrCodeResult(result)
+      setOutput(result.dataUrl)
 
-      const qrStats = getQrCodeStats(result);
-      setStats(qrStats);
+      const qrStats = getQrCodeStats(result)
+      setStats(qrStats)
     } catch (err) {
-      let errorMessage = 'Failed to generate QR code';
+      let errorMessage = 'Failed to generate QR code'
 
       if (err instanceof Error) {
         if (err.message.includes('Text is required')) {
-          errorMessage = 'Please enter some text to generate a QR code';
+          errorMessage = 'Please enter some text to generate a QR code'
         } else if (err.message.includes('URL is required')) {
-          errorMessage = 'Please enter a URL to generate a QR code';
+          errorMessage = 'Please enter a URL to generate a QR code'
         } else if (err.message.includes('Contact name is required')) {
-          errorMessage = 'Please enter a contact name';
+          errorMessage = 'Please enter a contact name'
         } else if (err.message.includes('WiFi SSID is required')) {
-          errorMessage = 'Please enter a WiFi SSID';
+          errorMessage = 'Please enter a WiFi SSID'
         } else if (err.message.includes('Phone number is required')) {
-          errorMessage = 'Please enter a phone number for SMS QR code';
+          errorMessage = 'Please enter a phone number for SMS QR code'
         } else if (err.message.includes('Email address is required')) {
-          errorMessage = 'Please enter an email address';
+          errorMessage = 'Please enter an email address'
         } else {
-          errorMessage = err.message;
+          errorMessage = err.message
         }
       }
 
-      setError(errorMessage);
-      setOutput('');
-      setQrCodeResult(null);
-      setStats(null);
+      setError(errorMessage)
+      setOutput('')
+      setQrCodeResult(null)
+      setStats(null)
     } finally {
-      setIsGenerating(false);
+      setIsGenerating(false)
     }
-  };
+  }
 
   const handleCopyOutput = async () => {
-    if (!qrCodeResult) return;
+    if (!qrCodeResult) return
 
     try {
-      await copyQrCodeToClipboard(qrCodeResult);
-      setCopySuccess(true);
-      setTimeout(() => setCopySuccess(false), 2000);
+      await copyQrCodeToClipboard(qrCodeResult)
+      setCopySuccess(true)
+      setTimeout(() => setCopySuccess(false), 2000)
     } catch (err) {
-      console.error('Failed to copy:', err);
+      console.error('Failed to copy:', err)
     }
-  };
+  }
 
   const handleDownloadQrCode = () => {
-    if (!qrCodeResult) return;
+    if (!qrCodeResult) return
 
     try {
-      downloadQrCode(qrCodeResult);
-      setDownloadSuccess(true);
-      setTimeout(() => setDownloadSuccess(false), 2000);
+      downloadQrCode(qrCodeResult)
+      setDownloadSuccess(true)
+      setTimeout(() => setDownloadSuccess(false), 2000)
     } catch (err) {
-      console.error('Failed to download:', err);
+      console.error('Failed to download:', err)
     }
-  };
+  }
 
   const handleOptionChange = <Key extends keyof QrCodeOptions>(key: Key, value: QrCodeOptions[Key]) => {
-    setOptions(prev => ({ ...prev, [key]: value }));
-  };
+    setOptions((prev) => ({ ...prev, [key]: value }))
+  }
 
   const handleSizeChange = (value: string) => {
-    setSizeInput(value);
+    setSizeInput(value)
     if (value === '') {
-      return;
+      return
     }
-    const size = parseInt(value, 10);
+    const size = parseInt(value, 10)
     if (!isNaN(size) && size >= QR_CODE_SIZE_LIMITS.min && size <= QR_CODE_SIZE_LIMITS.max) {
-      handleOptionChange('size', size);
+      handleOptionChange('size', size)
     }
-  };
+  }
 
   const handleSizeBlur = () => {
     if (sizeInput === '' || sizeInput.trim() === '') {
-      setSizeInput(QR_CODE_SIZE_LIMITS.min.toString());
-      handleOptionChange('size', QR_CODE_SIZE_LIMITS.min);
-      return;
+      setSizeInput(QR_CODE_SIZE_LIMITS.min.toString())
+      handleOptionChange('size', QR_CODE_SIZE_LIMITS.min)
+      return
     }
 
-    const size = parseInt(sizeInput, 10);
+    const size = parseInt(sizeInput, 10)
 
     if (isNaN(size) || size < QR_CODE_SIZE_LIMITS.min) {
-      setSizeInput(QR_CODE_SIZE_LIMITS.min.toString());
-      handleOptionChange('size', QR_CODE_SIZE_LIMITS.min);
+      setSizeInput(QR_CODE_SIZE_LIMITS.min.toString())
+      handleOptionChange('size', QR_CODE_SIZE_LIMITS.min)
     } else if (size > QR_CODE_SIZE_LIMITS.max) {
-      setSizeInput(QR_CODE_SIZE_LIMITS.max.toString());
-      handleOptionChange('size', QR_CODE_SIZE_LIMITS.max);
+      setSizeInput(QR_CODE_SIZE_LIMITS.max.toString())
+      handleOptionChange('size', QR_CODE_SIZE_LIMITS.max)
     } else {
-      handleOptionChange('size', size);
+      handleOptionChange('size', size)
     }
-  };
+  }
 
   const handleInputChange = <Key extends keyof QrCodeInput>(key: Key, value: QrCodeInput[Key]) => {
-    setInput(prev => ({ ...prev, [key]: value }));
-  };
+    setInput((prev) => ({ ...prev, [key]: value }))
+  }
 
-  const handleContactChange = <Key extends keyof NonNullable<QrCodeInput['contact']>>(key: Key, value: NonNullable<QrCodeInput['contact']>[Key]) => {
-    setInput(prev => ({
+  const handleContactChange = <Key extends keyof NonNullable<QrCodeInput['contact']>>(
+    key: Key,
+    value: NonNullable<QrCodeInput['contact']>[Key]
+  ) => {
+    setInput((prev) => ({
       ...prev,
       contact: {
         name: '',
         ...(prev.contact || {}),
-        [key]: value
-      }
-    }));
-  };
+        [key]: value,
+      },
+    }))
+  }
 
-  const handleWifiChange = <Key extends keyof NonNullable<QrCodeInput['wifi']>>(key: Key, value: NonNullable<QrCodeInput['wifi']>[Key]) => {
-    setInput(prev => ({
+  const handleWifiChange = <Key extends keyof NonNullable<QrCodeInput['wifi']>>(
+    key: Key,
+    value: NonNullable<QrCodeInput['wifi']>[Key]
+  ) => {
+    setInput((prev) => ({
       ...prev,
       wifi: {
         ssid: '',
         password: '',
         security: 'WPA' as const,
         ...(prev.wifi || {}),
-        [key]: value
-      }
-    }));
-  };
+        [key]: value,
+      },
+    }))
+  }
 
   const handleSmsChange = (key: string, value: string) => {
-    setInput(prev => ({
+    setInput((prev) => ({
       ...prev,
       sms: {
         phone: '',
         message: '',
         ...(prev.sms || {}),
-        [key]: value
-      }
-    }));
-  };
+        [key]: value,
+      },
+    }))
+  }
 
   const handleEmailChange = (key: string, value: string) => {
-    setInput(prev => ({
+    setInput((prev) => ({
       ...prev,
       email: {
         to: '',
         ...(prev.email || {}),
-        [key]: value
-      }
-    }));
-  };
+        [key]: value,
+      },
+    }))
+  }
 
-  const handleColorPreset = (preset: typeof QR_CODE_COLOR_PRESETS[0]) => {
-    setOptions(prev => ({
+  const handleColorPreset = (preset: (typeof QR_CODE_COLOR_PRESETS)[0]) => {
+    setOptions((prev) => ({
       ...prev,
       color: {
         dark: preset.dark,
-        light: preset.light
-      }
-    }));
-  };
+        light: preset.light,
+      },
+    }))
+  }
 
-  const handleExample = (example: typeof QR_CODE_EXAMPLES[keyof typeof QR_CODE_EXAMPLES]) => {
-    setInput(example.input);
-    setOptions(example.options);
-  };
+  const handleExample = (example: (typeof QR_CODE_EXAMPLES)[keyof typeof QR_CODE_EXAMPLES]) => {
+    setInput(example.input)
+    setOptions(example.options)
+  }
 
   const renderInputFields = () => {
     switch (options.type) {
@@ -273,7 +284,7 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
               className="min-h-[120px]"
             />
           </div>
-        );
+        )
 
       case 'url':
         return (
@@ -287,12 +298,12 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
               onChange={(e) => handleInputChange('url', e.target.value)}
             />
           </div>
-        );
+        )
 
       case 'contact':
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="contact-name">Name *</Label>
                 <Input
@@ -350,12 +361,12 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
               </div>
             </div>
           </div>
-        );
+        )
 
       case 'wifi':
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="wifi-ssid">Network Name (SSID) *</Label>
                 <Input
@@ -379,7 +390,7 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
                   <button
                     type="button"
                     onClick={() => setShowWifiPassword(!showWifiPassword)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                    className="absolute top-1/2 right-3 -translate-y-1/2 rounded p-1 transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-700"
                     aria-label={showWifiPassword ? 'Hide password' : 'Show password'}
                   >
                     {showWifiPassword ? (
@@ -394,7 +405,9 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
                 <Label htmlFor="wifi-security">Security Type</Label>
                 <Select
                   value={input.wifi?.security || 'WPA'}
-                  onValueChange={(value) => handleWifiChange('security', value as NonNullable<QrCodeInput['wifi']>['security'])}
+                  onValueChange={(value) =>
+                    handleWifiChange('security', value as NonNullable<QrCodeInput['wifi']>['security'])
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue />
@@ -416,12 +429,12 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
               </div>
             </div>
           </div>
-        );
+        )
 
       case 'sms':
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="sms-phone">Phone Number *</Label>
                 <Input
@@ -443,12 +456,12 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
               </div>
             </div>
           </div>
-        );
+        )
 
       case 'email':
         return (
           <div className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <div className="space-y-2">
                 <Label htmlFor="email-to">Email Address *</Label>
                 <Input
@@ -480,18 +493,18 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
               </div>
             </div>
           </div>
-        );
+        )
 
       default:
-        return null;
+        return null
     }
-  };
+  }
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           QR Code Generator
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -500,15 +513,12 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Controls Row */}
-          <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex flex-wrap items-center gap-3">
             {/* QR Code Type */}
-            <Select
-              value={options.type}
-              onValueChange={(value) => handleOptionChange('type', value as QrCodeType)}
-            >
+            <Select value={options.type} onValueChange={(value) => handleOptionChange('type', value as QrCodeType)}>
               <SelectTrigger label="QR Type:" className="w-[240px]">
                 <SelectValue />
               </SelectTrigger>
@@ -522,9 +532,9 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
             </Select>
 
             {/* Size Input with inline label */}
-            <div className="inline-flex h-10 items-center rounded-lg border border-neutral-200 bg-background pl-3 pr-2 py-[9.5px] text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 dark:border-neutral-700 w-[160px]">
-              <div className="flex items-center gap-3 text-sm leading-normal tracking-[0.07px] flex-1 min-w-0">
-                <span className="text-neutral-500 whitespace-nowrap dark:text-neutral-400">Size:</span>
+            <div className="bg-background ring-offset-background focus-within:ring-ring inline-flex h-10 w-[160px] items-center rounded-lg border border-neutral-200 py-[9.5px] pr-2 pl-3 text-sm focus-within:ring-2 focus-within:ring-offset-2 dark:border-neutral-700">
+              <div className="flex min-w-0 flex-1 items-center gap-3 text-sm leading-normal tracking-[0.07px]">
+                <span className="whitespace-nowrap text-neutral-500 dark:text-neutral-400">Size:</span>
                 <input
                   type="number"
                   min={QR_CODE_SIZE_LIMITS.min}
@@ -532,9 +542,9 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
                   value={sizeInput}
                   onChange={(e) => handleSizeChange(e.target.value)}
                   onBlur={handleSizeBlur}
-                  className="font-mono bg-transparent text-neutral-900 dark:text-neutral-100 outline-hidden flex-1 min-w-0 text-center [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  className="min-w-0 flex-1 [appearance:textfield] bg-transparent text-center font-mono text-neutral-900 outline-hidden dark:text-neutral-100 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                 />
-                <span className="text-neutral-500 whitespace-nowrap dark:text-neutral-400 text-xs">px</span>
+                <span className="text-xs whitespace-nowrap text-neutral-500 dark:text-neutral-400">px</span>
               </div>
             </div>
 
@@ -574,13 +584,15 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
 
             {/* Color Theme */}
             <Select
-              value={QR_CODE_COLOR_PRESETS.find(preset =>
-                preset.dark === options.color.dark && preset.light === options.color.light
-              )?.name || 'Default'}
+              value={
+                QR_CODE_COLOR_PRESETS.find(
+                  (preset) => preset.dark === options.color.dark && preset.light === options.color.light
+                )?.name || 'Default'
+              }
               onValueChange={(value) => {
-                const preset = QR_CODE_COLOR_PRESETS.find(p => p.name === value);
+                const preset = QR_CODE_COLOR_PRESETS.find((p) => p.name === value)
                 if (preset) {
-                  handleColorPreset(preset);
+                  handleColorPreset(preset)
                 }
               }}
             >
@@ -591,23 +603,20 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
                 {QR_CODE_COLOR_PRESETS.map((preset) => (
                   <SelectItem key={preset.name} value={preset.name}>
                     <div className="flex items-center gap-2">
-                      <div
-                        className="w-4 h-4 rounded border"
-                        style={{ backgroundColor: preset.dark }}
-                      />
+                      <div className="h-4 w-4 rounded border" style={{ backgroundColor: preset.dark }} />
                       {preset.name}
                     </div>
                   </SelectItem>
                 ))}
               </SelectContent>
             </Select>
-
           </div>
 
           {/* Main Content - Side by Side */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Input Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="Input Data"
               height="600px"
               showCopyButton={false}
@@ -617,7 +626,7 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
                   <DropdownMenuTrigger asChild>
                     <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                       Load Examples
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      <ChevronDownIcon className="ml-1 h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
@@ -630,15 +639,10 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
                 </DropdownMenu>
               }
               footerRightContent={
-                <Button
-                  onClick={handleGenerateQrCode}
-                  disabled={isGenerating}
-                  size="sm"
-                  className="h-8 px-4"
-                >
+                <Button onClick={handleGenerateQrCode} disabled={isGenerating} size="sm" className="h-8 px-4">
                   {isGenerating ? (
                     <>
-                      <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                      <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
                       Generating...
                     </>
                   ) : (
@@ -651,7 +655,8 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
             </CodePanel>
 
             {/* Output Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="Generated QR Code"
               height="600px"
               showCopyButton={false}
@@ -662,14 +667,14 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
                     <button
                       onClick={handleCopyOutput}
                       disabled={copySuccess}
-                      className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                      className="rounded p-1 transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-700"
                     >
                       <ClipboardDocumentIcon className="h-4 w-4 text-neutral-900 dark:text-neutral-300" />
                     </button>
                     <button
                       onClick={handleDownloadQrCode}
                       disabled={downloadSuccess}
-                      className="p-1 rounded hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+                      className="rounded p-1 transition-colors hover:bg-neutral-200 dark:hover:bg-neutral-700"
                     >
                       <ArrowDownTrayIcon className="h-4 w-4 text-neutral-900 dark:text-neutral-300" />
                     </button>
@@ -679,27 +684,45 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
               footerLeftContent={
                 stats && (
                   <div className="flex items-center gap-2">
-                    <Badge variant="secondary" className="bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100">{stats.type}</Badge>
-                    <Badge variant="secondary" className="bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100">{stats.size}px</Badge>
-                    <Badge variant="secondary" className="bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100">EC: {stats.errorCorrection}</Badge>
-                    <Badge variant="secondary" className="bg-white dark:bg-neutral-700 text-neutral-900 dark:text-neutral-100">{stats.format.toUpperCase()}</Badge>
+                    <Badge
+                      variant="secondary"
+                      className="bg-white text-neutral-900 dark:bg-neutral-700 dark:text-neutral-100"
+                    >
+                      {stats.type}
+                    </Badge>
+                    <Badge
+                      variant="secondary"
+                      className="bg-white text-neutral-900 dark:bg-neutral-700 dark:text-neutral-100"
+                    >
+                      {stats.size}px
+                    </Badge>
+                    <Badge
+                      variant="secondary"
+                      className="bg-white text-neutral-900 dark:bg-neutral-700 dark:text-neutral-100"
+                    >
+                      EC: {stats.errorCorrection}
+                    </Badge>
+                    <Badge
+                      variant="secondary"
+                      className="bg-white text-neutral-900 dark:bg-neutral-700 dark:text-neutral-100"
+                    >
+                      {stats.format.toUpperCase()}
+                    </Badge>
                   </div>
                 )
               }
               alwaysShowFooter={true}
             >
-              <div className="h-full flex flex-col items-center justify-center p-4">
+              <div className="flex h-full flex-col items-center justify-center p-4">
                 {qrCodeResult ? (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img
                     src={qrCodeResult.dataUrl}
                     alt="Generated QR Code"
-                    className="max-w-full max-h-full w-auto h-auto border rounded-lg"
+                    className="h-auto max-h-full w-auto max-w-full rounded-lg border"
                   />
                 ) : (
-                  <div className="text-muted-foreground text-sm">
-                    QR code will appear here after generation
-                  </div>
+                  <div className="text-muted-foreground text-sm">QR code will appear here after generation</div>
                 )}
               </div>
             </CodePanel>
@@ -707,14 +730,12 @@ export function QrCodeGenerator({ className, instanceId }: QrCodeGeneratorProps)
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+            <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+              <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }

@@ -1,183 +1,211 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LoadFileButton } from '@/components/ui/load-file-button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { DEFAULT_DIFF_OPTIONS, DIFF_CHECKER_OPTIONS, DIFF_EXAMPLES } from '@/config/diff-checker-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import { cn } from '@/libs/utils';
-import { ArrowsRightLeftIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { Change, diffLines, diffWordsWithSpace } from 'diff';
-import type { OnMount } from '@monaco-editor/react';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { LoadFileButton } from '@/components/ui/load-file-button'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { DEFAULT_DIFF_OPTIONS, DIFF_CHECKER_OPTIONS, DIFF_EXAMPLES } from '@/config/diff-checker-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { cn } from '@/libs/utils'
+import { ArrowsRightLeftIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { Change, diffLines, diffWordsWithSpace } from 'diff'
+import type { OnMount } from '@monaco-editor/react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 
 interface DiffCheckerProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 interface DiffOptions {
-  ignoreWhitespace: boolean;
-  language: string;
-  wordWrap: boolean;
-  syncScroll: boolean;
+  ignoreWhitespace: boolean
+  language: string
+  wordWrap: boolean
+  syncScroll: boolean
 }
 
 interface DiffStats {
-  additions: number;
-  deletions: number;
-  changes: number;
+  additions: number
+  deletions: number
+  changes: number
 }
 
 interface InlineDecoration {
-  lineNumber: number;
-  startColumn: number;
-  endColumn: number;
-  type: 'added' | 'removed';
+  lineNumber: number
+  startColumn: number
+  endColumn: number
+  type: 'added' | 'removed'
 }
 
-type MonacoEditorInstance = Parameters<OnMount>[0];
-type MonacoInstance = Parameters<OnMount>[1];
+type MonacoEditorInstance = Parameters<OnMount>[0]
+type MonacoInstance = Parameters<OnMount>[1]
 interface LineDecoration {
-  lineNumber: number;
-  type: 'added' | 'removed';
+  lineNumber: number
+  type: 'added' | 'removed'
 }
-type ViewZoneAccessor = Parameters<MonacoEditorInstance['changeViewZones']>[0] extends (accessor: infer T) => void ? T : never;
-type MonacoViewZone = Parameters<ViewZoneAccessor['addZone']>[0];
+type ViewZoneAccessor = Parameters<MonacoEditorInstance['changeViewZones']>[0] extends (accessor: infer T) => void
+  ? T
+  : never
+type MonacoViewZone = Parameters<ViewZoneAccessor['addZone']>[0]
 
 const EXTENSION_LANGUAGE_MAP: Record<string, string> = {
-  js: 'javascript', jsx: 'javascript', mjs: 'javascript', cjs: 'javascript',
-  ts: 'typescript', tsx: 'typescript',
-  json: 'json', html: 'html', htm: 'html',
-  css: 'css', scss: 'css', less: 'css',
-  py: 'python', java: 'java', cs: 'csharp',
-  cpp: 'cpp', cc: 'cpp', go: 'go', rs: 'rust',
-  sql: 'sql', xml: 'xml', svg: 'xml',
-  yaml: 'yaml', yml: 'yaml', md: 'markdown',
-  sh: 'shell', bash: 'shell', zsh: 'shell',
-};
+  js: 'javascript',
+  jsx: 'javascript',
+  mjs: 'javascript',
+  cjs: 'javascript',
+  ts: 'typescript',
+  tsx: 'typescript',
+  json: 'json',
+  html: 'html',
+  htm: 'html',
+  css: 'css',
+  scss: 'css',
+  less: 'css',
+  py: 'python',
+  java: 'java',
+  cs: 'csharp',
+  cpp: 'cpp',
+  cc: 'cpp',
+  go: 'go',
+  rs: 'rust',
+  sql: 'sql',
+  xml: 'xml',
+  svg: 'xml',
+  yaml: 'yaml',
+  yml: 'yaml',
+  md: 'markdown',
+  sh: 'shell',
+  bash: 'shell',
+  zsh: 'shell',
+}
 
 export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
-  const { toolState, updateToolState } = useToolState('diff-checker', instanceId);
+  const { toolState, updateToolState } = useToolState('diff-checker', instanceId)
 
   // State
-  const [originalText, setOriginalText] = useState<string>((toolState?.originalText as string) ?? (''));
-  const [modifiedText, setModifiedText] = useState<string>((toolState?.modifiedText as string) ?? (''));
-  const [options, setOptions] = useState<DiffOptions>((toolState?.options as DiffOptions) ?? (DEFAULT_DIFF_OPTIONS));
+  const [originalText, setOriginalText] = useState<string>((toolState?.originalText as string) ?? '')
+  const [modifiedText, setModifiedText] = useState<string>((toolState?.modifiedText as string) ?? '')
+  const [options, setOptions] = useState<DiffOptions>((toolState?.options as DiffOptions) ?? DEFAULT_DIFF_OPTIONS)
   const stats = useMemo<DiffStats>(() => {
-    const changes = diffLines(originalText, modifiedText, { ignoreWhitespace: options.ignoreWhitespace });
-    let additions = 0;
-    let deletions = 0;
+    const changes = diffLines(originalText, modifiedText, { ignoreWhitespace: options.ignoreWhitespace })
+    let additions = 0
+    let deletions = 0
     for (const change of changes) {
-      if (change.added) additions += change.count || 0;
-      if (change.removed) deletions += change.count || 0;
+      if (change.added) additions += change.count || 0
+      if (change.removed) deletions += change.count || 0
     }
-    return { additions, deletions, changes: additions + deletions };
-  }, [originalText, modifiedText, options.ignoreWhitespace]);
+    return { additions, deletions, changes: additions + deletions }
+  }, [originalText, modifiedText, options.ignoreWhitespace])
 
-  const [originalWrapText, setOriginalWrapText] = useState(false);
-  const [modifiedWrapText, setModifiedWrapText] = useState(false);
-  const [editorsReady, setEditorsReady] = useState(false);
-  const [zoomEpoch, setZoomEpoch] = useState(0);
+  const [originalWrapText, setOriginalWrapText] = useState(false)
+  const [modifiedWrapText, setModifiedWrapText] = useState(false)
+  const [editorsReady, setEditorsReady] = useState(false)
+  const [zoomEpoch, setZoomEpoch] = useState(0)
 
   // Editor refs for decorations
-  const originalEditorRef = useRef<MonacoEditorInstance | null>(null);
-  const modifiedEditorRef = useRef<MonacoEditorInstance | null>(null);
-  const originalDecorationsRef = useRef<string[]>([]);
-  const modifiedDecorationsRef = useRef<string[]>([]);
+  const originalEditorRef = useRef<MonacoEditorInstance | null>(null)
+  const modifiedEditorRef = useRef<MonacoEditorInstance | null>(null)
+  const originalDecorationsRef = useRef<string[]>([])
+  const modifiedDecorationsRef = useRef<string[]>([])
 
   // View zone IDs for alignment padding
-  const originalViewZoneIdsRef = useRef<string[]>([]);
-  const modifiedViewZoneIdsRef = useRef<string[]>([]);
+  const originalViewZoneIdsRef = useRef<string[]>([])
+  const modifiedViewZoneIdsRef = useRef<string[]>([])
 
   // Scroll sync refs
-  const isSyncingScrollRef = useRef<boolean>(false);
-  const originalScrollDisposableRef = useRef<{ dispose: () => void } | null>(null);
-  const modifiedScrollDisposableRef = useRef<{ dispose: () => void } | null>(null);
+  const isSyncingScrollRef = useRef<boolean>(false)
+  const originalScrollDisposableRef = useRef<{ dispose: () => void } | null>(null)
+  const modifiedScrollDisposableRef = useRef<{ dispose: () => void } | null>(null)
 
   // Theme
-  const [theme] = useCodeEditorTheme('basicDark');
+  const [theme] = useCodeEditorTheme('basicDark')
 
   // Hydrate state from toolState after mount
-
 
   // Update persistent state
   useEffect(() => {
     updateToolState({
-        originalText,
-        modifiedText,
-        options,
-      });
+      originalText,
+      modifiedText,
+      options,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [originalText, modifiedText, options]);
+  }, [originalText, modifiedText, options])
 
   // Reset state when tool state is cleared
 
-
   interface ViewZoneData {
-    afterLineNumber: number;
-    heightInLines: number;
+    afterLineNumber: number
+    heightInLines: number
     // Lines in the OTHER editor that this gap is aligning with (for pixel-accurate sizing)
-    otherEditorStart: number;
-    otherEditorCount: number;
+    otherEditorStart: number
+    otherEditorCount: number
   }
 
   // Calculate diff and apply decorations with character-level highlighting
   const calculateDiffAndDecorate = useCallback(() => {
     const lineChanges: Change[] = diffLines(originalText, modifiedText, {
       ignoreWhitespace: options.ignoreWhitespace,
-    });
+    })
 
-    const originalLineDecorations: LineDecoration[] = [];
-    const modifiedLineDecorations: LineDecoration[] = [];
-    const originalInlineDecorations: InlineDecoration[] = [];
-    const modifiedInlineDecorations: InlineDecoration[] = [];
-    const originalViewZones: ViewZoneData[] = [];
-    const modifiedViewZones: ViewZoneData[] = [];
+    const originalLineDecorations: LineDecoration[] = []
+    const modifiedLineDecorations: LineDecoration[] = []
+    const originalInlineDecorations: InlineDecoration[] = []
+    const modifiedInlineDecorations: InlineDecoration[] = []
+    const originalViewZones: ViewZoneData[] = []
+    const modifiedViewZones: ViewZoneData[] = []
 
-    let originalLine = 1;
-    let modifiedLine = 1;
-    let i = 0;
+    let originalLine = 1
+    let modifiedLine = 1
+    let i = 0
 
     while (i < lineChanges.length) {
-      const change = lineChanges[i];
-      const lineCount = change.count || 0;
+      const change = lineChanges[i]
+      const lineCount = change.count || 0
 
       if (change.added) {
         // Standalone addition (not preceded by a removal that already handled it)
-        const lines = (change.value || '').split('\n').filter((_, idx, arr) => idx < arr.length - 1 || arr[idx] !== '');
+        const lines = (change.value || '').split('\n').filter((_, idx, arr) => idx < arr.length - 1 || arr[idx] !== '')
         lines.forEach((_, idx) => {
           modifiedLineDecorations.push({
             lineNumber: modifiedLine + idx,
             type: 'added',
-          });
-        });
+          })
+        })
         // Pad original side so unchanged lines below stay aligned
-        originalViewZones.push({ afterLineNumber: originalLine - 1, heightInLines: lineCount, otherEditorStart: modifiedLine, otherEditorCount: lineCount });
-        modifiedLine += lineCount;
+        originalViewZones.push({
+          afterLineNumber: originalLine - 1,
+          heightInLines: lineCount,
+          otherEditorStart: modifiedLine,
+          otherEditorCount: lineCount,
+        })
+        modifiedLine += lineCount
       } else if (change.removed) {
         // Check if next is added (paired change for inline diff)
-        const nextChange = i + 1 < lineChanges.length ? lineChanges[i + 1] : null;
+        const nextChange = i + 1 < lineChanges.length ? lineChanges[i + 1] : null
 
-        const removedLines = (change.value || '').split('\n').filter((_, idx, arr) => idx < arr.length - 1 || arr[idx] !== '');
+        const removedLines = (change.value || '')
+          .split('\n')
+          .filter((_, idx, arr) => idx < arr.length - 1 || arr[idx] !== '')
 
         if (nextChange && nextChange.added) {
           // Paired change - do character-level diff
-          const addedLines = (nextChange.value || '').split('\n').filter((_, idx, arr) => idx < arr.length - 1 || arr[idx] !== '');
-          const addedCount = nextChange.count || 0;
-          const minLines = Math.min(removedLines.length, addedLines.length);
+          const addedLines = (nextChange.value || '')
+            .split('\n')
+            .filter((_, idx, arr) => idx < arr.length - 1 || arr[idx] !== '')
+          const addedCount = nextChange.count || 0
+          const minLines = Math.min(removedLines.length, addedLines.length)
 
           for (let j = 0; j < minLines; j++) {
-            const wordChanges = diffWordsWithSpace(removedLines[j], addedLines[j]);
-            let origCol = 1;
-            let modCol = 1;
+            const wordChanges = diffWordsWithSpace(removedLines[j], addedLines[j])
+            let origCol = 1
+            let modCol = 1
 
             wordChanges.forEach((wordChange) => {
-              const len = (wordChange.value || '').length;
+              const len = (wordChange.value || '').length
 
               if (wordChange.removed) {
                 originalInlineDecorations.push({
@@ -185,31 +213,31 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
                   startColumn: origCol,
                   endColumn: origCol + len,
                   type: 'removed',
-                });
-                origCol += len;
+                })
+                origCol += len
               } else if (wordChange.added) {
                 modifiedInlineDecorations.push({
                   lineNumber: modifiedLine + j,
                   startColumn: modCol,
                   endColumn: modCol + len,
                   type: 'added',
-                });
-                modCol += len;
+                })
+                modCol += len
               } else {
-                origCol += len;
-                modCol += len;
+                origCol += len
+                modCol += len
               }
-            });
+            })
 
             // Add line-level decoration for modified lines
             originalLineDecorations.push({
               lineNumber: originalLine + j,
               type: 'removed',
-            });
+            })
             modifiedLineDecorations.push({
               lineNumber: modifiedLine + j,
               type: 'added',
-            });
+            })
           }
 
           // Handle remaining lines without pair
@@ -217,13 +245,13 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
             originalLineDecorations.push({
               lineNumber: originalLine + j,
               type: 'removed',
-            });
+            })
           }
           for (let j = minLines; j < addedLines.length; j++) {
             modifiedLineDecorations.push({
               lineNumber: modifiedLine + j,
               type: 'added',
-            });
+            })
           }
 
           // Add alignment padding on the shorter side
@@ -233,47 +261,52 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
               heightInLines: removedLines.length - addedLines.length,
               otherEditorStart: originalLine + addedLines.length,
               otherEditorCount: removedLines.length - addedLines.length,
-            });
+            })
           } else if (addedLines.length > removedLines.length) {
             originalViewZones.push({
               afterLineNumber: originalLine + removedLines.length - 1,
               heightInLines: addedLines.length - removedLines.length,
               otherEditorStart: modifiedLine + removedLines.length,
               otherEditorCount: addedLines.length - removedLines.length,
-            });
+            })
           }
 
-          modifiedLine += addedCount;
-          i++; // Skip the next (added) change since we handled it
+          modifiedLine += addedCount
+          i++ // Skip the next (added) change since we handled it
         } else {
           // Isolated removal — pad modified side
           removedLines.forEach((_, idx) => {
             originalLineDecorations.push({
               lineNumber: originalLine + idx,
               type: 'removed',
-            });
-          });
-          modifiedViewZones.push({ afterLineNumber: modifiedLine - 1, heightInLines: lineCount, otherEditorStart: originalLine, otherEditorCount: lineCount });
+            })
+          })
+          modifiedViewZones.push({
+            afterLineNumber: modifiedLine - 1,
+            heightInLines: lineCount,
+            otherEditorStart: originalLine,
+            otherEditorCount: lineCount,
+          })
         }
-        originalLine += lineCount;
+        originalLine += lineCount
       } else {
         // Unchanged lines
-        originalLine += lineCount;
-        modifiedLine += lineCount;
+        originalLine += lineCount
+        modifiedLine += lineCount
       }
-      i++;
+      i++
     }
 
     // Apply decorations to editors
-    const monaco = (window as Window & { monaco?: MonacoInstance }).monaco;
-    if (!monaco) return;
+    const monaco = (window as Window & { monaco?: MonacoInstance }).monaco
+    if (!monaco) return
 
     // Only insert alignment zones when both panels have content — avoids blocking
     // the cursor in the empty editor with phantom rows at afterLineNumber: 0.
-    const shouldAlign = originalText.trim().length > 0 && modifiedText.trim().length > 0;
+    const shouldAlign = originalText.trim().length > 0 && modifiedText.trim().length > 0
 
     if (originalEditorRef.current) {
-      const editor = originalEditorRef.current;
+      const editor = originalEditorRef.current
       const decorations = [
         // Line decorations
         ...originalLineDecorations.map((dec) => ({
@@ -295,16 +328,12 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
             inlineClassName: 'diff-char-removed',
           },
         })),
-      ];
-      originalDecorationsRef.current = editor.deltaDecorations(
-        originalDecorationsRef.current,
-        decorations
-      );
-
+      ]
+      originalDecorationsRef.current = editor.deltaDecorations(originalDecorationsRef.current, decorations)
     }
 
     if (modifiedEditorRef.current) {
-      const editor = modifiedEditorRef.current;
+      const editor = modifiedEditorRef.current
       const decorations = [
         // Line decorations
         ...modifiedLineDecorations.map((dec) => ({
@@ -326,82 +355,87 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
             inlineClassName: 'diff-char-added',
           },
         })),
-      ];
-      modifiedDecorationsRef.current = editor.deltaDecorations(
-        modifiedDecorationsRef.current,
-        decorations
-      );
+      ]
+      modifiedDecorationsRef.current = editor.deltaDecorations(modifiedDecorationsRef.current, decorations)
     }
 
-    if (!shouldAlign) return;
+    if (!shouldAlign) return
 
     // Phase 1 — remove stale zones from both editors so getTopForLineNumber
     // returns accurate positions unaffected by previously applied zones.
     if (originalEditorRef.current) {
       originalEditorRef.current.changeViewZones((accessor) => {
-        originalViewZoneIdsRef.current.forEach((id) => accessor.removeZone(id));
-        originalViewZoneIdsRef.current = [];
-      });
+        originalViewZoneIdsRef.current.forEach((id) => accessor.removeZone(id))
+        originalViewZoneIdsRef.current = []
+      })
     }
     if (modifiedEditorRef.current) {
       modifiedEditorRef.current.changeViewZones((accessor) => {
-        modifiedViewZoneIdsRef.current.forEach((id) => accessor.removeZone(id));
-        modifiedViewZoneIdsRef.current = [];
-      });
+        modifiedViewZoneIdsRef.current.forEach((id) => accessor.removeZone(id))
+        modifiedViewZoneIdsRef.current = []
+      })
     }
 
     // Phase 2 — add new zones. When either panel has word wrap on, derive heightInPx
     // from getTopForLineNumber on the other editor so wrapped visual rows are accounted
     // for. Fall back to heightInLines when wrap is off so Monaco auto-scales with zoom.
-    const usePixelZones = originalWrapText || modifiedWrapText;
+    const usePixelZones = originalWrapText || modifiedWrapText
 
     if (originalEditorRef.current) {
       originalEditorRef.current.changeViewZones((accessor) => {
         originalViewZones.forEach((zone) => {
-          const domNode = document.createElement('div');
-          domNode.className = 'diff-placeholder-zone';
-          let zoneDef: MonacoViewZone = { afterLineNumber: zone.afterLineNumber, domNode, heightInLines: zone.heightInLines };
-          if (usePixelZones && modifiedEditorRef.current) {
-            const topStart = modifiedEditorRef.current.getTopForLineNumber(zone.otherEditorStart);
-            const topEnd = modifiedEditorRef.current.getTopForLineNumber(zone.otherEditorStart + zone.otherEditorCount);
-            const heightInPx = topEnd - topStart;
-            zoneDef = heightInPx > 0 ? { ...zoneDef, heightInPx } : { ...zoneDef, heightInLines: zone.heightInLines };
-          } else {
-            zoneDef.heightInLines = zone.heightInLines;
+          const domNode = document.createElement('div')
+          domNode.className = 'diff-placeholder-zone'
+          let zoneDef: MonacoViewZone = {
+            afterLineNumber: zone.afterLineNumber,
+            domNode,
+            heightInLines: zone.heightInLines,
           }
-          const id = accessor.addZone(zoneDef);
-          originalViewZoneIdsRef.current.push(id);
-        });
-      });
+          if (usePixelZones && modifiedEditorRef.current) {
+            const topStart = modifiedEditorRef.current.getTopForLineNumber(zone.otherEditorStart)
+            const topEnd = modifiedEditorRef.current.getTopForLineNumber(zone.otherEditorStart + zone.otherEditorCount)
+            const heightInPx = topEnd - topStart
+            zoneDef = heightInPx > 0 ? { ...zoneDef, heightInPx } : { ...zoneDef, heightInLines: zone.heightInLines }
+          } else {
+            zoneDef.heightInLines = zone.heightInLines
+          }
+          const id = accessor.addZone(zoneDef)
+          originalViewZoneIdsRef.current.push(id)
+        })
+      })
     }
 
     if (modifiedEditorRef.current) {
       modifiedEditorRef.current.changeViewZones((accessor) => {
         modifiedViewZones.forEach((zone) => {
-          const domNode = document.createElement('div');
-          domNode.className = 'diff-placeholder-zone';
-          let zoneDef: MonacoViewZone = { afterLineNumber: zone.afterLineNumber, domNode, heightInLines: zone.heightInLines };
-          if (usePixelZones && originalEditorRef.current) {
-            const topStart = originalEditorRef.current.getTopForLineNumber(zone.otherEditorStart);
-            const topEnd = originalEditorRef.current.getTopForLineNumber(zone.otherEditorStart + zone.otherEditorCount);
-            const heightInPx = topEnd - topStart;
-            zoneDef = heightInPx > 0 ? { ...zoneDef, heightInPx } : { ...zoneDef, heightInLines: zone.heightInLines };
-          } else {
-            zoneDef.heightInLines = zone.heightInLines;
+          const domNode = document.createElement('div')
+          domNode.className = 'diff-placeholder-zone'
+          let zoneDef: MonacoViewZone = {
+            afterLineNumber: zone.afterLineNumber,
+            domNode,
+            heightInLines: zone.heightInLines,
           }
-          const id = accessor.addZone(zoneDef);
-          modifiedViewZoneIdsRef.current.push(id);
-        });
-      });
+          if (usePixelZones && originalEditorRef.current) {
+            const topStart = originalEditorRef.current.getTopForLineNumber(zone.otherEditorStart)
+            const topEnd = originalEditorRef.current.getTopForLineNumber(zone.otherEditorStart + zone.otherEditorCount)
+            const heightInPx = topEnd - topStart
+            zoneDef = heightInPx > 0 ? { ...zoneDef, heightInPx } : { ...zoneDef, heightInLines: zone.heightInLines }
+          } else {
+            zoneDef.heightInLines = zone.heightInLines
+          }
+          const id = accessor.addZone(zoneDef)
+          modifiedViewZoneIdsRef.current.push(id)
+        })
+      })
     }
-  }, [originalText, modifiedText, options.ignoreWhitespace, originalWrapText, modifiedWrapText]);
+  }, [originalText, modifiedText, options.ignoreWhitespace, originalWrapText, modifiedWrapText])
 
   // Apply decorations when diff calculation changes, editors become ready, or zoom changes
   useEffect(() => {
     if (editorsReady) {
-      calculateDiffAndDecorate();
+      calculateDiffAndDecorate()
     }
-  }, [calculateDiffAndDecorate, editorsReady, zoomEpoch]);
+  }, [calculateDiffAndDecorate, editorsReady, zoomEpoch])
 
   // Scroll sync between editors
   useEffect(() => {
@@ -409,163 +443,161 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
     if (!options.syncScroll || !originalEditorRef.current || !modifiedEditorRef.current) {
       // Clean up existing listeners if sync is disabled
       if (originalScrollDisposableRef.current) {
-        originalScrollDisposableRef.current.dispose();
-        originalScrollDisposableRef.current = null;
+        originalScrollDisposableRef.current.dispose()
+        originalScrollDisposableRef.current = null
       }
       if (modifiedScrollDisposableRef.current) {
-        modifiedScrollDisposableRef.current.dispose();
-        modifiedScrollDisposableRef.current = null;
+        modifiedScrollDisposableRef.current.dispose()
+        modifiedScrollDisposableRef.current = null
       }
-      return;
+      return
     }
 
-    const originalEditor = originalEditorRef.current;
-    const modifiedEditor = modifiedEditorRef.current;
+    const originalEditor = originalEditorRef.current
+    const modifiedEditor = modifiedEditorRef.current
 
     // Helper function to calculate scroll percentage
     const getScrollPercentage = (editor: MonacoEditorInstance): number => {
-      const scrollTop = editor.getScrollTop();
-      const scrollHeight = editor.getScrollHeight();
-      const editorHeight = editor.getLayoutInfo().height;
-      const maxScrollTop = Math.max(0, scrollHeight - editorHeight);
+      const scrollTop = editor.getScrollTop()
+      const scrollHeight = editor.getScrollHeight()
+      const editorHeight = editor.getLayoutInfo().height
+      const maxScrollTop = Math.max(0, scrollHeight - editorHeight)
 
-      if (maxScrollTop === 0) return 0;
-      return scrollTop / maxScrollTop;
-    };
+      if (maxScrollTop === 0) return 0
+      return scrollTop / maxScrollTop
+    }
 
     // Helper function to set scroll position by percentage
     const setScrollPercentage = (editor: MonacoEditorInstance, percentage: number, scrollLeft?: number): void => {
-      const scrollHeight = editor.getScrollHeight();
-      const editorHeight = editor.getLayoutInfo().height;
-      const maxScrollTop = Math.max(0, scrollHeight - editorHeight);
-      const targetScrollTop = percentage * maxScrollTop;
+      const scrollHeight = editor.getScrollHeight()
+      const editorHeight = editor.getLayoutInfo().height
+      const maxScrollTop = Math.max(0, scrollHeight - editorHeight)
+      const targetScrollTop = percentage * maxScrollTop
 
-      editor.setScrollTop(targetScrollTop);
+      editor.setScrollTop(targetScrollTop)
 
       // Also sync horizontal scroll if provided
       if (scrollLeft !== undefined) {
-        editor.setScrollLeft(scrollLeft);
+        editor.setScrollLeft(scrollLeft)
       }
-    };
+    }
 
     // Sync scroll from original to modified
     const syncOriginalToModified = () => {
-      if (isSyncingScrollRef.current) return;
-      if (!modifiedEditorRef.current || !originalEditorRef.current) return;
+      if (isSyncingScrollRef.current) return
+      if (!modifiedEditorRef.current || !originalEditorRef.current) return
 
-      isSyncingScrollRef.current = true;
-      const percentage = getScrollPercentage(originalEditor);
-      const scrollLeft = originalEditor.getScrollLeft();
-      setScrollPercentage(modifiedEditor, percentage, scrollLeft);
+      isSyncingScrollRef.current = true
+      const percentage = getScrollPercentage(originalEditor)
+      const scrollLeft = originalEditor.getScrollLeft()
+      setScrollPercentage(modifiedEditor, percentage, scrollLeft)
 
       // Use requestAnimationFrame to clear the flag after scroll completes
       requestAnimationFrame(() => {
-        isSyncingScrollRef.current = false;
-      });
-    };
+        isSyncingScrollRef.current = false
+      })
+    }
 
     // Sync scroll from modified to original
     const syncModifiedToOriginal = () => {
-      if (isSyncingScrollRef.current) return;
-      if (!modifiedEditorRef.current || !originalEditorRef.current) return;
+      if (isSyncingScrollRef.current) return
+      if (!modifiedEditorRef.current || !originalEditorRef.current) return
 
-      isSyncingScrollRef.current = true;
-      const percentage = getScrollPercentage(modifiedEditor);
-      const scrollLeft = modifiedEditor.getScrollLeft();
-      setScrollPercentage(originalEditor, percentage, scrollLeft);
+      isSyncingScrollRef.current = true
+      const percentage = getScrollPercentage(modifiedEditor)
+      const scrollLeft = modifiedEditor.getScrollLeft()
+      setScrollPercentage(originalEditor, percentage, scrollLeft)
 
       // Use requestAnimationFrame to clear the flag after scroll completes
       requestAnimationFrame(() => {
-        isSyncingScrollRef.current = false;
-      });
-    };
+        isSyncingScrollRef.current = false
+      })
+    }
 
     // Set up scroll listeners
     originalScrollDisposableRef.current = originalEditor.onDidScrollChange(() => {
-      syncOriginalToModified();
-    });
+      syncOriginalToModified()
+    })
 
     modifiedScrollDisposableRef.current = modifiedEditor.onDidScrollChange(() => {
-      syncModifiedToOriginal();
-    });
+      syncModifiedToOriginal()
+    })
 
     // Cleanup function
     return () => {
       if (originalScrollDisposableRef.current) {
-        originalScrollDisposableRef.current.dispose();
-        originalScrollDisposableRef.current = null;
+        originalScrollDisposableRef.current.dispose()
+        originalScrollDisposableRef.current = null
       }
       if (modifiedScrollDisposableRef.current) {
-        modifiedScrollDisposableRef.current.dispose();
-        modifiedScrollDisposableRef.current = null;
+        modifiedScrollDisposableRef.current.dispose()
+        modifiedScrollDisposableRef.current = null
       }
-      isSyncingScrollRef.current = false;
-    };
-  }, [options.syncScroll, editorsReady]);
+      isSyncingScrollRef.current = false
+    }
+  }, [options.syncScroll, editorsReady])
 
   // Handlers
   const handleSwap = () => {
-    const temp = originalText;
-    setOriginalText(modifiedText);
-    setModifiedText(temp);
-  };
+    const temp = originalText
+    setOriginalText(modifiedText)
+    setModifiedText(temp)
+  }
 
   const handleLoadExample = (side: 'original' | 'modified', lang: 'javascript' | 'python') => {
-    const example = DIFF_EXAMPLES[lang][side];
+    const example = DIFF_EXAMPLES[lang][side]
     if (side === 'original') {
-      setOriginalText(example);
+      setOriginalText(example)
     } else {
-      setModifiedText(example);
+      setModifiedText(example)
     }
     // Also update language to match
-    setOptions((prev) => ({ ...prev, language: lang }));
-  };
+    setOptions((prev) => ({ ...prev, language: lang }))
+  }
 
   const handleOriginalEditorMount = (editor: MonacoEditorInstance) => {
-    originalEditorRef.current = editor;
+    originalEditorRef.current = editor
     // Increment zoomEpoch when font size or line height changes so pixel-based
     // alignment zones are recomputed at the new scale.
     editor.onDidChangeConfiguration((e) => {
-      const monaco = (window as Window & { monaco?: MonacoInstance }).monaco;
+      const monaco = (window as Window & { monaco?: MonacoInstance }).monaco
       if (
         monaco &&
-        (e.hasChanged(monaco.editor.EditorOption.fontSize) ||
-          e.hasChanged(monaco.editor.EditorOption.lineHeight))
+        (e.hasChanged(monaco.editor.EditorOption.fontSize) || e.hasChanged(monaco.editor.EditorOption.lineHeight))
       ) {
-        setZoomEpoch((n) => n + 1);
+        setZoomEpoch((n) => n + 1)
       }
-    });
+    })
     if (modifiedEditorRef.current) {
-      setEditorsReady(true);
+      setEditorsReady(true)
     }
-  };
+  }
 
   const handleModifiedEditorMount = (editor: MonacoEditorInstance) => {
-    modifiedEditorRef.current = editor;
+    modifiedEditorRef.current = editor
     editor.onDidChangeConfiguration((e) => {
-      const monaco = (window as Window & { monaco?: MonacoInstance }).monaco;
+      const monaco = (window as Window & { monaco?: MonacoInstance }).monaco
       if (
         monaco &&
-        (e.hasChanged(monaco.editor.EditorOption.fontSize) ||
-          e.hasChanged(monaco.editor.EditorOption.lineHeight))
+        (e.hasChanged(monaco.editor.EditorOption.fontSize) || e.hasChanged(monaco.editor.EditorOption.lineHeight))
       ) {
-        setZoomEpoch((n) => n + 1);
+        setZoomEpoch((n) => n + 1)
       }
-    });
+    })
     if (originalEditorRef.current) {
-      setEditorsReady(true);
+      setEditorsReady(true)
     }
-  };
+  }
 
-  const getCharacterCount = (text: string): number => text.length;
-  const getLineCount = (text: string): number => (text ? text.split('\n').length : 0);
+  const getCharacterCount = (text: string): number => text.length
+  const getLineCount = (text: string): number => (text ? text.split('\n').length : 0)
 
-  const hasOriginalContent = originalText.trim().length > 0;
-  const hasModifiedContent = modifiedText.trim().length > 0;
-  const hasContent = hasOriginalContent || hasModifiedContent;
+  const hasOriginalContent = originalText.trim().length > 0
+  const hasModifiedContent = modifiedText.trim().length > 0
+  const hasContent = hasOriginalContent || hasModifiedContent
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* CSS for diff highlighting */}
       <style jsx global>{`
         .diff-line-removed {
@@ -605,7 +637,7 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
 
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           Diff Checker
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -614,18 +646,16 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Main Controls Row */}
-            <div className="flex items-center gap-3 flex-wrap">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Language Select */}
               <Select
                 value={options.language}
-                onValueChange={(value) =>
-                  setOptions((prev) => ({ ...prev, language: value }))
-                }
+                onValueChange={(value) => setOptions((prev) => ({ ...prev, language: value }))}
               >
                 <SelectTrigger label="Language:">
                   <SelectValue />
@@ -641,33 +671,30 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
 
               {/* Sync Scroll Toggle */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Sync Scroll:</span>
+                <span className="text-muted-foreground text-sm">Sync Scroll:</span>
                 <Switch
                   checked={options.syncScroll}
-                  onCheckedChange={(checked) =>
-                    setOptions((prev) => ({ ...prev, syncScroll: checked }))
-                  }
+                  onCheckedChange={(checked) => setOptions((prev) => ({ ...prev, syncScroll: checked }))}
                   aria-label="Synchronize scrolling between original and modified editors"
                 />
               </div>
 
               {/* Ignore Whitespace Toggle */}
               <div className="flex items-center gap-2">
-                <span className="text-sm text-muted-foreground">Ignore Whitespace:</span>
+                <span className="text-muted-foreground text-sm">Ignore Whitespace:</span>
                 <Switch
                   checked={options.ignoreWhitespace}
-                  onCheckedChange={(checked) =>
-                    setOptions((prev) => ({ ...prev, ignoreWhitespace: checked }))
-                  }
+                  onCheckedChange={(checked) => setOptions((prev) => ({ ...prev, ignoreWhitespace: checked }))}
                 />
               </div>
             </div>
           </div>
 
           {/* Side-by-side Editor Panels */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Original Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="Original"
               value={originalText}
               onChange={(value) => setOriginalText(value)}
@@ -682,17 +709,17 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
                 <>
                   <LoadFileButton
                     onFileLoad={(content, file) => {
-                      setOriginalText(content);
-                      const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
-                      const lang = EXTENSION_LANGUAGE_MAP[ext];
-                      if (lang) setOptions((prev) => ({ ...prev, language: lang }));
+                      setOriginalText(content)
+                      const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+                      const lang = EXTENSION_LANGUAGE_MAP[ext]
+                      if (lang) setOptions((prev) => ({ ...prev, language: lang }))
                     }}
                   />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                         Load Example
-                        <ChevronDownIcon className="h-3 w-3 ml-1" />
+                        <ChevronDownIcon className="ml-1 h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -716,7 +743,8 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
             />
 
             {/* Modified Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="Modified"
               value={modifiedText}
               onChange={(value) => setModifiedText(value)}
@@ -731,17 +759,17 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
                 <>
                   <LoadFileButton
                     onFileLoad={(content, file) => {
-                      setModifiedText(content);
-                      const ext = file.name.split('.').pop()?.toLowerCase() ?? '';
-                      const lang = EXTENSION_LANGUAGE_MAP[ext];
-                      if (lang) setOptions((prev) => ({ ...prev, language: lang }));
+                      setModifiedText(content)
+                      const ext = file.name.split('.').pop()?.toLowerCase() ?? ''
+                      const lang = EXTENSION_LANGUAGE_MAP[ext]
+                      if (lang) setOptions((prev) => ({ ...prev, language: lang }))
                     }}
                   />
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                         Load Example
-                        <ChevronDownIcon className="h-3 w-3 ml-1" />
+                        <ChevronDownIcon className="ml-1 h-3 w-3" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
@@ -769,7 +797,7 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
                   disabled={!hasContent}
                   className="h-8 px-3 text-xs"
                 >
-                  <ArrowsRightLeftIcon className="h-3 w-3 mr-1" />
+                  <ArrowsRightLeftIcon className="mr-1 h-3 w-3" />
                   Swap
                 </Button>
               }
@@ -778,19 +806,13 @@ export function DiffChecker({ className, instanceId }: DiffCheckerProps) {
           </div>
 
           {/* Stats Bar */}
-          <div className="flex items-center justify-center gap-6 py-3 px-4 bg-neutral-100 dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-[10px]">
-            <span className="text-sm font-medium text-red-600 dark:text-red-400">
-              -{stats.deletions} deletions
-            </span>
-            <span className="text-sm font-medium text-green-600 dark:text-green-400">
-              +{stats.additions} additions
-            </span>
-            <span className="text-sm text-muted-foreground">
-              {stats.changes} total changes
-            </span>
+          <div className="flex items-center justify-center gap-6 rounded-[10px] border border-neutral-200 bg-neutral-100 px-4 py-3 dark:border-neutral-700 dark:bg-neutral-800">
+            <span className="text-sm font-medium text-red-600 dark:text-red-400">-{stats.deletions} deletions</span>
+            <span className="text-sm font-medium text-green-600 dark:text-green-400">+{stats.additions} additions</span>
+            <span className="text-muted-foreground text-sm">{stats.changes} total changes</span>
           </div>
         </div>
       </div>
     </div>
-  );
+  )
 }

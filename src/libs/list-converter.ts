@@ -3,160 +3,154 @@
  * Functions for converting lists between different formats
  */
 
-import { stringify } from 'yaml';
-import { parseListInput, type InputFormat } from './list-comparison';
+import { stringify } from 'yaml'
+import { parseListInput, type InputFormat } from './list-comparison'
 
 export interface ConversionResult {
-  output: string;
-  success: boolean;
-  error?: string;
+  output: string
+  success: boolean
+  error?: string
   stats: {
-    inputItems: number;
-    outputItems: number;
-    inputSize: number;
-    outputSize: number;
-  };
+    inputItems: number
+    outputItems: number
+    inputSize: number
+    outputSize: number
+  }
 }
 
 export interface ConverterOptions {
-  preserveTypes: boolean;
-  removeEmpty: boolean;
-  removeDuplicates: boolean;
-  sortOrder: 'none' | 'asc' | 'desc';
+  preserveTypes: boolean
+  removeEmpty: boolean
+  removeDuplicates: boolean
+  sortOrder: 'none' | 'asc' | 'desc'
 }
 
 /**
  * Format a list of values to the specified output format
  */
-export function formatListOutput(
-  values: string[],
-  format: InputFormat,
-  options: ConverterOptions
-): string {
+export function formatListOutput(values: string[], format: InputFormat, options: ConverterOptions): string {
   // Apply transformations
-  let processed = [...values];
+  let processed = [...values]
 
   // Remove empty items
   if (options.removeEmpty) {
-    processed = processed.filter(item => item.trim().length > 0);
+    processed = processed.filter((item) => item.trim().length > 0)
   }
 
   // Remove duplicates
   if (options.removeDuplicates) {
-    const seen = new Set<string>();
-    processed = processed.filter(item => {
-      const normalized = item.toLowerCase();
+    const seen = new Set<string>()
+    processed = processed.filter((item) => {
+      const normalized = item.toLowerCase()
       if (seen.has(normalized)) {
-        return false;
+        return false
       }
-      seen.add(normalized);
-      return true;
-    });
+      seen.add(normalized)
+      return true
+    })
   }
 
   // Sort items
   if (options.sortOrder !== 'none') {
     processed.sort((a, b) => {
       // Try numeric comparison first
-      const numA = Number(a);
-      const numB = Number(b);
-      const isNumA = !isNaN(numA) && a.trim() === numA.toString();
-      const isNumB = !isNaN(numB) && b.trim() === numB.toString();
+      const numA = Number(a)
+      const numB = Number(b)
+      const isNumA = !isNaN(numA) && a.trim() === numA.toString()
+      const isNumB = !isNaN(numB) && b.trim() === numB.toString()
 
       if (isNumA && isNumB) {
-        return options.sortOrder === 'asc' ? numA - numB : numB - numA;
+        return options.sortOrder === 'asc' ? numA - numB : numB - numA
       }
 
       // String comparison
-      return options.sortOrder === 'asc'
-        ? a.localeCompare(b)
-        : b.localeCompare(a);
-    });
+      return options.sortOrder === 'asc' ? a.localeCompare(b) : b.localeCompare(a)
+    })
   }
 
   // Format based on output format
   switch (format) {
     case 'line-by-line':
-      return processed.join('\n');
+      return processed.join('\n')
 
     case 'comma-separated':
-      return processed.join(', ');
+      return processed.join(', ')
 
     case 'space-separated':
-      return processed.join(' ');
+      return processed.join(' ')
 
     case 'pipe-separated':
-      return processed.join(' | ');
+      return processed.join(' | ')
 
     case 'tab-separated':
-      return processed.join('\t');
+      return processed.join('\t')
 
     case 'json-array': {
       // Convert to JSON array, preserving types if requested
       const jsonValues = options.preserveTypes
-        ? processed.map(item => {
-            const num = Number(item);
+        ? processed.map((item) => {
+            const num = Number(item)
             if (!isNaN(num) && item.trim() === num.toString()) {
-              return num;
+              return num
             }
-            return item;
+            return item
           })
-        : processed;
-      return JSON.stringify(jsonValues);
+        : processed
+      return JSON.stringify(jsonValues)
     }
 
     case 'python-list': {
-      const formatted = processed.map(item => {
+      const formatted = processed.map((item) => {
         if (options.preserveTypes) {
-          const num = Number(item);
+          const num = Number(item)
           if (!isNaN(num) && item.trim() === num.toString()) {
-            return num.toString();
+            return num.toString()
           }
         }
         // Escape single quotes
-        const escaped = item.replace(/'/g, "\\'");
-        return `'${escaped}'`;
-      });
-      return `[${formatted.join(', ')}]`;
+        const escaped = item.replace(/'/g, "\\'")
+        return `'${escaped}'`
+      })
+      return `[${formatted.join(', ')}]`
     }
 
     case 'javascript-array': {
-      const formatted = processed.map(item => {
+      const formatted = processed.map((item) => {
         if (options.preserveTypes) {
-          const num = Number(item);
+          const num = Number(item)
           if (!isNaN(num) && item.trim() === num.toString()) {
-            return num.toString();
+            return num.toString()
           }
         }
         // Escape single quotes
-        const escaped = item.replace(/'/g, "\\'");
-        return `'${escaped}'`;
-      });
-      return `[${formatted.join(', ')}]`;
+        const escaped = item.replace(/'/g, "\\'")
+        return `'${escaped}'`
+      })
+      return `[${formatted.join(', ')}]`
     }
 
     case 'yaml-array': {
       // Convert to YAML array format
       // If preserveTypes is enabled, try to preserve numeric types
       const yamlValues = options.preserveTypes
-        ? processed.map(item => {
-            const num = Number(item);
+        ? processed.map((item) => {
+            const num = Number(item)
             if (!isNaN(num) && item.trim() === num.toString()) {
-              return num;
+              return num
             }
-            return item;
+            return item
           })
-        : processed;
+        : processed
 
       // Use YAML library to format as array
       return stringify(yamlValues, {
         indent: 2,
         lineWidth: 0,
-      });
+      })
     }
 
     default:
-      return processed.join('\n');
+      return processed.join('\n')
   }
 }
 
@@ -171,10 +165,10 @@ export function convertListFormat(
 ): ConversionResult {
   try {
     // Parse input
-    const items = parseListInput(input, inputFormat, false);
+    const items = parseListInput(input, inputFormat, false)
 
     // Format output
-    const output = formatListOutput(items, outputFormat, options);
+    const output = formatListOutput(items, outputFormat, options)
 
     return {
       output,
@@ -185,7 +179,7 @@ export function convertListFormat(
         inputSize: input.length,
         outputSize: output.length,
       },
-    };
+    }
   } catch (error) {
     return {
       output: '',
@@ -197,7 +191,7 @@ export function convertListFormat(
         inputSize: input.length,
         outputSize: 0,
       },
-    };
+    }
   }
 }
 
@@ -207,15 +201,14 @@ export function convertListFormat(
 export function getLanguageForFormat(format: InputFormat): string {
   switch (format) {
     case 'json-array':
-      return 'json';
+      return 'json'
     case 'python-list':
-      return 'python';
+      return 'python'
     case 'javascript-array':
-      return 'javascript';
+      return 'javascript'
     case 'yaml-array':
-      return 'yaml';
+      return 'yaml'
     default:
-      return 'plaintext';
+      return 'plaintext'
   }
 }
-

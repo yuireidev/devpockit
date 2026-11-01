@@ -1,10 +1,10 @@
-import type { CronParserOptions } from '@/config/cron-parser-config';
+import type { CronParserOptions } from '@/config/cron-parser-config'
 
 export interface ExportFormat {
-  id: string;
-  name: string;
-  description: string;
-  extension: string;
+  id: string
+  name: string
+  description: string
+  extension: string
 }
 
 export const EXPORT_FORMATS: ExportFormat[] = [
@@ -12,96 +12,92 @@ export const EXPORT_FORMATS: ExportFormat[] = [
     id: 'plain',
     name: 'Plain Cron Expression',
     description: 'Standard cron expression',
-    extension: 'txt'
+    extension: 'txt',
   },
   {
     id: 'json',
     name: 'JSON Config',
     description: 'JSON configuration object',
-    extension: 'json'
+    extension: 'json',
   },
   {
     id: 'javascript',
     name: 'JavaScript (node-cron)',
     description: 'Node.js node-cron format',
-    extension: 'js'
+    extension: 'js',
   },
   {
     id: 'python',
     name: 'Python (APScheduler)',
     description: 'Python APScheduler cron format',
-    extension: 'py'
+    extension: 'py',
   },
   {
     id: 'go',
     name: 'Go (robfig/cron)',
     description: 'Go robfig/cron format',
-    extension: 'go'
+    extension: 'go',
   },
   {
     id: 'java',
     name: 'Java (Quartz)',
     description: 'Java Quartz cron format',
-    extension: 'java'
+    extension: 'java',
   },
   {
     id: 'docker',
     name: 'Docker Compose',
     description: 'Docker Compose cron format',
-    extension: 'yml'
+    extension: 'yml',
   },
   {
     id: 'kubernetes',
     name: 'Kubernetes CronJob',
     description: 'Kubernetes CronJob YAML',
-    extension: 'yaml'
+    extension: 'yaml',
   },
   {
     id: 'github-actions',
     name: 'GitHub Actions',
     description: 'GitHub Actions workflow cron',
-    extension: 'yml'
-  }
-];
+    extension: 'yml',
+  },
+]
 
 /**
  * Export cron expression in various formats
  */
-export function exportCronExpression(
-  expression: string,
-  format: string,
-  options?: CronParserOptions
-): string {
+export function exportCronExpression(expression: string, format: string, options?: CronParserOptions): string {
   switch (format) {
     case 'plain':
-      return expression;
+      return expression
 
     case 'json':
-      return exportAsJson(expression, options);
+      return exportAsJson(expression, options)
 
     case 'javascript':
-      return exportAsJavaScript(expression);
+      return exportAsJavaScript(expression)
 
     case 'python':
-      return exportAsPython(expression);
+      return exportAsPython(expression)
 
     case 'go':
-      return exportAsGo(expression);
+      return exportAsGo(expression)
 
     case 'java':
-      return exportAsJava(expression);
+      return exportAsJava(expression)
 
     case 'docker':
-      return exportAsDocker(expression);
+      return exportAsDocker(expression)
 
     case 'kubernetes':
-      return exportAsKubernetes(expression);
+      return exportAsKubernetes(expression)
 
     case 'github-actions':
-      return exportAsGitHubActions(expression);
+      return exportAsGitHubActions(expression)
 
     default:
-      return expression;
+      return expression
   }
 }
 
@@ -115,10 +111,10 @@ function exportAsJson(expression: string, options?: CronParserOptions): string {
       hour: options?.hour,
       day: options?.day,
       month: options?.month,
-      weekday: options?.weekday
-    }
-  };
-  return JSON.stringify(config, null, 2);
+      weekday: options?.weekday,
+    },
+  }
+  return JSON.stringify(config, null, 2)
 }
 
 function exportAsJavaScript(expression: string): string {
@@ -128,7 +124,7 @@ function exportAsJavaScript(expression: string): string {
 cron.schedule('${expression}', () => {
   // Your task here
   console.log('Task executed');
-});`;
+});`
 }
 
 function exportAsPython(expression: string): string {
@@ -145,7 +141,7 @@ scheduler.add_job(
     name='Job description'
 )
 
-scheduler.start()`;
+scheduler.start()`
 }
 
 function exportAsGo(expression: string): string {
@@ -170,7 +166,7 @@ func main() {
 
     // Keep the program running
     select {}
-}`;
+}`
 }
 
 function exportAsJava(expression: string): string {
@@ -194,7 +190,7 @@ public class CronJob {
         scheduler.scheduleJob(job, trigger);
         scheduler.start();
     }
-}`;
+}`
 }
 
 function exportAsDocker(expression: string): string {
@@ -219,7 +215,7 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock:ro
     labels:
       - "ofelia.job-exec.${expression}.image=your-image:latest"
-      - "ofelia.job-exec.${expression}.command=/path/to/script.sh"`;
+      - "ofelia.job-exec.${expression}.command=/path/to/script.sh"`
 }
 
 function exportAsKubernetes(expression: string): string {
@@ -243,7 +239,7 @@ spec:
             - /path/to/script.sh
           restartPolicy: OnFailure
   successfulJobsHistoryLimit: 3
-  failedJobsHistoryLimit: 1`;
+  failedJobsHistoryLimit: 1`
 }
 
 function exportAsGitHubActions(expression: string): string {
@@ -265,6 +261,5 @@ jobs:
       - name: Run task
         run: |
           echo "Task executed"
-          # Your commands here`;
+          # Your commands here`
 }
-

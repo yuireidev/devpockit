@@ -1,7 +1,7 @@
 name: Documentation
 description: Report a documentation issue or suggest documentation improvements
-title: "[Docs]: "
-labels: ["documentation"]
+title: '[Docs]: '
+labels: ['documentation']
 body:
   - type: markdown
     attributes:
@@ -14,13 +14,13 @@ body:
       label: Documentation Type
       description: What type of documentation issue is this?
       options:
-        - "Missing Documentation"
-        - "Incorrect Information"
-        - "Unclear/Confusing"
-        - "Outdated Content"
-        - "Typo/Grammar"
-        - "Formatting Issue"
-        - "Other"
+        - 'Missing Documentation'
+        - 'Incorrect Information'
+        - 'Unclear/Confusing'
+        - 'Outdated Content'
+        - 'Typo/Grammar'
+        - 'Formatting Issue'
+        - 'Other'
     validations:
       required: true
 
@@ -29,7 +29,7 @@ body:
     attributes:
       label: Documentation Location
       description: Where is this documentation issue? (e.g., README.md, CONTRIBUTING.md, specific tool docs)
-      placeholder: "e.g., README.md, CONTRIBUTING.md, docs/ARCHITECTURE.md"
+      placeholder: 'e.g., README.md, CONTRIBUTING.md, docs/ARCHITECTURE.md'
     validations:
       required: true
 
@@ -78,4 +78,3 @@ body:
           required: true
         - label: I have provided all the information requested above
           required: true
-

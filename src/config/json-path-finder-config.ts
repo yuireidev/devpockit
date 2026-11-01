@@ -1,8 +1,8 @@
 export interface JsonPathFinderOptions {
-  returnPaths: boolean;
-  returnValues: boolean;
-  formatOutput: boolean;
-  sortKeys: 'none' | 'asc' | 'desc';
+  returnPaths: boolean
+  returnValues: boolean
+  formatOutput: boolean
+  sortKeys: 'none' | 'asc' | 'desc'
 }
 
 export const DEFAULT_JSON_PATH_OPTIONS: JsonPathFinderOptions = {
@@ -10,13 +10,13 @@ export const DEFAULT_JSON_PATH_OPTIONS: JsonPathFinderOptions = {
   returnValues: true,
   formatOutput: true,
   sortKeys: 'none',
-};
+}
 
 export const JSON_PATH_SORT_OPTIONS = [
   { value: 'none', label: 'Keep original order' },
-  { value: 'asc',  label: 'Ascending (A-Z)' },
+  { value: 'asc', label: 'Ascending (A-Z)' },
   { value: 'desc', label: 'Descending (Z-A)' },
-] as const;
+] as const
 
 export const JSON_PATH_EXAMPLES = [
   {
@@ -27,7 +27,7 @@ export const JSON_PATH_EXAMPLES = [
   "email": "john@example.com"
 }`,
     path: '$.name',
-    description: 'Access a simple property'
+    description: 'Access a simple property',
   },
   {
     name: 'Nested Object',
@@ -46,7 +46,7 @@ export const JSON_PATH_EXAMPLES = [
   }
 }`,
     path: '$.user.profile.address.city',
-    description: 'Navigate nested properties'
+    description: 'Navigate nested properties',
   },
   {
     name: 'Array Access',
@@ -58,7 +58,7 @@ export const JSON_PATH_EXAMPLES = [
   ]
 }`,
     path: '$.users[0].name',
-    description: 'Access first array element'
+    description: 'Access first array element',
   },
   {
     name: 'Array Wildcard',
@@ -70,7 +70,7 @@ export const JSON_PATH_EXAMPLES = [
   ]
 }`,
     path: '$.products[*].name',
-    description: 'Get all product names'
+    description: 'Get all product names',
   },
   {
     name: 'Recursive Descent',
@@ -87,7 +87,7 @@ export const JSON_PATH_EXAMPLES = [
   }
 }`,
     path: '$..title',
-    description: 'Find all titles recursively'
+    description: 'Find all titles recursively',
   },
   {
     name: 'Array Slice',
@@ -95,13 +95,13 @@ export const JSON_PATH_EXAMPLES = [
   "items": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]
 }`,
     path: '$.items[1:4]',
-    description: 'Get array slice (indices 1-3)'
+    description: 'Get array slice (indices 1-3)',
   },
   {
     name: 'Root Array',
     json: `[1, 2, 3, 4, 5]`,
     path: '$[0]',
-    description: 'Access root array element'
+    description: 'Access root array element',
   },
   {
     name: 'Root Array Wildcard',
@@ -111,7 +111,7 @@ export const JSON_PATH_EXAMPLES = [
   {"id": 3, "name": "Item 3"}
 ]`,
     path: '$[*].name',
-    description: 'Get all names from root array'
+    description: 'Get all names from root array',
   },
   {
     name: 'All Properties',
@@ -123,7 +123,7 @@ export const JSON_PATH_EXAMPLES = [
   }
 }`,
     path: '$.user.*',
-    description: 'Get all user properties'
+    description: 'Get all user properties',
   },
   {
     name: 'API Response',
@@ -142,85 +142,85 @@ export const JSON_PATH_EXAMPLES = [
   }
 }`,
     path: '$..role',
-    description: 'Find all roles in the structure'
-  }
-];
+    description: 'Find all roles in the structure',
+  },
+]
 
 export const JSON_PATH_COMMON_PATTERNS = [
   {
     pattern: '$.property',
     description: 'Access root property',
-    example: '$.name'
+    example: '$.name',
   },
   {
     pattern: '$.parent.child',
     description: 'Access nested property',
-    example: '$.user.profile.name'
+    example: '$.user.profile.name',
   },
   {
     pattern: '$.array[0]',
     description: 'Access array element by index',
-    example: '$.items[0]'
+    example: '$.items[0]',
   },
   {
     pattern: '$.array[*]',
     description: 'Access all array elements',
-    example: '$.users[*]'
+    example: '$.users[*]',
   },
   {
     pattern: '$.array[1:4]',
     description: 'Array slice (start:end)',
-    example: '$.items[1:4]'
+    example: '$.items[1:4]',
   },
   {
     pattern: '$..property',
     description: 'Recursive descent - find all properties',
-    example: '$..name'
+    example: '$..name',
   },
   {
     pattern: '$.*',
     description: 'All root properties',
-    example: '$.*'
+    example: '$.*',
   },
   {
     pattern: '$["property"]',
     description: 'Bracket notation for property',
-    example: '$["user-name"]'
-  }
-];
+    example: '$["user-name"]',
+  },
+]
 
 export const JSON_PATH_TIPS = [
   {
     tip: 'Root Selector',
     description: 'Always start with $ to reference the root of the JSON document',
-    example: '$.property'
+    example: '$.property',
   },
   {
     tip: 'Dot Notation',
     description: 'Use dots to navigate nested objects',
-    example: '$.user.profile.name'
+    example: '$.user.profile.name',
   },
   {
     tip: 'Bracket Notation',
     description: 'Use brackets for array indices or property names with special characters',
-    example: '$.items[0] or $["property-name"]'
+    example: '$.items[0] or $["property-name"]',
   },
   {
     tip: 'Wildcard',
     description: 'Use * to match all elements at a level',
-    example: '$.users[*].name'
+    example: '$.users[*].name',
   },
   {
     tip: 'Recursive Descent',
     description: 'Use .. to search recursively through all levels',
-    example: '$..email (finds all email properties)'
+    example: '$..email (finds all email properties)',
   },
   {
     tip: 'Array Slicing',
     description: 'Use [start:end] to get a range of array elements',
-    example: '$.items[1:4] (gets indices 1, 2, 3)'
-  }
-];
+    example: '$.items[1:4] (gets indices 1, 2, 3)',
+  },
+]
 
 export const JSON_PATH_FINDER_DESCRIPTIONS = {
   title: 'JSON Path Finder',
@@ -230,14 +230,13 @@ export const JSON_PATH_FINDER_DESCRIPTIONS = {
     'Find and extract matching values',
     'Display paths to matched elements',
     'Support for common JSONPath syntax',
-    'Real-time query validation'
+    'Real-time query validation',
   ],
   useCases: [
     'Extract specific data from API responses',
     'Navigate complex JSON structures',
     'Find all occurrences of a property',
     'Query nested objects and arrays',
-    'Data transformation and filtering'
-  ]
-};
-
+    'Data transformation and filtering',
+  ],
+}

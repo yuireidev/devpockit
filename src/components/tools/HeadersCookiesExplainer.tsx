@@ -1,8 +1,8 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Badge } from '@/components/ui/badge'
+import { Button } from '@/components/ui/button'
 import {
   Dialog,
   DialogClose,
@@ -11,106 +11,97 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog';
-import { CodePanel, type CodePanelTab } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
+} from '@/components/ui/dialog'
+import { CodePanel, type CodePanelTab } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
 import {
   HEADERS_COOKIE_EXAMPLES,
   type HeaderCookieGlossaryCategory,
   type GlossaryEntry,
-} from '@/config/headers-cookies-explainer-config';
+} from '@/config/headers-cookies-explainer-config'
 import {
   parseHttpHeaderBlock,
   parseRequestCookiePairs,
   parseSetCookiePaste,
   type ParsedHeaderRow,
   type ParsedSetCookieCookie,
-} from '@/libs/headers-cookies-explainer';
-import { cn } from '@/libs/utils';
-import { ChevronDownIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline';
-import { useCallback, useEffect, useMemo, useState } from 'react';
+} from '@/libs/headers-cookies-explainer'
+import { cn } from '@/libs/utils'
+import { ChevronDownIcon, DocumentDuplicateIcon } from '@heroicons/react/24/outline'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
-const TOOL_ID = 'headers-cookies-explainer' as const;
+const TOOL_ID = 'headers-cookies-explainer' as const
 
-type MainTab = 'headers' | 'cookie-request' | 'set-cookie';
+type MainTab = 'headers' | 'cookie-request' | 'set-cookie'
 
 interface HeadersCookiesExplainerProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 function categoryBadgeClass(cat: HeaderCookieGlossaryCategory | undefined): string {
   switch (cat) {
     case 'security':
-      return 'border-red-200 bg-red-100 text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100';
+      return 'border-red-200 bg-red-100 text-red-900 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-100'
     case 'caching':
-      return 'border-amber-200 bg-amber-100 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/35 dark:text-amber-50';
+      return 'border-amber-200 bg-amber-100 text-amber-950 dark:border-amber-900/40 dark:bg-amber-950/35 dark:text-amber-50'
     case 'cors':
-      return 'border-violet-200 bg-violet-100 text-violet-950 dark:border-violet-900/40 dark:bg-violet-950/40 dark:text-violet-100';
+      return 'border-violet-200 bg-violet-100 text-violet-950 dark:border-violet-900/40 dark:bg-violet-950/40 dark:text-violet-100'
     case 'auth':
-      return 'border-blue-200 bg-blue-100 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-50';
+      return 'border-blue-200 bg-blue-100 text-blue-950 dark:border-blue-900/40 dark:bg-blue-950/40 dark:text-blue-50'
     case 'privacy':
-      return 'border-teal-200 bg-teal-100 text-teal-950 dark:border-teal-900/40 dark:bg-teal-950/35 dark:text-teal-50';
+      return 'border-teal-200 bg-teal-100 text-teal-950 dark:border-teal-900/40 dark:bg-teal-950/35 dark:text-teal-50'
     case 'content':
-      return 'border-sky-200 bg-sky-100 text-sky-950 dark:border-sky-900/40 dark:bg-sky-950/35 dark:text-sky-50';
+      return 'border-sky-200 bg-sky-100 text-sky-950 dark:border-sky-900/40 dark:bg-sky-950/35 dark:text-sky-50'
     default:
-      return 'border-neutral-200 bg-neutral-100 text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100';
+      return 'border-neutral-200 bg-neutral-100 text-neutral-800 dark:border-neutral-700 dark:bg-neutral-800 dark:text-neutral-100'
   }
 }
 
 function copyText(text: string) {
-  if (!navigator.clipboard?.writeText) return;
-  navigator.clipboard.writeText(text).catch(console.error);
+  if (!navigator.clipboard?.writeText) return
+  navigator.clipboard.writeText(text).catch(console.error)
 }
 
 export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookiesExplainerProps) {
-  const { toolState, updateToolState } = useToolState(TOOL_ID, instanceId);
+  const { toolState, updateToolState } = useToolState(TOOL_ID, instanceId)
 
-  const [mainTab, setMainTab] = useState<MainTab>((toolState?.mainTab as MainTab) ?? ('headers'));
-  const [headersText, setHeadersText] = useState((toolState?.headersText as string) ?? (''));
-  const [cookieRequestText, setCookieRequestText] = useState((toolState?.cookieRequestText as string) ?? (''));
-  const [setCookieText, setSetCookieText] = useState((toolState?.setCookieText as string) ?? (''));
+  const [mainTab, setMainTab] = useState<MainTab>((toolState?.mainTab as MainTab) ?? 'headers')
+  const [headersText, setHeadersText] = useState((toolState?.headersText as string) ?? '')
+  const [cookieRequestText, setCookieRequestText] = useState((toolState?.cookieRequestText as string) ?? '')
+  const [setCookieText, setSetCookieText] = useState((toolState?.setCookieText as string) ?? '')
 
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [inputWrapText, setInputWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [inputWrapText, setInputWrapText] = useState(true)
 
-  const [detailEntry, setDetailEntry] = useState<{ title: string; entry: GlossaryEntry } | null>(
-    null
-  );
-
-
+  const [detailEntry, setDetailEntry] = useState<{ title: string; entry: GlossaryEntry } | null>(null)
 
   useEffect(() => {
     updateToolState({
-        mainTab,
-        headersText,
-        cookieRequestText,
-        setCookieText,
-      });
+      mainTab,
+      headersText,
+      cookieRequestText,
+      setCookieText,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [mainTab, headersText, cookieRequestText, setCookieText]);
+  }, [mainTab, headersText, cookieRequestText, setCookieText])
 
-
-
-  const parsedHeaders = useMemo(() => parseHttpHeaderBlock(headersText), [headersText]);
-  const parsedRequestCookies = useMemo(
-    () => parseRequestCookiePairs(cookieRequestText),
-    [cookieRequestText]
-  );
-  const parsedSetCookies = useMemo(() => parseSetCookiePaste(setCookieText), [setCookieText]);
+  const parsedHeaders = useMemo(() => parseHttpHeaderBlock(headersText), [headersText])
+  const parsedRequestCookies = useMemo(() => parseRequestCookiePairs(cookieRequestText), [cookieRequestText])
+  const parsedSetCookies = useMemo(() => parseSetCookiePaste(setCookieText), [setCookieText])
 
   const allWarnings =
     mainTab === 'headers'
       ? parsedHeaders.warnings
       : mainTab === 'cookie-request'
         ? parsedRequestCookies.warnings
-        : parsedSetCookies.warnings;
+        : parsedSetCookies.warnings
 
   const openGlossary = (title: string, entry?: GlossaryEntry) => {
-    if (!entry) return;
-    setDetailEntry({ title, entry });
-  };
+    if (!entry) return
+    setDetailEntry({ title, entry })
+  }
 
   const inputTabs = useMemo<CodePanelTab[]>(
     () => [
@@ -119,39 +110,39 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
       { id: 'set-cookie', label: 'Set-Cookie', value: setCookieText, language: 'plaintext' },
     ],
     [headersText, cookieRequestText, setCookieText]
-  );
+  )
 
   const handleEditorChange = useCallback(
     (value: string) => {
       switch (mainTab) {
         case 'headers':
-          setHeadersText(value);
-          break;
+          setHeadersText(value)
+          break
         case 'cookie-request':
-          setCookieRequestText(value);
-          break;
+          setCookieRequestText(value)
+          break
         case 'set-cookie':
-          setSetCookieText(value);
-          break;
+          setSetCookieText(value)
+          break
         default:
-          break;
+          break
       }
     },
     [mainTab]
-  );
+  )
 
   const editorPlaceholder = useMemo(() => {
     switch (mainTab) {
       case 'headers':
-        return 'Host: api.example.com\nAccept: application/json';
+        return 'Host: api.example.com\nAccept: application/json'
       case 'cookie-request':
-        return 'session=abc123; locale=en';
+        return 'session=abc123; locale=en'
       case 'set-cookie':
-        return 'Set-Cookie: id=u1; Path=/; HttpOnly\nSet-Cookie: prefs=compact; Secure; SameSite=None';
+        return 'Set-Cookie: id=u1; Path=/; HttpOnly\nSet-Cookie: prefs=compact; Secure; SameSite=None'
       default:
-        return '';
+        return ''
     }
-  }, [mainTab]);
+  }, [mainTab])
 
   const editorHeaderActions = useMemo(() => {
     if (mainTab === 'headers') {
@@ -160,21 +151,19 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
           <DropdownMenuTrigger asChild>
             <Button type="button" variant="outline" size="sm" className="h-8 px-3 text-xs">
               Load example
-              <ChevronDownIcon className="h-3 w-3 ml-1" />
+              <ChevronDownIcon className="ml-1 h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={() => setHeadersText(HEADERS_COOKIE_EXAMPLES.headRequest)}>
               Sample GET request
             </DropdownMenuItem>
-            <DropdownMenuItem
-              onClick={() => setHeadersText(HEADERS_COOKIE_EXAMPLES.responseWithSetCookie)}
-            >
+            <DropdownMenuItem onClick={() => setHeadersText(HEADERS_COOKIE_EXAMPLES.responseWithSetCookie)}>
               Sample response (+ Set-Cookie)
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      );
+      )
     }
     if (mainTab === 'cookie-request') {
       return (
@@ -187,7 +176,7 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
         >
           Load example
         </Button>
-      );
+      )
     }
     return (
       <Button
@@ -199,44 +188,45 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
       >
         Load example
       </Button>
-    );
-  }, [mainTab]);
+    )
+  }, [mainTab])
 
   const editorFooterHint = useMemo(() => {
     if (mainTab === 'cookie-request') {
       return (
-        <span className="text-xs text-neutral-600 dark:text-neutral-400 max-w-[min(100%,42rem)]">
+        <span className="max-w-[min(100%,42rem)] text-xs text-neutral-600 dark:text-neutral-400">
           Paste the value only (omit <span className="font-mono text-[11px]">Cookie:</span> prefix). Semicolon-separated{' '}
           <span className="font-mono text-[11px]">name=value</span> pairs.
         </span>
-      );
+      )
     }
     if (mainTab === 'set-cookie') {
       return (
-        <span className="text-xs text-neutral-600 dark:text-neutral-400 max-w-[min(100%,42rem)]">
+        <span className="max-w-[min(100%,42rem)] text-xs text-neutral-600 dark:text-neutral-400">
           One cookie per line. Optional <span className="font-mono text-[11px]">Set-Cookie:</span> prefix. Avoid merging
           lines when <span className="font-mono text-[11px]">Expires=</span> dates include commas.
         </span>
-      );
+      )
     }
-    return null;
-  }, [mainTab]);
+    return null
+  }, [mainTab])
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-8 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-8 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           Headers / Cookies explainer
         </h1>
-        <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100 max-w-3xl">
-          Paste HTTP headers or cookie strings copied from DevTools or server logs. The tool parses rows
-          client-side only and attaches short glossary notes—not a substitute for inspecting real traffic policies.
+        <p className="max-w-3xl text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
+          Paste HTTP headers or cookie strings copied from DevTools or server logs. The tool parses rows client-side
+          only and attaches short glossary notes—not a substitute for inspecting real traffic policies.
         </p>
       </div>
 
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-hidden">
-        <div className="flex flex-col gap-4 min-h-0 flex-1">
-          <CodePanel fillHeight={true}
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-hidden px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
+          <CodePanel
+            fillHeight={true}
             tabs={inputTabs}
             activeTab={mainTab}
             onTabChange={(id) => setMainTab(id as MainTab)}
@@ -254,9 +244,9 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
           />
 
           {(allWarnings.length > 0 || (mainTab === 'headers' && parsedHeaders.malformedLines.length > 0)) && (
-            <div className="rounded-lg border border-amber-200 bg-amber-50/90 dark:border-amber-900/50 dark:bg-amber-950/25 px-3 py-2 text-sm text-amber-950 dark:text-amber-100 flex-shrink-0 space-y-1">
+            <div className="flex-shrink-0 space-y-1 rounded-lg border border-amber-200 bg-amber-50/90 px-3 py-2 text-sm text-amber-950 dark:border-amber-900/50 dark:bg-amber-950/25 dark:text-amber-100">
               <p className="font-medium">Parsing notes</p>
-              <ul className="list-disc pl-5 space-y-0.5 text-amber-900/90 dark:text-amber-200/90">
+              <ul className="list-disc space-y-0.5 pl-5 text-amber-900/90 dark:text-amber-200/90">
                 {mainTab === 'headers' &&
                   parsedHeaders.malformedLines.map((m, i) => (
                     <li key={`m-${m.lineNumber}-${i}`}>
@@ -272,28 +262,28 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
           )}
 
           {mainTab === 'headers' && parsedHeaders.skippedFirstLine?.trim() && (
-            <p className="text-xs text-neutral-600 dark:text-neutral-400 flex-shrink-0">
+            <p className="flex-shrink-0 text-xs text-neutral-600 dark:text-neutral-400">
               Stripped initial line:{' '}
               <span className="font-mono break-all">{parsedHeaders.skippedFirstLine.trim()}</span>
             </p>
           )}
 
           {/* Results */}
-          <div className="flex-1 min-h-0 rounded-lg border border-neutral-200 dark:border-neutral-800 overflow-auto flex flex-col">
+          <div className="flex min-h-0 flex-1 flex-col overflow-auto rounded-lg border border-neutral-200 dark:border-neutral-800">
             {mainTab === 'headers' &&
               (parsedHeaders.rows.length === 0 ? (
                 <p className="p-6 text-sm text-neutral-600 dark:text-neutral-400">
                   Paste a header block to see a row-by-row breakdown.
                 </p>
               ) : (
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead className="sticky top-0 z-10 bg-neutral-50 dark:bg-neutral-900/95 backdrop-blur border-b border-neutral-200 dark:border-neutral-800">
+                <table className="w-full border-collapse text-left text-sm">
+                  <thead className="sticky top-0 z-10 border-b border-neutral-200 bg-neutral-50 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/95">
                     <tr>
-                      <th className="px-4 py-3 font-medium min-w-[140px]">Header</th>
-                      <th className="px-4 py-3 font-medium min-w-[120px]">Value</th>
-                      <th className="px-4 py-3 font-medium w-36">Topic</th>
+                      <th className="min-w-[140px] px-4 py-3 font-medium">Header</th>
+                      <th className="min-w-[120px] px-4 py-3 font-medium">Value</th>
+                      <th className="w-36 px-4 py-3 font-medium">Topic</th>
                       <th className="px-4 py-3 font-medium">Summary</th>
-                      <th className="px-4 py-3 font-medium w-28 text-right">Copy</th>
+                      <th className="w-28 px-4 py-3 text-right font-medium">Copy</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -303,11 +293,7 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
                         row={row}
                         onOpenExplain={
                           row.glossary
-                            ? () =>
-                                openGlossary(
-                                  `${row.name} (#${row.occurrenceIndex})`,
-                                  row.glossary
-                                )
+                            ? () => openGlossary(`${row.name} (#${row.occurrenceIndex})`, row.glossary)
                             : undefined
                         }
                       />
@@ -322,12 +308,12 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
                   Paste cookie pairs from the Cookie request header (_name=value;_).
                 </p>
               ) : (
-                <table className="w-full text-sm text-left border-collapse">
-                  <thead className="sticky top-0 z-10 bg-neutral-50 dark:bg-neutral-900/95 backdrop-blur border-b border-neutral-200 dark:border-neutral-800">
+                <table className="w-full border-collapse text-left text-sm">
+                  <thead className="sticky top-0 z-10 border-b border-neutral-200 bg-neutral-50 backdrop-blur dark:border-neutral-800 dark:bg-neutral-900/95">
                     <tr>
                       <th className="px-4 py-3 font-medium">Name</th>
                       <th className="px-4 py-3 font-medium">Value</th>
-                      <th className="px-4 py-3 font-medium w-28 text-right">Copy</th>
+                      <th className="w-28 px-4 py-3 text-right font-medium">Copy</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -339,10 +325,8 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
                           i % 2 === 0 ? 'bg-background' : 'bg-neutral-50/50 dark:bg-neutral-950/30'
                         )}
                       >
-                        <td className="px-4 py-2.5 font-mono text-neutral-900 dark:text-neutral-100">
-                          {p.name}
-                        </td>
-                        <td className="px-4 py-2.5 font-mono text-neutral-700 dark:text-neutral-300 break-all">
+                        <td className="px-4 py-2.5 font-mono text-neutral-900 dark:text-neutral-100">{p.name}</td>
+                        <td className="px-4 py-2.5 font-mono break-all text-neutral-700 dark:text-neutral-300">
                           {p.value || '—'}
                         </td>
                         <td className="px-4 py-2.5 text-right">
@@ -365,17 +349,17 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
             {mainTab === 'set-cookie' &&
               (parsedSetCookies.cookies.length === 0 ? (
                 <p className="p-6 text-sm text-neutral-600 dark:text-neutral-400">
-                  Paste newline-separated Set-Cookie lines; avoid merging multiple cookies on one line when Expires dates
-                  are present (commas confuse naive splitting).
+                  Paste newline-separated Set-Cookie lines; avoid merging multiple cookies on one line when Expires
+                  dates are present (commas confuse naive splitting).
                 </p>
               ) : (
                 <div className="divide-y divide-neutral-100 dark:divide-neutral-800/80">
                   {parsedSetCookies.cookies.map((cookie, ci) => (
-                    <div key={`${cookie.cookieName}-${ci}`} className="p-4 space-y-3">
+                    <div key={`${cookie.cookieName}-${ci}`} className="space-y-3 p-4">
                       <div className="flex flex-wrap items-start justify-between gap-2">
                         <p className="font-mono text-sm text-neutral-900 dark:text-neutral-100">
                           <span className="font-semibold">{cookie.cookieName}</span>
-                          <span className="text-neutral-600 dark:text-neutral-400 mx-1">=</span>
+                          <span className="mx-1 text-neutral-600 dark:text-neutral-400">=</span>
                           <span className="break-all">{cookie.cookieValue || '(empty)'}</span>
                         </p>
                         <Button
@@ -383,16 +367,14 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
                           size="sm"
                           variant="outline"
                           className="h-8 shrink-0"
-                          onClick={() =>
-                            copyText(`${cookie.cookieName}=${cookie.cookieValue}`)
-                          }
+                          onClick={() => copyText(`${cookie.cookieName}=${cookie.cookieValue}`)}
                         >
                           Copy name=value
                         </Button>
                       </div>
-                      <table className="w-full text-sm text-left border-collapse">
+                      <table className="w-full border-collapse text-left text-sm">
                         <thead>
-                          <tr className="border-b border-neutral-200 dark:border-neutral-800 bg-neutral-50/80 dark:bg-neutral-900/50">
+                          <tr className="border-b border-neutral-200 bg-neutral-50/80 dark:border-neutral-800 dark:bg-neutral-900/50">
                             <th className="px-3 py-2 font-medium">Attribute</th>
                             <th className="px-3 py-2 font-medium">Value</th>
                             <th className="px-3 py-2 font-medium">Topic</th>
@@ -429,14 +411,17 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
                 <div className="space-y-3 text-left text-neutral-900 dark:text-neutral-100">
                   <Badge
                     variant="outline"
-                    className={cn('text-[10px] uppercase tracking-wide', categoryBadgeClass(detailEntry.entry.category))}
+                    className={cn(
+                      'text-[10px] tracking-wide uppercase',
+                      categoryBadgeClass(detailEntry.entry.category)
+                    )}
                   >
                     {detailEntry.entry.category}
                   </Badge>
-                  <p className="text-sm text-neutral-700 dark:text-neutral-300 leading-relaxed">
+                  <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
                     <span className="font-medium">{detailEntry.entry.summary}</span>
                   </p>
-                  <p className="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed">
+                  <p className="text-sm leading-relaxed text-neutral-600 dark:text-neutral-400">
                     {detailEntry.entry.detail}
                   </p>
                 </div>
@@ -453,16 +438,10 @@ export function HeadersCookiesExplainer({ className, instanceId }: HeadersCookie
         </DialogContent>
       </Dialog>
     </div>
-  );
+  )
 }
 
-function ParsedHeaderRowTr({
-  row,
-  onOpenExplain,
-}: {
-  row: ParsedHeaderRow;
-  onOpenExplain?: () => void;
-}) {
+function ParsedHeaderRowTr({ row, onOpenExplain }: { row: ParsedHeaderRow; onOpenExplain?: () => void }) {
   return (
     <tr
       className={cn(
@@ -474,23 +453,18 @@ function ParsedHeaderRowTr({
         <div className="font-mono text-neutral-900 dark:text-neutral-100">
           {row.name}
           {row.occurrenceIndex > 1 && (
-            <span className="ml-2 text-[10px] text-neutral-500 dark:text-neutral-400">
-              #{row.occurrenceIndex}
-            </span>
+            <span className="ml-2 text-[10px] text-neutral-500 dark:text-neutral-400">#{row.occurrenceIndex}</span>
           )}
         </div>
       </td>
-      <td className="px-4 py-2.5 align-top font-mono text-xs text-neutral-700 dark:text-neutral-300 break-all max-w-[40vw] sm:max-w-md">
+      <td className="max-w-[40vw] px-4 py-2.5 align-top font-mono text-xs break-all text-neutral-700 sm:max-w-md dark:text-neutral-300">
         {row.value || '—'}
       </td>
       <td className="px-4 py-2.5 align-top">
         {row.glossary?.category ? (
           <Badge
             variant="outline"
-            className={cn(
-              'text-[10px] uppercase tracking-normal',
-              categoryBadgeClass(row.glossary.category)
-            )}
+            className={cn('text-[10px] tracking-normal uppercase', categoryBadgeClass(row.glossary.category))}
           >
             {row.glossary.category}
           </Badge>
@@ -498,12 +472,12 @@ function ParsedHeaderRowTr({
           <span className="text-xs text-neutral-500 dark:text-neutral-400">—</span>
         )}
       </td>
-      <td className="px-4 py-2.5 align-top text-neutral-700 dark:text-neutral-300 leading-snug">
+      <td className="px-4 py-2.5 align-top leading-snug text-neutral-700 dark:text-neutral-300">
         {row.glossary && onOpenExplain ? (
           <button
             type="button"
             onClick={onOpenExplain}
-            className="text-left underline-offset-2 hover:underline text-neutral-800 dark:text-neutral-200 cursor-pointer bg-transparent border-0 p-0 font-inherit"
+            className="font-inherit cursor-pointer border-0 bg-transparent p-0 text-left text-neutral-800 underline-offset-2 hover:underline dark:text-neutral-200"
           >
             {row.glossary.summary}
           </button>
@@ -513,7 +487,7 @@ function ParsedHeaderRowTr({
           </span>
         )}
       </td>
-      <td className="px-4 py-2.5 align-top text-right">
+      <td className="px-4 py-2.5 text-right align-top">
         <Button
           type="button"
           variant="ghost"
@@ -526,7 +500,7 @@ function ParsedHeaderRowTr({
         </Button>
       </td>
     </tr>
-  );
+  )
 }
 
 function SetCookieAttrRow({
@@ -534,16 +508,16 @@ function SetCookieAttrRow({
   cookieName,
   onOpenExplain,
 }: {
-  attr: ParsedSetCookieCookie['attributes'][number];
-  cookieName: string;
-  onOpenExplain: (title: string, entry: GlossaryEntry) => void;
+  attr: ParsedSetCookieCookie['attributes'][number]
+  cookieName: string
+  onOpenExplain: (title: string, entry: GlossaryEntry) => void
 }) {
-  const title = `${cookieName} » ${attr.name}`;
-  const glossary = attr.glossary;
+  const title = `${cookieName} » ${attr.name}`
+  const glossary = attr.glossary
   return (
     <tr className="border-b border-neutral-100 dark:border-neutral-800/40">
-      <td className="px-3 py-2 font-mono text-xs text-neutral-900 dark:text-neutral-100 align-top">{attr.name}</td>
-      <td className="px-3 py-2 font-mono text-xs text-neutral-700 dark:text-neutral-300 break-all align-top">
+      <td className="px-3 py-2 align-top font-mono text-xs text-neutral-900 dark:text-neutral-100">{attr.name}</td>
+      <td className="px-3 py-2 align-top font-mono text-xs break-all text-neutral-700 dark:text-neutral-300">
         {attr.value || '(flag)'}
       </td>
       <td className="px-3 py-2 align-top">
@@ -551,7 +525,7 @@ function SetCookieAttrRow({
           <Badge
             variant="outline"
             className={cn(
-              'text-[10px] uppercase tracking-normal whitespace-nowrap',
+              'text-[10px] tracking-normal whitespace-nowrap uppercase',
               categoryBadgeClass(glossary.category)
             )}
           >
@@ -561,21 +535,19 @@ function SetCookieAttrRow({
           <span className="text-xs text-neutral-500">—</span>
         )}
       </td>
-      <td className="px-3 py-2 text-neutral-700 dark:text-neutral-300 text-xs align-top leading-snug">
+      <td className="px-3 py-2 align-top text-xs leading-snug text-neutral-700 dark:text-neutral-300">
         {glossary ? (
           <button
             type="button"
-            className="text-left underline-offset-2 hover:underline cursor-pointer bg-transparent border-0 p-0 font-inherit text-inherit"
+            className="font-inherit cursor-pointer border-0 bg-transparent p-0 text-left text-inherit underline-offset-2 hover:underline"
             onClick={() => onOpenExplain(title, glossary)}
           >
             {glossary.summary}
           </button>
         ) : (
-          <span className="text-neutral-500 dark:text-neutral-400">
-            Standard cookie attribute semantics apply.
-          </span>
+          <span className="text-neutral-500 dark:text-neutral-400">Standard cookie attribute semantics apply.</span>
         )}
       </td>
     </tr>
-  );
+  )
 }

@@ -1,21 +1,21 @@
-import type { RegexFlags, RegexTesterOptions } from '@/config/regex-tester-config';
+import type { RegexFlags, RegexTesterOptions } from '@/config/regex-tester-config'
 
 export interface MatchResult {
-  match: string;
-  index: number;
-  groups: string[];
-  namedGroups: Record<string, string>;
-  fullMatch: string;
+  match: string
+  index: number
+  groups: string[]
+  namedGroups: Record<string, string>
+  fullMatch: string
 }
 
 export interface RegexTestResult {
-  isValid: boolean;
-  error?: string;
-  matches: MatchResult[];
-  matchCount: number;
-  replacedText?: string;
-  executionTime?: number;
-  flagsString: string;
+  isValid: boolean
+  error?: string
+  matches: MatchResult[]
+  matchCount: number
+  replacedText?: string
+  executionTime?: number
+  flagsString: string
 }
 
 /**
@@ -23,16 +23,16 @@ export interface RegexTestResult {
  * Order: m, s, g, i, y, u, d, v (matching common regex flag display conventions)
  */
 export function flagsToString(flags: RegexFlags): string {
-  const flagChars: string[] = [];
-  if (flags.multiline) flagChars.push('m');
-  if (flags.dotall) flagChars.push('s');
-  if (flags.global) flagChars.push('g');
-  if (flags.caseInsensitive) flagChars.push('i');
-  if (flags.sticky) flagChars.push('y');
-  if (flags.unicode) flagChars.push('u');
-  if (flags.hasIndices) flagChars.push('d');
-  if (flags.unicodeSets) flagChars.push('v');
-  return flagChars.join('');
+  const flagChars: string[] = []
+  if (flags.multiline) flagChars.push('m')
+  if (flags.dotall) flagChars.push('s')
+  if (flags.global) flagChars.push('g')
+  if (flags.caseInsensitive) flagChars.push('i')
+  if (flags.sticky) flagChars.push('y')
+  if (flags.unicode) flagChars.push('u')
+  if (flags.hasIndices) flagChars.push('d')
+  if (flags.unicodeSets) flagChars.push('v')
+  return flagChars.join('')
 }
 
 /**
@@ -40,10 +40,10 @@ export function flagsToString(flags: RegexFlags): string {
  */
 export function buildRegExp(pattern: string, flags: RegexFlags): RegExp | null {
   try {
-    const flagsString = flagsToString(flags);
-    return new RegExp(pattern, flagsString);
+    const flagsString = flagsToString(flags)
+    return new RegExp(pattern, flagsString)
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -52,16 +52,16 @@ export function buildRegExp(pattern: string, flags: RegexFlags): RegExp | null {
  */
 export function validatePattern(pattern: string, flags: RegexFlags): { isValid: boolean; error?: string } {
   if (!pattern || pattern.trim().length === 0) {
-    return { isValid: false, error: 'Pattern cannot be empty' };
+    return { isValid: false, error: 'Pattern cannot be empty' }
   }
 
   try {
-    const flagsString = flagsToString(flags);
-    new RegExp(pattern, flagsString);
-    return { isValid: true };
+    const flagsString = flagsToString(flags)
+    new RegExp(pattern, flagsString)
+    return { isValid: true }
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : 'Invalid regex pattern';
-    return { isValid: false, error: errorMessage };
+    const errorMessage = error instanceof Error ? error.message : 'Invalid regex pattern'
+    return { isValid: false, error: errorMessage }
   }
 }
 
@@ -69,30 +69,30 @@ export function validatePattern(pattern: string, flags: RegexFlags): { isValid: 
  * Test regex pattern against test string with timeout protection
  */
 export function testRegex(options: RegexTesterOptions, timeoutMs: number = 2000): RegexTestResult {
-  const startTime = performance.now();
+  const startTime = performance.now()
 
   // Validate pattern
-  const validation = validatePattern(options.pattern, options.flags);
+  const validation = validatePattern(options.pattern, options.flags)
   if (!validation.isValid) {
     return {
       isValid: false,
       error: validation.error,
       matches: [],
       matchCount: 0,
-      flagsString: flagsToString(options.flags)
-    };
+      flagsString: flagsToString(options.flags),
+    }
   }
 
   // Build regex
-  const regex = buildRegExp(options.pattern, options.flags);
+  const regex = buildRegExp(options.pattern, options.flags)
   if (!regex) {
     return {
       isValid: false,
       error: 'Failed to build regex',
       matches: [],
       matchCount: 0,
-      flagsString: flagsToString(options.flags)
-    };
+      flagsString: flagsToString(options.flags),
+    }
   }
 
   // Performance check: skip very long test strings
@@ -102,49 +102,49 @@ export function testRegex(options: RegexTesterOptions, timeoutMs: number = 2000)
       error: 'Test string is too long (max 100,000 characters)',
       matches: [],
       matchCount: 0,
-      flagsString: flagsToString(options.flags)
-    };
+      flagsString: flagsToString(options.flags),
+    }
   }
 
-  const matches: MatchResult[] = [];
-  const testString = options.testString;
-  let timedOut = false;
+  const matches: MatchResult[] = []
+  const testString = options.testString
+  let timedOut = false
 
   // Set up timeout protection
   const timeoutId = setTimeout(() => {
-    timedOut = true;
-  }, timeoutMs);
+    timedOut = true
+  }, timeoutMs)
 
   try {
     if (options.flags.global) {
       // Global match - find all matches with iteration limit
-      let match;
-      const regexCopy = new RegExp(regex.source, regex.flags);
-      let iterationCount = 0;
-      const MAX_ITERATIONS = 10000; // Prevent infinite loops
+      let match
+      const regexCopy = new RegExp(regex.source, regex.flags)
+      let iterationCount = 0
+      const MAX_ITERATIONS = 10000 // Prevent infinite loops
 
       while ((match = regexCopy.exec(testString)) !== null && !timedOut && iterationCount < MAX_ITERATIONS) {
-        iterationCount++;
+        iterationCount++
 
         // Prevent infinite loop on zero-length matches
         if (match.index === regexCopy.lastIndex) {
-          regexCopy.lastIndex++;
-          if (regexCopy.lastIndex > testString.length) break; // Safety check
+          regexCopy.lastIndex++
+          if (regexCopy.lastIndex > testString.length) break // Safety check
         }
 
-        const groups: string[] = [];
-        const namedGroups: Record<string, string> = {};
+        const groups: string[] = []
+        const namedGroups: Record<string, string> = {}
 
         // Extract numbered groups
         for (let i = 1; i < match.length; i++) {
           if (match[i] !== undefined) {
-            groups.push(match[i]);
+            groups.push(match[i])
           }
         }
 
         // Extract named groups (if supported)
         if (match.groups) {
-          Object.assign(namedGroups, match.groups);
+          Object.assign(namedGroups, match.groups)
         }
 
         matches.push({
@@ -152,42 +152,42 @@ export function testRegex(options: RegexTesterOptions, timeoutMs: number = 2000)
           index: match.index,
           groups,
           namedGroups,
-          fullMatch: match[0]
-        });
+          fullMatch: match[0],
+        })
 
         // Safety check for very large result sets
         if (matches.length > 1000) {
-          break;
+          break
         }
       }
 
       if (iterationCount >= MAX_ITERATIONS) {
-        clearTimeout(timeoutId);
+        clearTimeout(timeoutId)
         return {
           isValid: false,
           error: 'Pattern matched too many times (possible infinite loop)',
           matches: [],
           matchCount: 0,
-          flagsString: flagsToString(options.flags)
-        };
+          flagsString: flagsToString(options.flags),
+        }
       }
     } else {
       // Single match
-      const match = testString.match(regex);
+      const match = testString.match(regex)
       if (match) {
-        const groups: string[] = [];
-        const namedGroups: Record<string, string> = {};
+        const groups: string[] = []
+        const namedGroups: Record<string, string> = {}
 
         // Extract numbered groups
         for (let i = 1; i < match.length; i++) {
           if (match[i] !== undefined) {
-            groups.push(match[i]);
+            groups.push(match[i])
           }
         }
 
         // Extract named groups
         if (match.groups) {
-          Object.assign(namedGroups, match.groups);
+          Object.assign(namedGroups, match.groups)
         }
 
         matches.push({
@@ -195,22 +195,22 @@ export function testRegex(options: RegexTesterOptions, timeoutMs: number = 2000)
           index: match.index || 0,
           groups,
           namedGroups,
-          fullMatch: match[0]
-        });
+          fullMatch: match[0],
+        })
       }
     }
   } catch (err) {
-    clearTimeout(timeoutId);
+    clearTimeout(timeoutId)
     return {
       isValid: false,
       error: err instanceof Error ? err.message : 'Error executing regex',
       matches: [],
       matchCount: 0,
-      flagsString: flagsToString(options.flags)
-    };
+      flagsString: flagsToString(options.flags),
+    }
   }
 
-  clearTimeout(timeoutId);
+  clearTimeout(timeoutId)
 
   if (timedOut) {
     return {
@@ -218,22 +218,22 @@ export function testRegex(options: RegexTesterOptions, timeoutMs: number = 2000)
       error: `Regex execution timed out after ${timeoutMs}ms (possible catastrophic backtracking)`,
       matches: [],
       matchCount: 0,
-      flagsString: flagsToString(options.flags)
-    };
+      flagsString: flagsToString(options.flags),
+    }
   }
 
   // Perform replacement if replace string is provided
-  let replacedText: string | undefined;
+  let replacedText: string | undefined
   if (options.replaceString !== undefined && options.replaceString !== '') {
     try {
-      replacedText = testString.replace(regex, options.replaceString);
+      replacedText = testString.replace(regex, options.replaceString)
     } catch {
       // Replacement failed, but we still have matches
     }
   }
 
-  const endTime = performance.now();
-  const executionTime = endTime - startTime;
+  const endTime = performance.now()
+  const executionTime = endTime - startTime
 
   return {
     isValid: true,
@@ -241,114 +241,114 @@ export function testRegex(options: RegexTesterOptions, timeoutMs: number = 2000)
     matchCount: matches.length,
     replacedText,
     executionTime,
-    flagsString: flagsToString(options.flags)
-  };
+    flagsString: flagsToString(options.flags),
+  }
 }
 
 /**
  * Generate JavaScript code snippet
  */
 export function generateJavaScriptCode(options: RegexTesterOptions): string {
-  const flagsString = flagsToString(options.flags);
-  const patternEscaped = options.pattern.replace(/\\/g, '\\\\').replace(/`/g, '\\`');
-  const testStringEscaped = options.testString.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\${/g, '\\${');
+  const flagsString = flagsToString(options.flags)
+  const patternEscaped = options.pattern.replace(/\\/g, '\\\\').replace(/`/g, '\\`')
+  const testStringEscaped = options.testString.replace(/\\/g, '\\\\').replace(/`/g, '\\`').replace(/\${/g, '\\${')
 
-  let code = `// Regex Pattern\n`;
-  code += `const pattern = /${patternEscaped}/${flagsString};\n\n`;
+  let code = `// Regex Pattern\n`
+  code += `const pattern = /${patternEscaped}/${flagsString};\n\n`
 
-  code += `// Test String\n`;
-  code += `const testString = \`${testStringEscaped}\`;\n\n`;
+  code += `// Test String\n`
+  code += `const testString = \`${testStringEscaped}\`;\n\n`
 
   if (options.flags.global) {
-    code += `// Find all matches\n`;
-    code += `const matches = testString.match(pattern);\n`;
-    code += `console.log(matches);\n\n`;
+    code += `// Find all matches\n`
+    code += `const matches = testString.match(pattern);\n`
+    code += `console.log(matches);\n\n`
 
-    code += `// Or use exec in a loop\n`;
-    code += `const regex = new RegExp(pattern);\n`;
-    code += `let match;\n`;
-    code += `while ((match = regex.exec(testString)) !== null) {\n`;
-    code += `  console.log(match[0], match.index);\n`;
-    code += `}\n`;
+    code += `// Or use exec in a loop\n`
+    code += `const regex = new RegExp(pattern);\n`
+    code += `let match;\n`
+    code += `while ((match = regex.exec(testString)) !== null) {\n`
+    code += `  console.log(match[0], match.index);\n`
+    code += `}\n`
   } else {
-    code += `// Find first match\n`;
-    code += `const match = testString.match(pattern);\n`;
-    code += `console.log(match);\n`;
+    code += `// Find first match\n`
+    code += `const match = testString.match(pattern);\n`
+    code += `console.log(match);\n`
   }
 
   if (options.replaceString) {
-    code += `\n// Replace matches\n`;
-    code += `const replaced = testString.replace(pattern, '${options.replaceString.replace(/'/g, "\\'")}');\n`;
-    code += `console.log(replaced);\n`;
+    code += `\n// Replace matches\n`
+    code += `const replaced = testString.replace(pattern, '${options.replaceString.replace(/'/g, "\\'")}');\n`
+    code += `console.log(replaced);\n`
   }
 
-  return code;
+  return code
 }
 
 /**
  * Generate Python code snippet
  */
 export function generatePythonCode(options: RegexTesterOptions): string {
-  const flags = options.flags;
-  let code = `import re\n\n`;
+  const flags = options.flags
+  let code = `import re\n\n`
 
-  code += `# Regex Pattern\n`;
-  code += `pattern = r'${options.pattern.replace(/'/g, "\\'")}'\n\n`;
+  code += `# Regex Pattern\n`
+  code += `pattern = r'${options.pattern.replace(/'/g, "\\'")}'\n\n`
 
-  code += `# Test String\n`;
-  code += `test_string = '''${options.testString.replace(/'''/g, "\\'\\'\\'")}'''\n\n`;
+  code += `# Test String\n`
+  code += `test_string = '''${options.testString.replace(/'''/g, "\\'\\'\\'")}'''\n\n`
 
   // Build flags
-  const pythonFlags: string[] = [];
-  if (flags.caseInsensitive) pythonFlags.push('re.IGNORECASE');
-  if (flags.multiline) pythonFlags.push('re.MULTILINE');
-  if (flags.dotall) pythonFlags.push('re.DOTALL');
-  if (flags.unicode) pythonFlags.push('re.UNICODE');
+  const pythonFlags: string[] = []
+  if (flags.caseInsensitive) pythonFlags.push('re.IGNORECASE')
+  if (flags.multiline) pythonFlags.push('re.MULTILINE')
+  if (flags.dotall) pythonFlags.push('re.DOTALL')
+  if (flags.unicode) pythonFlags.push('re.UNICODE')
 
-  const flagsVar = pythonFlags.length > 0 ? `flags = ${pythonFlags.join(' | ')}\n` : '';
+  const flagsVar = pythonFlags.length > 0 ? `flags = ${pythonFlags.join(' | ')}\n` : ''
   if (flagsVar) {
-    code += flagsVar;
-    code += `\n`;
+    code += flagsVar
+    code += `\n`
   }
 
   if (options.flags.global) {
-    code += `# Find all matches\n`;
+    code += `# Find all matches\n`
     if (flagsVar) {
-      code += `matches = re.findall(pattern, test_string, flags)\n`;
+      code += `matches = re.findall(pattern, test_string, flags)\n`
     } else {
-      code += `matches = re.findall(pattern, test_string)\n`;
+      code += `matches = re.findall(pattern, test_string)\n`
     }
-    code += `print(matches)\n\n`;
+    code += `print(matches)\n\n`
 
-    code += `# Or use finditer for match objects\n`;
+    code += `# Or use finditer for match objects\n`
     if (flagsVar) {
-      code += `for match in re.finditer(pattern, test_string, flags):\n`;
+      code += `for match in re.finditer(pattern, test_string, flags):\n`
     } else {
-      code += `for match in re.finditer(pattern, test_string):\n`;
+      code += `for match in re.finditer(pattern, test_string):\n`
     }
-    code += `    print(match.group(), match.start(), match.end())\n`;
+    code += `    print(match.group(), match.start(), match.end())\n`
   } else {
-    code += `# Find first match\n`;
+    code += `# Find first match\n`
     if (flagsVar) {
-      code += `match = re.search(pattern, test_string, flags)\n`;
+      code += `match = re.search(pattern, test_string, flags)\n`
     } else {
-      code += `match = re.search(pattern, test_string)\n`;
+      code += `match = re.search(pattern, test_string)\n`
     }
-    code += `if match:\n`;
-    code += `    print(match.group())\n`;
+    code += `if match:\n`
+    code += `    print(match.group())\n`
   }
 
   if (options.replaceString) {
-    code += `\n# Replace matches\n`;
+    code += `\n# Replace matches\n`
     if (flagsVar) {
-      code += `replaced = re.sub(pattern, '${options.replaceString.replace(/'/g, "\\'")}', test_string, flags=flags)\n`;
+      code += `replaced = re.sub(pattern, '${options.replaceString.replace(/'/g, "\\'")}', test_string, flags=flags)\n`
     } else {
-      code += `replaced = re.sub(pattern, '${options.replaceString.replace(/'/g, "\\'")}', test_string)\n`;
+      code += `replaced = re.sub(pattern, '${options.replaceString.replace(/'/g, "\\'")}', test_string)\n`
     }
-    code += `print(replaced)\n`;
+    code += `print(replaced)\n`
   }
 
-  return code;
+  return code
 }
 
 /**
@@ -356,86 +356,78 @@ export function generatePythonCode(options: RegexTesterOptions): string {
  */
 export function highlightMatches(text: string, matches: MatchResult[]): string {
   if (matches.length === 0) {
-    return text;
+    return text
   }
 
   // Sort matches by index in reverse order to avoid index shifting
-  const sortedMatches = [...matches].sort((a, b) => b.index - a.index);
+  const sortedMatches = [...matches].sort((a, b) => b.index - a.index)
 
-  let highlighted = text;
+  let highlighted = text
   for (const match of sortedMatches) {
-    const before = highlighted.substring(0, match.index);
-    const matchText = highlighted.substring(match.index, match.index + match.match.length);
-    const after = highlighted.substring(match.index + match.match.length);
-    highlighted = `${before}<mark>${matchText}</mark>${after}`;
+    const before = highlighted.substring(0, match.index)
+    const matchText = highlighted.substring(match.index, match.index + match.match.length)
+    const after = highlighted.substring(match.index + match.match.length)
+    highlighted = `${before}<mark>${matchText}</mark>${after}`
   }
 
-  return highlighted;
+  return highlighted
 }
 
 /**
  * Type alias for Monaco editor decorations
  */
 type MonacoDecoration = {
-  range: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number };
-  options: { inlineClassName: string };
-};
+  range: { startLineNumber: number; startColumn: number; endLineNumber: number; endColumn: number }
+  options: { inlineClassName: string }
+}
 
-type MonacoModule = typeof import('monaco-editor');
+type MonacoModule = typeof import('monaco-editor')
 
 /**
  * Convert decorations to Monaco editor format
  */
-export function toMonacoDecorations(
-  decorations: MonacoDecoration[],
-  monaco: MonacoModule
-){
-  return decorations.map(dec => ({
+export function toMonacoDecorations(decorations: MonacoDecoration[], monaco: MonacoModule) {
+  return decorations.map((dec) => ({
     range: new monaco.Range(
       dec.range.startLineNumber,
       dec.range.startColumn,
       dec.range.endLineNumber,
       dec.range.endColumn
     ),
-    options: dec.options
-  }));
+    options: dec.options,
+  }))
 }
 
 /**
  * Get group color name for reference
  */
 function getGroupColorName(groupIndex: number): string {
-  const names = ['Blue', 'Green', 'Purple', 'Orange', 'Teal'];
-  return names[groupIndex % 5];
+  const names = ['Blue', 'Green', 'Purple', 'Orange', 'Teal']
+  return names[groupIndex % 5]
 }
 
 /**
  * Get group color class for highlighting
  */
 function getGroupColorClass(groupIndex: number): string {
-  return `regex-group-${(groupIndex % 5) + 1}`;
+  return `regex-group-${(groupIndex % 5) + 1}`
 }
 
 /**
  * Create a decoration for a text range
  */
-function createDecoration(
-  text: string,
-  startIndex: number,
-  endIndex: number,
-  className: string
-): MonacoDecoration {
-  const startPos = indexToPosition(text, startIndex);
-  const endPos = indexToPosition(text, endIndex);
+function createDecoration(text: string, startIndex: number, endIndex: number, className: string): MonacoDecoration {
+  const startPos = indexToPosition(text, startIndex)
+  const endPos = indexToPosition(text, endIndex)
   return {
     range: {
       startLineNumber: startPos.lineNumber,
       startColumn: startPos.column,
       endLineNumber: endPos.lineNumber,
-      endColumn: endPos.column
+      endColumn: endPos.column,
     },
-    options: { inlineClassName: className }
-  };
+    options: { inlineClassName: className },
+  }
 }
 
 /**
@@ -448,51 +440,51 @@ function createLineDecoration(
   endCol: number,
   className: string
 ): MonacoDecoration {
-  const text = lines.join('\n');
-  const lineStart = getLineStartIndex(lines, lineNumber);
-  return createDecoration(text, lineStart + startCol, lineStart + endCol, className);
+  const text = lines.join('\n')
+  const lineStart = getLineStartIndex(lines, lineNumber)
+  return createDecoration(text, lineStart + startCol, lineStart + endCol, className)
 }
 
 /**
  * Parse regex pattern to find capture groups and their positions
  */
 export interface CaptureGroupInfo {
-  start: number;
-  end: number;
-  groupIndex: number;
-  name?: string;
-  isNamed: boolean;
+  start: number
+  end: number
+  groupIndex: number
+  name?: string
+  isNamed: boolean
 }
 
 /**
  * Helper class to track regex parsing state (escapes, character classes)
  */
 class RegexParserState {
-  inCharacterClass = false;
-  escapeNext = false;
+  inCharacterClass = false
+  escapeNext = false
 
   advance(char: string): boolean {
     if (this.escapeNext) {
-      this.escapeNext = false;
-      return true; // Continue to next char
+      this.escapeNext = false
+      return true // Continue to next char
     }
 
     if (char === '\\') {
-      this.escapeNext = true;
-      return true;
+      this.escapeNext = true
+      return true
     }
 
     if (char === '[' && !this.escapeNext) {
-      this.inCharacterClass = true;
-      return true;
+      this.inCharacterClass = true
+      return true
     }
 
     if (char === ']' && this.inCharacterClass) {
-      this.inCharacterClass = false;
-      return true;
+      this.inCharacterClass = false
+      return true
     }
 
-    return this.inCharacterClass; // Skip if in character class
+    return this.inCharacterClass // Skip if in character class
   }
 }
 
@@ -500,102 +492,102 @@ class RegexParserState {
  * Find the matching closing parenthesis for an opening parenthesis
  */
 function findMatchingParen(pattern: string, startPos: number): number {
-  let depth = 1;
-  const state = new RegexParserState();
+  let depth = 1
+  const state = new RegexParserState()
 
   for (let i = startPos; i < pattern.length; i++) {
-    const char = pattern[i];
+    const char = pattern[i]
 
-    if (state.advance(char)) continue;
+    if (state.advance(char)) continue
 
     if (char === '(') {
-      depth++;
+      depth++
     } else if (char === ')') {
-      depth--;
-      if (depth === 0) return i;
+      depth--
+      if (depth === 0) return i
     }
   }
 
-  return -1;
+  return -1
 }
 
 export function parseCaptureGroups(pattern: string): CaptureGroupInfo[] {
-  const groups: CaptureGroupInfo[] = [];
-  let groupIndex = 0;
-  const state = new RegexParserState();
+  const groups: CaptureGroupInfo[] = []
+  let groupIndex = 0
+  const state = new RegexParserState()
 
   for (let i = 0; i < pattern.length; i++) {
-    const char = pattern[i];
+    const char = pattern[i]
 
-    if (state.advance(char)) continue;
+    if (state.advance(char)) continue
 
     if (char === '(') {
-      const start = i;
-      i++;
+      const start = i
+      i++
 
       // Check for non-capturing groups and special constructs
       if (i < pattern.length && pattern[i] === '?') {
-        i++;
+        i++
 
         // Named group: (?<name>...)
         if (i < pattern.length && pattern[i] === '<') {
-          const nameEnd = pattern.indexOf('>', i + 1);
+          const nameEnd = pattern.indexOf('>', i + 1)
           if (nameEnd !== -1) {
-            const name = pattern.substring(i + 1, nameEnd);
-            const end = findMatchingParen(pattern, nameEnd + 1);
+            const name = pattern.substring(i + 1, nameEnd)
+            const end = findMatchingParen(pattern, nameEnd + 1)
             if (end !== -1) {
-              groups.push({ start, end: end + 1, groupIndex, name, isNamed: true });
-              groupIndex++;
-              i = end;
-              continue;
+              groups.push({ start, end: end + 1, groupIndex, name, isNamed: true })
+              groupIndex++
+              i = end
+              continue
             }
           }
         }
 
         // Non-capturing group: (?:...), (?=...), (?!...), (?<=...), (?<!...)
-        const end = findMatchingParen(pattern, i);
+        const end = findMatchingParen(pattern, i)
         if (end !== -1) {
-          i = end;
-          continue;
+          i = end
+          continue
         }
       } else {
         // Regular capture group: (...)
-        const end = findMatchingParen(pattern, i);
+        const end = findMatchingParen(pattern, i)
         if (end !== -1) {
-          groups.push({ start, end: end + 1, groupIndex, isNamed: false });
-          groupIndex++;
-          i = end;
-          continue;
+          groups.push({ start, end: end + 1, groupIndex, isNamed: false })
+          groupIndex++
+          i = end
+          continue
         }
       }
     }
   }
 
-  return groups;
+  return groups
 }
 
 /**
  * Generate decorations for highlighting capture groups in the pattern
  */
 export function generatePatternDecorations(pattern: string): MonacoDecoration[] {
-  if (!pattern?.trim()) return [];
+  if (!pattern?.trim()) return []
 
   try {
     const decorations: MonacoDecoration[] = [
       // Highlight entire pattern as group 0 (full match)
-      createDecoration(pattern, 0, pattern.length, 'regex-match-highlight')
-    ];
+      createDecoration(pattern, 0, pattern.length, 'regex-match-highlight'),
+    ]
 
     // Highlight individual capture groups
     parseCaptureGroups(pattern).forEach((group) => {
-      const className = `regex-group-highlight ${getGroupColorClass(group.groupIndex)}`;
-      decorations.push(createDecoration(pattern, group.start, group.end, className));
-    });
+      const className = `regex-group-highlight ${getGroupColorClass(group.groupIndex)}`
+      decorations.push(createDecoration(pattern, group.start, group.end, className))
+    })
 
-    return decorations;
+    return decorations
   } catch (err) {
-    console.warn('Failed to parse pattern for decorations:', err);
-    return [];
+    console.warn('Failed to parse pattern for decorations:', err)
+    return []
   }
 }
 
@@ -604,51 +596,51 @@ export function generatePatternDecorations(pattern: string): MonacoDecoration[] 
  */
 export function formatMatchResults(matches: MatchResult[], showGroups: boolean, showPositions: boolean): string {
   if (matches.length === 0) {
-    return 'No matches found.';
+    return 'No matches found.'
   }
 
-  let output = `Found ${matches.length} match${matches.length === 1 ? '' : 'es'}:\n\n`;
+  let output = `Found ${matches.length} match${matches.length === 1 ? '' : 'es'}:\n\n`
 
   matches.forEach((match, index) => {
-    output += `Match ${index + 1}:\n`;
-    output += `  Text: "${match.match}"\n`;
+    output += `Match ${index + 1}:\n`
+    output += `  Text: "${match.match}"\n`
 
     if (showPositions) {
-      output += `  Position: ${match.index} - ${match.index + match.match.length}\n`;
+      output += `  Position: ${match.index} - ${match.index + match.match.length}\n`
     }
 
     if (showGroups && match.groups.length > 0) {
-      output += `  Groups:\n`;
+      output += `  Groups:\n`
       match.groups.forEach((group, groupIndex) => {
-        const colorName = getGroupColorName(groupIndex);
-        output += `    [${groupIndex + 1}] (${colorName}): "${group}"\n`;
-      });
+        const colorName = getGroupColorName(groupIndex)
+        output += `    [${groupIndex + 1}] (${colorName}): "${group}"\n`
+      })
     }
 
     if (showGroups && Object.keys(match.namedGroups).length > 0) {
-      output += `  Named Groups:\n`;
+      output += `  Named Groups:\n`
       Object.entries(match.namedGroups).forEach(([name, value], index) => {
-        const colorName = getGroupColorName(index);
-        output += `    ${name} (${colorName}): "${value}"\n`;
-      });
+        const colorName = getGroupColorName(index)
+        output += `    ${name} (${colorName}): "${value}"\n`
+      })
     }
 
-    output += `\n`;
-  });
+    output += `\n`
+  })
 
-  return output.trim();
+  return output.trim()
 }
 
 /**
  * Extract quoted value from a line and return its position
  */
 function extractQuotedValue(line: string): { value: string; start: number; end: number } | null {
-  const match = line.match(/:\s*"([^"]*)"/);
-  if (!match) return null;
+  const match = line.match(/:\s*"([^"]*)"/)
+  if (!match) return null
 
-  const value = match[1];
-  const start = line.indexOf(`: "`) + 3;
-  return { value, start, end: start + value.length };
+  const value = match[1]
+  const start = line.indexOf(`: "`) + 3
+  return { value, start, end: start + value.length }
 }
 
 /**
@@ -659,104 +651,98 @@ export function generateOutputDecorations(
   formattedOutput: string,
   showGroups: boolean
 ): MonacoDecoration[] {
-  if (matches.length === 0 || !showGroups) return [];
+  if (matches.length === 0 || !showGroups) return []
 
-  const decorations: MonacoDecoration[] = [];
-  const lines = formattedOutput.split('\n');
-  let matchIndex = -1;
-  let currentMatch: MatchResult | null = null;
-  let groupIndex = -1;
+  const decorations: MonacoDecoration[] = []
+  const lines = formattedOutput.split('\n')
+  let matchIndex = -1
+  let currentMatch: MatchResult | null = null
+  let groupIndex = -1
 
   lines.forEach((line, lineNumber) => {
     // Detect match start
     if (line.match(/^Match \d+:/)) {
-      matchIndex++;
-      currentMatch = matchIndex < matches.length ? matches[matchIndex] : null;
-      groupIndex = -1;
-      return;
+      matchIndex++
+      currentMatch = matchIndex < matches.length ? matches[matchIndex] : null
+      groupIndex = -1
+      return
     }
 
-    if (!currentMatch) return;
+    if (!currentMatch) return
 
     // Detect full match text (group 0): "Text: "value""
     if (line.match(/^\s+Text:\s*"/)) {
-      const quoted = extractQuotedValue(line);
+      const quoted = extractQuotedValue(line)
       if (quoted) {
-        decorations.push(createLineDecoration(
-          lines, lineNumber, quoted.start, quoted.end, 'regex-match-highlight'
-        ));
+        decorations.push(createLineDecoration(lines, lineNumber, quoted.start, quoted.end, 'regex-match-highlight'))
       }
-      return;
+      return
     }
 
     // Detect numbered groups
     if (line.match(/^\s+\[\d+\] \(/) && currentMatch.groups.length > 0) {
-      groupIndex++;
+      groupIndex++
       if (groupIndex < currentMatch.groups.length) {
-        const quoted = extractQuotedValue(line);
+        const quoted = extractQuotedValue(line)
         if (quoted) {
-          const className = `regex-group-highlight ${getGroupColorClass(groupIndex)}`;
-          decorations.push(createLineDecoration(
-            lines, lineNumber, quoted.start, quoted.end, className
-          ));
+          const className = `regex-group-highlight ${getGroupColorClass(groupIndex)}`
+          decorations.push(createLineDecoration(lines, lineNumber, quoted.start, quoted.end, className))
         }
       }
-      return;
+      return
     }
 
     // Detect named groups
     if (line.match(/^\s+[a-zA-Z_][a-zA-Z0-9_]* \(/)) {
-      const namedGroups = Object.entries(currentMatch.namedGroups);
-      const namedIndex = namedGroups.findIndex(([name]) => line.includes(`${name} (`));
+      const namedGroups = Object.entries(currentMatch.namedGroups)
+      const namedIndex = namedGroups.findIndex(([name]) => line.includes(`${name} (`))
       if (namedIndex >= 0) {
-        const quoted = extractQuotedValue(line);
+        const quoted = extractQuotedValue(line)
         if (quoted) {
-          const className = `regex-group-highlight ${getGroupColorClass(namedIndex)}`;
-          decorations.push(createLineDecoration(
-            lines, lineNumber, quoted.start, quoted.end, className
-          ));
+          const className = `regex-group-highlight ${getGroupColorClass(namedIndex)}`
+          decorations.push(createLineDecoration(lines, lineNumber, quoted.start, quoted.end, className))
         }
       }
     }
-  });
+  })
 
-  return decorations;
+  return decorations
 }
 
 /**
  * Helper to get the character index at the start of a line
  */
 function getLineStartIndex(lines: string[], lineNumber: number): number {
-  let index = 0;
+  let index = 0
   for (let i = 0; i < lineNumber; i++) {
-    index += lines[i].length + 1; // +1 for newline
+    index += lines[i].length + 1 // +1 for newline
   }
-  return index;
+  return index
 }
 
 /**
  * Convert character index to line/column position
  */
 function indexToPosition(text: string, index: number): { lineNumber: number; column: number } {
-  const lines = text.split('\n');
-  let offset = 0;
+  const lines = text.split('\n')
+  let offset = 0
 
   for (let i = 0; i < lines.length; i++) {
-    const lineLength = lines[i].length + 1; // +1 for newline
+    const lineLength = lines[i].length + 1 // +1 for newline
 
     if (offset + lineLength > index) {
       return {
         lineNumber: i + 1,
-        column: index - offset + 1
-      };
+        column: index - offset + 1,
+      }
     }
-    offset += lineLength;
+    offset += lineLength
   }
 
   return {
     lineNumber: lines.length,
-    column: lines[lines.length - 1].length + 1
-  };
+    column: lines[lines.length - 1].length + 1,
+  }
 }
 
 /**
@@ -770,230 +756,256 @@ function addGroupDecorations(
 ): void {
   // Add numbered group decorations
   if (match.groups.length > 0) {
-    let searchOffset = 0;
+    let searchOffset = 0
     match.groups.forEach((group, groupIndex) => {
-      if (!group) return;
-      const groupIndexInMatch = match.match.indexOf(group, searchOffset);
-      if (groupIndexInMatch === -1) return;
-      const groupStart = matchStart + groupIndexInMatch;
-      const className = `regex-group-highlight ${getGroupColorClass(groupIndex)}`;
-      decorations.push(createDecoration(text, groupStart, groupStart + group.length, className));
-      searchOffset = groupIndexInMatch + group.length;
-    });
+      if (!group) return
+      const groupIndexInMatch = match.match.indexOf(group, searchOffset)
+      if (groupIndexInMatch === -1) return
+      const groupStart = matchStart + groupIndexInMatch
+      const className = `regex-group-highlight ${getGroupColorClass(groupIndex)}`
+      decorations.push(createDecoration(text, groupStart, groupStart + group.length, className))
+      searchOffset = groupIndexInMatch + group.length
+    })
   }
 
   // Add named group decorations
   Object.values(match.namedGroups).forEach((value, index) => {
-    if (!value) return;
-    const groupIndexInMatch = match.match.indexOf(value);
-    if (groupIndexInMatch === -1) return;
-    const groupStart = matchStart + groupIndexInMatch;
-    const className = `regex-group-highlight ${getGroupColorClass(index)}`;
-    decorations.push(createDecoration(text, groupStart, groupStart + value.length, className));
-  });
+    if (!value) return
+    const groupIndexInMatch = match.match.indexOf(value)
+    if (groupIndexInMatch === -1) return
+    const groupStart = matchStart + groupIndexInMatch
+    const className = `regex-group-highlight ${getGroupColorClass(index)}`
+    decorations.push(createDecoration(text, groupStart, groupStart + value.length, className))
+  })
 }
 
 /**
  * Generate Monaco editor decorations for highlighting matches and groups
  */
-export function generateMatchDecorations(matches: MatchResult[], text: string, showGroups: boolean = true): MonacoDecoration[] {
-  if (matches.length === 0) return [];
+export function generateMatchDecorations(
+  matches: MatchResult[],
+  text: string,
+  showGroups: boolean = true
+): MonacoDecoration[] {
+  if (matches.length === 0) return []
 
-  const decorations: MonacoDecoration[] = [];
+  const decorations: MonacoDecoration[] = []
 
   matches.forEach((match) => {
-    const matchStart = match.index;
-    const matchEnd = matchStart + match.match.length;
+    const matchStart = match.index
+    const matchEnd = matchStart + match.match.length
 
     // Add full match decoration (groups will appear on top)
-    decorations.push(createDecoration(text, matchStart, matchEnd, 'regex-match-highlight'));
+    decorations.push(createDecoration(text, matchStart, matchEnd, 'regex-match-highlight'))
 
     if (showGroups) {
-      addGroupDecorations(decorations, text, match, matchStart);
+      addGroupDecorations(decorations, text, match, matchStart)
     }
-  });
+  })
 
-  return decorations;
+  return decorations
 }
 
 /**
  * Explain regex pattern in human-readable format
  */
 export interface RegexExplanation {
-  pattern: string;
-  explanation: string;
-  components: Array<{ part: string; description: string; example?: string }>;
-  warnings: string[];
+  pattern: string
+  explanation: string
+  components: Array<{ part: string; description: string; example?: string }>
+  warnings: string[]
 }
 
 export function explainRegex(pattern: string, flags: RegexFlags): RegexExplanation {
-  const components: Array<{ part: string; description: string; example?: string }> = [];
-  const warnings: string[] = [];
-  let explanation = '';
+  const components: Array<{ part: string; description: string; example?: string }> = []
+  const warnings: string[] = []
+  let explanation = ''
 
   try {
     // Basic pattern analysis
     if (pattern.startsWith('^')) {
-      components.push({ part: '^', description: 'Start of string anchor - matches the beginning of the string' });
-      explanation += 'Matches from the start of the string. ';
+      components.push({ part: '^', description: 'Start of string anchor - matches the beginning of the string' })
+      explanation += 'Matches from the start of the string. '
     }
 
     if (pattern.endsWith('$') && !pattern.endsWith('\\$')) {
-      components.push({ part: '$', description: 'End of string anchor - matches the end of the string' });
-      explanation += 'Matches until the end of the string. ';
+      components.push({ part: '$', description: 'End of string anchor - matches the end of the string' })
+      explanation += 'Matches until the end of the string. '
     }
 
     // Character classes
-    const charClassMatches = pattern.match(/\[([^\]]+)\]/g);
+    const charClassMatches = pattern.match(/\[([^\]]+)\]/g)
     if (charClassMatches) {
-      charClassMatches.forEach(match => {
-        const content = match.slice(1, -1);
+      charClassMatches.forEach((match) => {
+        const content = match.slice(1, -1)
         if (content.startsWith('^')) {
-          components.push({ part: match, description: `Negated character class - matches any character NOT in [${content.slice(1)}]` });
+          components.push({
+            part: match,
+            description: `Negated character class - matches any character NOT in [${content.slice(1)}]`,
+          })
         } else {
-          components.push({ part: match, description: `Character class - matches any single character from [${content}]` });
+          components.push({
+            part: match,
+            description: `Character class - matches any single character from [${content}]`,
+          })
         }
-      });
+      })
     }
 
     // Quantifiers
-    const quantifierMatches = pattern.match(/(\*|\+|\?|\{[0-9,]+?\})/g);
+    const quantifierMatches = pattern.match(/(\*|\+|\?|\{[0-9,]+?\})/g)
     if (quantifierMatches) {
-      quantifierMatches.forEach(match => {
-        let desc = '';
-        if (match === '*') desc = 'Zero or more times (greedy)';
-        else if (match === '+') desc = 'One or more times (greedy)';
-        else if (match === '?') desc = 'Zero or one time (optional)';
+      quantifierMatches.forEach((match) => {
+        let desc = ''
+        if (match === '*') desc = 'Zero or more times (greedy)'
+        else if (match === '+') desc = 'One or more times (greedy)'
+        else if (match === '?') desc = 'Zero or one time (optional)'
         else if (match.startsWith('{')) {
-          const range = match.slice(1, -1);
+          const range = match.slice(1, -1)
           if (range.includes(',')) {
-            const [min, max] = range.split(',');
-            desc = `Between ${min} and ${max || 'unlimited'} times`;
+            const [min, max] = range.split(',')
+            desc = `Between ${min} and ${max || 'unlimited'} times`
           } else {
-            desc = `Exactly ${range} times`;
+            desc = `Exactly ${range} times`
           }
         }
-        components.push({ part: match, description: desc });
-      });
+        components.push({ part: match, description: desc })
+      })
     }
 
     // Groups
-    const groupMatches = pattern.match(/\(([^)]+)\)/g);
+    const groupMatches = pattern.match(/\(([^)]+)\)/g)
     if (groupMatches) {
       groupMatches.forEach((match, index) => {
-        const isNamed = match.includes('?<');
+        const isNamed = match.includes('?<')
         if (isNamed) {
-          const nameMatch = match.match(/\?<([^>]+)>/);
-          const name = nameMatch ? nameMatch[1] : 'unknown';
-          components.push({ part: match, description: `Named capture group "${name}" - captures matched text for later reference` });
+          const nameMatch = match.match(/\?<([^>]+)>/)
+          const name = nameMatch ? nameMatch[1] : 'unknown'
+          components.push({
+            part: match,
+            description: `Named capture group "${name}" - captures matched text for later reference`,
+          })
         } else {
-          components.push({ part: match, description: `Capture group ${index + 1} - captures matched text for later reference` });
+          components.push({
+            part: match,
+            description: `Capture group ${index + 1} - captures matched text for later reference`,
+          })
         }
-      });
+      })
     }
 
     // Common patterns
     if (pattern.includes('\\b')) {
-      components.push({ part: '\\b', description: 'Word boundary - matches between word and non-word characters' });
+      components.push({ part: '\\b', description: 'Word boundary - matches between word and non-word characters' })
     }
     if (pattern.includes('\\w')) {
-      components.push({ part: '\\w', description: 'Word character - matches letters, digits, and underscore [a-zA-Z0-9_]' });
+      components.push({
+        part: '\\w',
+        description: 'Word character - matches letters, digits, and underscore [a-zA-Z0-9_]',
+      })
     }
     if (pattern.includes('\\d')) {
-      components.push({ part: '\\d', description: 'Digit - matches any digit [0-9]' });
+      components.push({ part: '\\d', description: 'Digit - matches any digit [0-9]' })
     }
     if (pattern.includes('\\s')) {
-      components.push({ part: '\\s', description: 'Whitespace - matches any whitespace character (space, tab, newline, etc.)' });
+      components.push({
+        part: '\\s',
+        description: 'Whitespace - matches any whitespace character (space, tab, newline, etc.)',
+      })
     }
     if (pattern.includes('.')) {
-      components.push({ part: '.', description: flags.dotall ? 'Any character including newline' : 'Any character except newline' });
+      components.push({
+        part: '.',
+        description: flags.dotall ? 'Any character including newline' : 'Any character except newline',
+      })
     }
 
     // Flags explanation
-    if (flags.global) explanation += 'Finds all matches (global). ';
-    if (flags.caseInsensitive) explanation += 'Case-insensitive matching. ';
-    if (flags.multiline) explanation += '^ and $ match line breaks. ';
-    if (flags.dotall) explanation += '. matches newline characters. ';
-    if (flags.unicode) explanation += 'Unicode features enabled. ';
+    if (flags.global) explanation += 'Finds all matches (global). '
+    if (flags.caseInsensitive) explanation += 'Case-insensitive matching. '
+    if (flags.multiline) explanation += '^ and $ match line breaks. '
+    if (flags.dotall) explanation += '. matches newline characters. '
+    if (flags.unicode) explanation += 'Unicode features enabled. '
 
     // Performance warnings - enhanced detection
-    const performanceWarnings = detectPerformanceIssues(pattern);
-    warnings.push(...performanceWarnings);
+    const performanceWarnings = detectPerformanceIssues(pattern)
+    warnings.push(...performanceWarnings)
 
     if (explanation === '') {
-      explanation = 'Matches the pattern as written.';
+      explanation = 'Matches the pattern as written.'
     }
-
   } catch {
-    explanation = 'Unable to analyze pattern.';
-    warnings.push('Pattern analysis failed');
+    explanation = 'Unable to analyze pattern.'
+    warnings.push('Pattern analysis failed')
   }
 
   return {
     pattern,
     explanation: explanation.trim() || 'Matches the pattern as written.',
     components,
-    warnings
-  };
+    warnings,
+  }
 }
 
 /**
  * Detect performance issues in regex patterns
  */
 export function detectPerformanceIssues(pattern: string): string[] {
-  const warnings: string[] = [];
+  const warnings: string[] = []
 
   // Catastrophic backtracking patterns
   if (pattern.includes('.*') || pattern.includes('.+')) {
-    warnings.push('⚠️ Potential catastrophic backtracking: .* or .+ can cause exponential time complexity on certain inputs');
+    warnings.push(
+      '⚠️ Potential catastrophic backtracking: .* or .+ can cause exponential time complexity on certain inputs'
+    )
   }
 
   // Nested quantifiers
   if (pattern.match(/\([^)]*[*+?{][^)]*[*+?{]/)) {
-    warnings.push('⚠️ Nested quantifiers detected: May cause performance issues');
+    warnings.push('⚠️ Nested quantifiers detected: May cause performance issues')
   }
 
   // ReDoS patterns - nested quantifiers with alternation
   if (pattern.match(/\([^)]*\|[^)]*\)[*+?{]/)) {
-    warnings.push('⚠️ ReDoS risk: Alternation with quantifiers can cause exponential backtracking');
+    warnings.push('⚠️ ReDoS risk: Alternation with quantifiers can cause exponential backtracking')
   }
 
   // Multiple overlapping quantifiers
-  const quantifierCount = (pattern.match(/[*+?{]/g) || []).length;
+  const quantifierCount = (pattern.match(/[*+?{]/g) || []).length
   if (quantifierCount > 5) {
-    warnings.push('⚠️ Many quantifiers detected: Pattern may be slow on large inputs');
+    warnings.push('⚠️ Many quantifiers detected: Pattern may be slow on large inputs')
   }
 
   // Unbounded quantifiers without anchors
   if ((pattern.includes('*') || pattern.includes('+')) && !pattern.startsWith('^') && !pattern.endsWith('$')) {
-    warnings.push('⚠️ Unbounded quantifiers without anchors: May match more than intended');
+    warnings.push('⚠️ Unbounded quantifiers without anchors: May match more than intended')
   }
 
   // Expensive character classes
   if (pattern.match(/\[[^\]]*\[/)) {
-    warnings.push('⚠️ Nested character classes: May cause performance issues');
+    warnings.push('⚠️ Nested character classes: May cause performance issues')
   }
 
   // Lookahead/lookbehind with quantifiers
   if (pattern.match(/\(\?[=!][^)]*[*+?{]/)) {
-    warnings.push('⚠️ Lookahead/lookbehind with quantifiers: Can be computationally expensive');
+    warnings.push('⚠️ Lookahead/lookbehind with quantifiers: Can be computationally expensive')
   }
 
-  return warnings;
+  return warnings
 }
 
 /**
  * Generate diff between original and replaced text
  */
 export interface ReplacementDiff {
-  original: string;
-  replaced: string;
+  original: string
+  replaced: string
   changes: Array<{
-    type: 'unchanged' | 'removed' | 'added';
-    text: string;
-    start: number;
-    end: number;
-  }>;
+    type: 'unchanged' | 'removed' | 'added'
+    text: string
+    start: number
+    end: number
+  }>
 }
 
 export function generateReplacementDiff(original: string, replaced: string): ReplacementDiff {
@@ -1002,17 +1014,19 @@ export function generateReplacementDiff(original: string, replaced: string): Rep
     return {
       original,
       replaced,
-      changes: [{
-        type: 'unchanged',
-        text: original,
-        start: 0,
-        end: original.length
-      }]
-    };
+      changes: [
+        {
+          type: 'unchanged',
+          text: original,
+          start: 0,
+          end: original.length,
+        },
+      ],
+    }
   }
 
   // Performance optimization: limit diff size
-  const MAX_DIFF_LENGTH = 5000;
+  const MAX_DIFF_LENGTH = 5000
   if (original.length > MAX_DIFF_LENGTH || replaced.length > MAX_DIFF_LENGTH) {
     // For very long strings, just show a simple diff
     return {
@@ -1020,19 +1034,19 @@ export function generateReplacementDiff(original: string, replaced: string): Rep
       replaced,
       changes: [
         { type: 'removed', text: original, start: 0, end: original.length },
-        { type: 'added', text: replaced, start: 0, end: replaced.length }
-      ]
-    };
+        { type: 'added', text: replaced, start: 0, end: replaced.length },
+      ],
+    }
   }
 
-  const changes: ReplacementDiff['changes'] = [];
-  let origIndex = 0;
-  let replIndex = 0;
-  let iterations = 0;
-  const MAX_ITERATIONS = 10000; // Prevent infinite loops
+  const changes: ReplacementDiff['changes'] = []
+  let origIndex = 0
+  let replIndex = 0
+  let iterations = 0
+  const MAX_ITERATIONS = 10000 // Prevent infinite loops
 
   while ((origIndex < original.length || replIndex < replaced.length) && iterations < MAX_ITERATIONS) {
-    iterations++;
+    iterations++
 
     if (origIndex >= original.length) {
       // Only replacement text left
@@ -1040,9 +1054,9 @@ export function generateReplacementDiff(original: string, replaced: string): Rep
         type: 'added',
         text: replaced.substring(replIndex),
         start: replIndex,
-        end: replaced.length
-      });
-      break;
+        end: replaced.length,
+      })
+      break
     }
 
     if (replIndex >= replaced.length) {
@@ -1051,21 +1065,18 @@ export function generateReplacementDiff(original: string, replaced: string): Rep
         type: 'removed',
         text: original.substring(origIndex),
         start: origIndex,
-        end: original.length
-      });
-      break;
+        end: original.length,
+      })
+      break
     }
 
     if (original[origIndex] === replaced[replIndex]) {
       // Find the longest common substring (optimized)
-      let commonLength = 0;
-      const maxCheck = Math.min(original.length - origIndex, replaced.length - replIndex, 100);
+      let commonLength = 0
+      const maxCheck = Math.min(original.length - origIndex, replaced.length - replIndex, 100)
 
-      while (
-        commonLength < maxCheck &&
-        original[origIndex + commonLength] === replaced[replIndex + commonLength]
-      ) {
-        commonLength++;
+      while (commonLength < maxCheck && original[origIndex + commonLength] === replaced[replIndex + commonLength]) {
+        commonLength++
       }
 
       if (commonLength > 0) {
@@ -1073,35 +1084,35 @@ export function generateReplacementDiff(original: string, replaced: string): Rep
           type: 'unchanged',
           text: original.substring(origIndex, origIndex + commonLength),
           start: origIndex,
-          end: origIndex + commonLength
-        });
-        origIndex += commonLength;
-        replIndex += commonLength;
+          end: origIndex + commonLength,
+        })
+        origIndex += commonLength
+        replIndex += commonLength
       } else {
         // No match found, advance both
-        origIndex++;
-        replIndex++;
+        origIndex++
+        replIndex++
       }
     } else {
       // Find next match (optimized - limit search distance)
-      let origEnd = origIndex;
-      let replEnd = replIndex;
-      const searchLimit = Math.min(100, Math.max(original.length - origIndex, replaced.length - replIndex));
+      let origEnd = origIndex
+      let replEnd = replIndex
+      const searchLimit = Math.min(100, Math.max(original.length - origIndex, replaced.length - replIndex))
 
       // Find next common character in original (limited search)
       for (let i = 0; i < searchLimit && origEnd < original.length; i++) {
         if (replaced.substring(replIndex, replIndex + searchLimit).includes(original[origEnd])) {
-          break;
+          break
         }
-        origEnd++;
+        origEnd++
       }
 
       // Find next common character in replacement (limited search)
       for (let i = 0; i < searchLimit && replEnd < replaced.length; i++) {
         if (original.substring(origIndex, origIndex + searchLimit).includes(replaced[replEnd])) {
-          break;
+          break
         }
-        replEnd++;
+        replEnd++
       }
 
       if (origEnd > origIndex) {
@@ -1109,9 +1120,9 @@ export function generateReplacementDiff(original: string, replaced: string): Rep
           type: 'removed',
           text: original.substring(origIndex, origEnd),
           start: origIndex,
-          end: origEnd
-        });
-        origIndex = origEnd;
+          end: origEnd,
+        })
+        origIndex = origEnd
       }
 
       if (replEnd > replIndex) {
@@ -1119,13 +1130,13 @@ export function generateReplacementDiff(original: string, replaced: string): Rep
           type: 'added',
           text: replaced.substring(replIndex, replEnd),
           start: replIndex,
-          end: replEnd
-        });
-        replIndex = replEnd;
+          end: replEnd,
+        })
+        replIndex = replEnd
       } else {
         // No progress, advance to prevent infinite loop
-        origIndex++;
-        replIndex++;
+        origIndex++
+        replIndex++
       }
     }
   }
@@ -1133,117 +1144,127 @@ export function generateReplacementDiff(original: string, replaced: string): Rep
   return {
     original,
     replaced,
-    changes
-  };
+    changes,
+  }
 }
 
 /**
  * Visualize backreferences in replacement string
  */
 export interface BackreferenceInfo {
-  backref: string;
-  groupIndex: number;
-  position: number;
-  description: string;
+  backref: string
+  groupIndex: number
+  position: number
+  description: string
 }
 
 export function analyzeBackreferences(replaceString: string): BackreferenceInfo[] {
-  const backrefs: BackreferenceInfo[] = [];
+  const backrefs: BackreferenceInfo[] = []
 
   // Match $1, $2, etc. or ${1}, ${2}, etc.
-  const backrefPattern = /\$(\d+)|\$\{(\d+)\}/g;
-  let match;
+  const backrefPattern = /\$(\d+)|\$\{(\d+)\}/g
+  let match
 
   while ((match = backrefPattern.exec(replaceString)) !== null) {
-    const groupIndex = parseInt(match[1] || match[2], 10);
+    const groupIndex = parseInt(match[1] || match[2], 10)
     backrefs.push({
       backref: match[0],
       groupIndex,
       position: match.index,
-      description: `References capture group ${groupIndex}`
-    });
+      description: `References capture group ${groupIndex}`,
+    })
   }
 
   // Match named groups ${name}
-  const namedBackrefPattern = /\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g;
+  const namedBackrefPattern = /\$\{([a-zA-Z_][a-zA-Z0-9_]*)\}/g
   while ((match = namedBackrefPattern.exec(replaceString)) !== null) {
     backrefs.push({
       backref: match[0],
       groupIndex: -1, // Named group
       position: match.index,
-      description: `References named group "${match[1]}"`
-    });
+      description: `References named group "${match[1]}"`,
+    })
   }
 
-  return backrefs;
+  return backrefs
 }
 
 /**
  * Export matches to JSON format
  */
 export function exportMatchesToJson(matches: MatchResult[]): string {
-  return JSON.stringify({
-    matchCount: matches.length,
-    matches: matches.map(m => ({
-      match: m.match,
-      index: m.index,
-      length: m.match.length,
-      groups: m.groups,
-      namedGroups: m.namedGroups
-    }))
-  }, null, 2);
+  return JSON.stringify(
+    {
+      matchCount: matches.length,
+      matches: matches.map((m) => ({
+        match: m.match,
+        index: m.index,
+        length: m.match.length,
+        groups: m.groups,
+        namedGroups: m.namedGroups,
+      })),
+    },
+    null,
+    2
+  )
 }
 
 /**
  * Escape CSV field
  */
 function escapeCsvField(value: string): string {
-  return `"${value.replace(/"/g, '""')}"`;
+  return `"${value.replace(/"/g, '""')}"`
 }
 
 /**
  * Export matches to CSV format
  */
 export function exportMatchesToCsv(matches: MatchResult[]): string {
-  const headers = ['Match #', 'Text', 'Index', 'Length', 'Groups', 'Named Groups'];
-  const rows = matches.map((match, index) => [
-    index + 1,
-    escapeCsvField(match.match),
-    match.index,
-    match.match.length,
-    escapeCsvField(match.groups.join('; ')),
-    escapeCsvField(Object.entries(match.namedGroups).map(([k, v]) => `${k}=${v}`).join('; '))
-  ].join(','));
+  const headers = ['Match #', 'Text', 'Index', 'Length', 'Groups', 'Named Groups']
+  const rows = matches.map((match, index) =>
+    [
+      index + 1,
+      escapeCsvField(match.match),
+      match.index,
+      match.match.length,
+      escapeCsvField(match.groups.join('; ')),
+      escapeCsvField(
+        Object.entries(match.namedGroups)
+          .map(([k, v]) => `${k}=${v}`)
+          .join('; ')
+      ),
+    ].join(',')
+  )
 
-  return [headers.join(','), ...rows].join('\n');
+  return [headers.join(','), ...rows].join('\n')
 }
 
 /**
  * Build XML match element
  */
 function buildXmlMatch(match: MatchResult, index: number): string {
-  let xml = `    <match number="${index + 1}">\n`;
-  xml += `      <text><![CDATA[${match.match}]]></text>\n`;
-  xml += `      <index>${match.index}</index>\n`;
-  xml += `      <length>${match.match.length}</length>\n`;
+  let xml = `    <match number="${index + 1}">\n`
+  xml += `      <text><![CDATA[${match.match}]]></text>\n`
+  xml += `      <index>${match.index}</index>\n`
+  xml += `      <length>${match.match.length}</length>\n`
 
   if (match.groups.length > 0) {
-    xml += '      <groups>\n';
+    xml += '      <groups>\n'
     match.groups.forEach((group, groupIndex) => {
-      xml += `        <group number="${groupIndex + 1}"><![CDATA[${group}]]></group>\n`;
-    });
-    xml += '      </groups>\n';
+      xml += `        <group number="${groupIndex + 1}"><![CDATA[${group}]]></group>\n`
+    })
+    xml += '      </groups>\n'
   }
 
   if (Object.keys(match.namedGroups).length > 0) {
-    xml += '      <named-groups>\n';
+    xml += '      <named-groups>\n'
     Object.entries(match.namedGroups).forEach(([name, value]) => {
-      xml += `        <group name="${name}"><![CDATA[${value}]]></group>\n`;
-    });
-    xml += '      </named-groups>\n';
+      xml += `        <group name="${name}"><![CDATA[${value}]]></group>\n`
+    })
+    xml += '      </named-groups>\n'
   }
 
-  return xml + '    </match>\n';
+  return xml + '    </match>\n'
 }
 
 /**
@@ -1255,37 +1276,37 @@ export function exportMatchesToXml(matches: MatchResult[]): string {
   <match-count>${matches.length}</match-count>
   <matches>
 ${matches.map((match, index) => buildXmlMatch(match, index)).join('')}  </matches>
-</regex-matches>`;
+</regex-matches>`
 }
 
 /**
  * Test case interface
  */
 export interface TestCase {
-  id: string;
-  name: string;
-  pattern: string;
-  testString: string;
-  flags: RegexFlags;
-  replaceString?: string;
-  expectedMatchCount?: number;
-  createdAt: number;
+  id: string
+  name: string
+  pattern: string
+  testString: string
+  flags: RegexFlags
+  replaceString?: string
+  expectedMatchCount?: number
+  createdAt: number
 }
 
 /**
  * Storage key for test cases
  */
-const TEST_CASES_STORAGE_KEY = 'regex-test-cases';
+const TEST_CASES_STORAGE_KEY = 'regex-test-cases'
 
 /**
  * Load test cases from localStorage
  */
 export function loadTestCases(): TestCase[] {
   try {
-    const stored = localStorage.getItem(TEST_CASES_STORAGE_KEY);
-    return stored ? (JSON.parse(stored) as TestCase[]) : [];
+    const stored = localStorage.getItem(TEST_CASES_STORAGE_KEY)
+    return stored ? (JSON.parse(stored) as TestCase[]) : []
   } catch {
-    return [];
+    return []
   }
 }
 
@@ -1293,19 +1314,19 @@ export function loadTestCases(): TestCase[] {
  * Save test cases to localStorage
  */
 function saveTestCases(testCases: TestCase[]): void {
-  localStorage.setItem(TEST_CASES_STORAGE_KEY, JSON.stringify(testCases));
+  localStorage.setItem(TEST_CASES_STORAGE_KEY, JSON.stringify(testCases))
 }
 
 /**
  * Save test case to localStorage
  */
 export function saveTestCase(testCase: Omit<TestCase, 'id' | 'createdAt'>): string {
-  const id = `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
-  const fullTestCase: TestCase = { ...testCase, id, createdAt: Date.now() };
-  const saved = loadTestCases();
-  saved.push(fullTestCase);
-  saveTestCases(saved);
-  return id;
+  const id = `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+  const fullTestCase: TestCase = { ...testCase, id, createdAt: Date.now() }
+  const saved = loadTestCases()
+  saved.push(fullTestCase)
+  saveTestCases(saved)
+  return id
 }
 
 /**
@@ -1313,11 +1334,11 @@ export function saveTestCase(testCase: Omit<TestCase, 'id' | 'createdAt'>): stri
  */
 export function deleteTestCase(id: string): boolean {
   try {
-    const testCases = loadTestCases().filter(tc => tc.id !== id);
-    saveTestCases(testCases);
-    return true;
+    const testCases = loadTestCases().filter((tc) => tc.id !== id)
+    saveTestCases(testCases)
+    return true
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -1326,14 +1347,13 @@ export function deleteTestCase(id: string): boolean {
  */
 export function updateTestCase(id: string, updates: Partial<Omit<TestCase, 'id' | 'createdAt'>>): boolean {
   try {
-    const testCases = loadTestCases();
-    const index = testCases.findIndex(tc => tc.id === id);
-    if (index === -1) return false;
-    testCases[index] = { ...testCases[index], ...updates };
-    saveTestCases(testCases);
-    return true;
+    const testCases = loadTestCases()
+    const index = testCases.findIndex((tc) => tc.id === id)
+    if (index === -1) return false
+    testCases[index] = { ...testCases[index], ...updates }
+    saveTestCases(testCases)
+    return true
   } catch {
-    return false;
+    return false
   }
 }
-

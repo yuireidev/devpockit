@@ -6,4 +6,3 @@ contact_links:
   - name: Security Issue
     url: https://github.com/yuireidev/devpockit/security/advisories/new
     about: Report a security vulnerability (please do not create a public issue)
-

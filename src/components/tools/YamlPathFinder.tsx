@@ -1,204 +1,205 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import type { CodeOutputTab } from '@/components/ui/code-panel';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Input } from '@/components/ui/input';
-import { JsonTreeView, type JsonValue } from '@/components/ui/json-tree-view';
-import { Label } from '@/components/ui/label';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import type { CodeOutputTab } from '@/components/ui/code-panel'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Input } from '@/components/ui/input'
+import { JsonTreeView, type JsonValue } from '@/components/ui/json-tree-view'
+import { Label } from '@/components/ui/label'
 import {
   DEFAULT_YAML_PATH_OPTIONS,
   YAML_PATH_COMMON_PATTERNS,
   YAML_PATH_EXAMPLES,
-  type YamlPathFinderOptions
-} from '@/config/yaml-path-finder-config';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
+  type YamlPathFinderOptions,
+} from '@/config/yaml-path-finder-config'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
 import {
   evaluateYamlPath,
   formatYamlPathResults,
   parseYamlWithMetadata,
   validateYamlPath,
-  type YamlPathResult
-} from '@/libs/yaml-path-finder';
-import { cn } from '@/libs/utils';
-import { stringify } from 'yaml';
-import { ArrowPathIcon, ArrowsPointingInIcon, ArrowsPointingOutIcon, ChevronDownIcon, MagnifyingGlassIcon } from '@heroicons/react/24/outline';
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+  type YamlPathResult,
+} from '@/libs/yaml-path-finder'
+import { cn } from '@/libs/utils'
+import { stringify } from 'yaml'
+import {
+  ArrowPathIcon,
+  ArrowsPointingInIcon,
+  ArrowsPointingOutIcon,
+  ChevronDownIcon,
+  MagnifyingGlassIcon,
+} from '@heroicons/react/24/outline'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 
 interface YamlPathFinderProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
-  const { toolState, updateToolState } = useToolState('yaml-path-finder', instanceId);
+  const { toolState, updateToolState } = useToolState('yaml-path-finder', instanceId)
 
   // Initialize with defaults to avoid hydration mismatch
-  const [options] = useState<YamlPathFinderOptions>((toolState?.options as YamlPathFinderOptions) ?? (DEFAULT_YAML_PATH_OPTIONS));
-  const [yamlInput, setYamlInput] = useState<string>((toolState?.yamlInput as string) ?? (''));
-  const [pathInput, setPathInput] = useState<string>((toolState?.pathInput as string) ?? (''));
-  const [output, setOutput] = useState<string>((toolState?.output as string) ?? (''));
-  const [isEvaluating, setIsEvaluating] = useState(false);
-  const [error, setError] = useState<string>((toolState?.error as string) ?? (''));
-  const [result, setResult] = useState<YamlPathResult | null>((toolState?.result as YamlPathResult) ?? (null));
+  const [options] = useState<YamlPathFinderOptions>(
+    (toolState?.options as YamlPathFinderOptions) ?? DEFAULT_YAML_PATH_OPTIONS
+  )
+  const [yamlInput, setYamlInput] = useState<string>((toolState?.yamlInput as string) ?? '')
+  const [pathInput, setPathInput] = useState<string>((toolState?.pathInput as string) ?? '')
+  const [output, setOutput] = useState<string>((toolState?.output as string) ?? '')
+  const [isEvaluating, setIsEvaluating] = useState(false)
+  const [error, setError] = useState<string>((toolState?.error as string) ?? '')
+  const [result, setResult] = useState<YamlPathResult | null>((toolState?.result as YamlPathResult) ?? null)
 
-  const [activeTab, setActiveTab] = useState<string>((toolState?.activeTab as string) ?? ('tree'));
-  const [getExpandedJson, setGetExpandedJson] = useState<(() => string) | null>(null);
+  const [activeTab, setActiveTab] = useState<string>((toolState?.activeTab as string) ?? 'tree')
+  const [getExpandedJson, setGetExpandedJson] = useState<(() => string) | null>(null)
   // Tree View search + expand/collapse controls (footer buttons)
-  const [treeSearchTerm, setTreeSearchTerm] = useState<string>('');
-  const [treeExpandAll, setTreeExpandAll] = useState<(() => void) | null>(null);
-  const [treeCollapseAll, setTreeCollapseAll] = useState<(() => void) | null>(null);
+  const [treeSearchTerm, setTreeSearchTerm] = useState<string>('')
+  const [treeExpandAll, setTreeExpandAll] = useState<(() => void) | null>(null)
+  const [treeCollapseAll, setTreeCollapseAll] = useState<(() => void) | null>(null)
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [inputWrapText, setInputWrapText] = useState(true);
-  const [outputWrapText, setOutputWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [inputWrapText, setInputWrapText] = useState(true)
+  const [outputWrapText, setOutputWrapText] = useState(true)
 
   // Hydrate state from toolState after mount (client-side only)
-
 
   // Update persistent state whenever local state changes
   useEffect(() => {
     updateToolState({
-        options,
-        yamlInput,
-        pathInput,
-        output,
-        error,
-        result: result || undefined,
-        activeTab
-      });
+      options,
+      yamlInput,
+      pathInput,
+      output,
+      error,
+      result: result || undefined,
+      activeTab,
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [options, yamlInput, pathInput, output, error, result, activeTab]);
+  }, [options, yamlInput, pathInput, output, error, result, activeTab])
 
   // Reset local state when tool state is cleared
 
-
   const handleEvaluate = async () => {
     if (!yamlInput.trim()) {
-      setError('Please enter YAML data');
-      setOutput('');
-      setResult(null);
-      return;
+      setError('Please enter YAML data')
+      setOutput('')
+      setResult(null)
+      return
     }
 
     if (!pathInput.trim()) {
-      setError('Please enter a YAMLPath expression');
-      setOutput('');
-      setResult(null);
-      return;
+      setError('Please enter a YAMLPath expression')
+      setOutput('')
+      setResult(null)
+      return
     }
 
-    setIsEvaluating(true);
-    setError('');
+    setIsEvaluating(true)
+    setError('')
 
     try {
       // Validate YAMLPath syntax
-      const pathValidation = validateYamlPath(pathInput);
+      const pathValidation = validateYamlPath(pathInput)
       if (!pathValidation.isValid) {
-        setError(pathValidation.error || 'Invalid YAMLPath expression');
-        setOutput('');
-        setResult(null);
-        return;
+        setError(pathValidation.error || 'Invalid YAMLPath expression')
+        setOutput('')
+        setResult(null)
+        return
       }
 
       // Parse YAML with metadata
-      const parseResult = parseYamlWithMetadata(yamlInput);
+      const parseResult = parseYamlWithMetadata(yamlInput)
       if (parseResult.error) {
-        setError(parseResult.error);
-        setOutput('');
-        setResult(null);
-        return;
+        setError(parseResult.error)
+        setOutput('')
+        setResult(null)
+        return
       }
 
       if (parseResult.documents.length === 0) {
-        setError('No YAML documents found');
-        setOutput('');
-        setResult(null);
-        return;
+        setError('No YAML documents found')
+        setOutput('')
+        setResult(null)
+        return
       }
 
       // For now, evaluate against the first document
       // TODO: Support multi-document evaluation
-      const firstDoc = parseResult.documents[0];
+      const firstDoc = parseResult.documents[0]
       const metadata = {
         anchors: firstDoc.anchors,
         aliases: firstDoc.aliases,
-        tags: firstDoc.tags
-      };
+        tags: firstDoc.tags,
+      }
 
       // Simulate async operation for better UX
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
       // Evaluate YAMLPath
-      const pathResult = evaluateYamlPath(
-        firstDoc.content,
-        pathInput,
-        options,
-        metadata
-      );
+      const pathResult = evaluateYamlPath(firstDoc.content, pathInput, options, metadata)
 
       if (pathResult.success) {
-        setResult(pathResult);
-        setOutput(formatYamlPathResults(pathResult));
+        setResult(pathResult)
+        setOutput(formatYamlPathResults(pathResult))
       } else {
-        setError(pathResult.error || 'YAMLPath evaluation failed');
-        setOutput('');
-        setResult(null);
+        setError(pathResult.error || 'YAMLPath evaluation failed')
+        setOutput('')
+        setResult(null)
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Evaluation failed');
-      setOutput('');
-      setResult(null);
+      setError(err instanceof Error ? err.message : 'Evaluation failed')
+      setOutput('')
+      setResult(null)
     } finally {
-      setIsEvaluating(false);
+      setIsEvaluating(false)
     }
-  };
+  }
 
-  const handleLoadExample = (example: typeof YAML_PATH_EXAMPLES[0]) => {
-    setYamlInput(example.yaml);
-    setPathInput(example.path);
-    setError('');
-    setOutput('');
-    setResult(null);
-  };
+  const handleLoadExample = (example: (typeof YAML_PATH_EXAMPLES)[0]) => {
+    setYamlInput(example.yaml)
+    setPathInput(example.path)
+    setError('')
+    setOutput('')
+    setResult(null)
+  }
 
-  const handleLoadPattern = (pattern: typeof YAML_PATH_COMMON_PATTERNS[0]) => {
-    setPathInput(pattern.example);
+  const handleLoadPattern = (pattern: (typeof YAML_PATH_COMMON_PATTERNS)[0]) => {
+    setPathInput(pattern.example)
     // Focus on path input
     setTimeout(() => {
-      const pathInputElement = document.querySelector('input[placeholder*="YAMLPath"]') as HTMLInputElement;
+      const pathInputElement = document.querySelector('input[placeholder*="YAMLPath"]') as HTMLInputElement
       if (pathInputElement) {
-        pathInputElement.focus();
+        pathInputElement.focus()
       }
-    }, 100);
-  };
+    }, 100)
+  }
 
   const getCharacterCount = (text: string): number => {
-    return text.length;
-  };
+    return text.length
+  }
 
   const getLineCount = (text: string): number => {
-    if (!text) return 0;
-    return text.split('\n').length;
-  };
+    if (!text) return 0
+    return text.split('\n').length
+  }
 
   // Parse YAML safely
   const parsedYamlData = useMemo(() => {
-    if (!yamlInput.trim()) return null;
+    if (!yamlInput.trim()) return null
     try {
-      const parseResult = parseYamlWithMetadata(yamlInput);
+      const parseResult = parseYamlWithMetadata(yamlInput)
       if (parseResult.error || parseResult.documents.length === 0) {
-        return null;
+        return null
       }
-      const serialized = JSON.stringify(parseResult.documents[0].content);
-      return serialized === undefined ? null : JSON.parse(serialized) as JsonValue;
+      const serialized = JSON.stringify(parseResult.documents[0].content)
+      return serialized === undefined ? null : (JSON.parse(serialized) as JsonValue)
     } catch {
-      return null;
+      return null
     }
-  }, [yamlInput]);
+  }, [yamlInput])
 
   // Create output tabs - Always show both tabs
   const outputTabs: CodeOutputTab[] = useMemo(() => {
@@ -207,123 +208,136 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
         id: 'tree',
         label: 'Tree View',
         value: '', // Not used for tree view
-        language: 'yaml'
+        language: 'yaml',
       },
       {
         id: 'results',
         label: 'Results',
         value: output || '',
-        language: 'json'
-      }
-    ];
+        language: 'json',
+      },
+    ]
 
-    return tabs;
-  }, [output]);
+    return tabs
+  }, [output])
 
-  const selectedOutputTab = outputTabs.find(tab => tab.id === activeTab)?.id
-    ?? outputTabs.find(tab => tab.id === 'tree')?.id
-    ?? outputTabs[0]?.id
-    ?? activeTab;
+  const selectedOutputTab =
+    outputTabs.find((tab) => tab.id === activeTab)?.id ??
+    outputTabs.find((tab) => tab.id === 'tree')?.id ??
+    outputTabs[0]?.id ??
+    activeTab
 
   // Tree View expand/collapse controls registered by JsonTreeView (used by footer buttons)
-  const registerTreeExpandAll = useCallback((fn: () => void) => setTreeExpandAll(() => fn), []);
-  const registerTreeCollapseAll = useCallback((fn: () => void) => setTreeCollapseAll(() => fn), []);
+  const registerTreeExpandAll = useCallback((fn: () => void) => setTreeExpandAll(() => fn), [])
+  const registerTreeCollapseAll = useCallback((fn: () => void) => setTreeCollapseAll(() => fn), [])
   const handleTreeExpandAll = useCallback(() => {
-    treeExpandAll?.();
-  }, [treeExpandAll]);
+    treeExpandAll?.()
+  }, [treeExpandAll])
   const handleTreeCollapseAll = useCallback(() => {
-    treeCollapseAll?.();
-  }, [treeCollapseAll]);
+    treeCollapseAll?.()
+  }, [treeCollapseAll])
 
-  const treeHighlightedPaths = useMemo(() => result?.paths || [], [result]);
+  const treeHighlightedPaths = useMemo(() => result?.paths || [], [result])
 
   const handleTreePathClick = useCallback((path: string) => {
-    navigator.clipboard.writeText(path).catch(console.error);
-  }, []);
+    navigator.clipboard.writeText(path).catch(console.error)
+  }, [])
 
   const handleRegisterGetExpandedJson = useCallback((fn: () => string) => {
-    setGetExpandedJson(() => fn);
-  }, []);
+    setGetExpandedJson(() => fn)
+  }, [])
 
   // Custom tab content renderer
-  const renderCustomTabContent = useCallback((tabId: string): React.ReactNode => {
-    if (tabId === 'tree') {
-      // Show tree view if YAML is valid, otherwise show empty state message
-      if (parsedYamlData !== null) {
+  const renderCustomTabContent = useCallback(
+    (tabId: string): React.ReactNode => {
+      if (tabId === 'tree') {
+        // Show tree view if YAML is valid, otherwise show empty state message
+        if (parsedYamlData !== null) {
+          return (
+            <div className="h-full w-full">
+              <JsonTreeView
+                data={parsedYamlData}
+                highlightedPaths={treeHighlightedPaths}
+                onPathClick={handleTreePathClick}
+                onGetExpandedJson={handleRegisterGetExpandedJson}
+                maxDepth={3}
+                theme={theme}
+                searchTerm={treeSearchTerm}
+                onExpandAll={registerTreeExpandAll}
+                onCollapseAll={registerTreeCollapseAll}
+              />
+            </div>
+          )
+        }
+        // Show empty state when no YAML is provided
         return (
-          <div className="h-full w-full">
-            <JsonTreeView
-              data={parsedYamlData}
-              highlightedPaths={treeHighlightedPaths}
-              onPathClick={handleTreePathClick}
-              onGetExpandedJson={handleRegisterGetExpandedJson}
-              maxDepth={3}
-              theme={theme}
-              searchTerm={treeSearchTerm}
-              onExpandAll={registerTreeExpandAll}
-              onCollapseAll={registerTreeCollapseAll}
-            />
+          <div className="flex h-full w-full items-center justify-center text-neutral-500 dark:text-neutral-400">
+            <div className="text-center">
+              <p className="text-sm">Enter YAML data to view the tree structure</p>
+            </div>
           </div>
-        );
+        )
       }
-      // Show empty state when no YAML is provided
-      return (
-        <div className="h-full w-full flex items-center justify-center text-neutral-500 dark:text-neutral-400">
-          <div className="text-center">
-            <p className="text-sm">Enter YAML data to view the tree structure</p>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  }, [parsedYamlData, treeHighlightedPaths, handleTreePathClick, handleRegisterGetExpandedJson, theme, treeSearchTerm, registerTreeExpandAll, registerTreeCollapseAll]);
+      return null
+    },
+    [
+      parsedYamlData,
+      treeHighlightedPaths,
+      handleTreePathClick,
+      handleRegisterGetExpandedJson,
+      theme,
+      treeSearchTerm,
+      registerTreeExpandAll,
+      registerTreeCollapseAll,
+    ]
+  )
 
   // Custom copy handler for tree view and results
   const handleTreeViewCopy = useCallback(async (): Promise<string | null> => {
     if (selectedOutputTab === 'tree') {
       if (getExpandedJson) {
         try {
-          const json = getExpandedJson();
-          if (!json) return '';
+          const json = getExpandedJson()
+          if (!json) return ''
 
           // Parse JSON and convert to YAML
           try {
-            const jsonData = JSON.parse(json);
-            const yaml = stringify(jsonData, { indent: 2, lineWidth: 0 });
-            return yaml;
+            const jsonData = JSON.parse(json)
+            const yaml = stringify(jsonData, { indent: 2, lineWidth: 0 })
+            return yaml
           } catch {
             // If JSON parsing fails, return the JSON string as-is
-            return json;
+            return json
           }
         } catch {
-          return null;
+          return null
         }
       }
       // Function not ready yet, but button should still be enabled
-      return '';
+      return ''
     } else if (selectedOutputTab === 'results') {
       // For results tab, convert JSON output to YAML
       if (output) {
         try {
           // Try to parse the output as JSON and convert to YAML
-          const jsonData = JSON.parse(output);
-          const yaml = stringify(jsonData, { indent: 2, lineWidth: 0 });
-          return yaml;
+          const jsonData = JSON.parse(output)
+          const yaml = stringify(jsonData, { indent: 2, lineWidth: 0 })
+          return yaml
         } catch {
           // If it's not valid JSON, return as-is (might already be YAML or error message)
-          return output;
+          return output
         }
       }
-      return null;
+      return null
     }
-    return null; // Use default copy behavior for other tabs
-  }, [selectedOutputTab, getExpandedJson, output]);
+    return null // Use default copy behavior for other tabs
+  }, [selectedOutputTab, getExpandedJson, output])
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           YAML Path Finder
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -332,8 +346,8 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* YAMLPath Input */}
           <div className="flex flex-col gap-2">
             <Label htmlFor="yamlpath-input" className="text-sm font-medium">
@@ -347,8 +361,8 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
                 onChange={(e) => setPathInput(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) {
-                    e.preventDefault();
-                    handleEvaluate();
+                    e.preventDefault()
+                    handleEvaluate()
                   }
                 }}
                 className="flex-1 font-mono text-sm"
@@ -362,7 +376,7 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
               >
                 {isEvaluating ? (
                   <>
-                    <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
                     Evaluating...
                   </>
                 ) : (
@@ -371,16 +385,12 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
               </Button>
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-10 px-3 text-xs"
-                  >
+                  <Button variant="outline" size="sm" className="h-10 px-3 text-xs">
                     Patterns
-                    <ChevronDownIcon className="h-3 w-3 ml-1" />
+                    <ChevronDownIcon className="ml-1 h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto w-64">
+                <DropdownMenuContent align="end" className="max-h-[300px] w-64 overflow-y-auto">
                   {YAML_PATH_COMMON_PATTERNS.map((pattern, index) => (
                     <DropdownMenuItem
                       key={index}
@@ -388,21 +398,20 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
                       className="flex flex-col items-start gap-1"
                     >
                       <span className="font-mono text-xs">{pattern.pattern}</span>
-                      <span className="text-xs text-muted-foreground">{pattern.description}</span>
+                      <span className="text-muted-foreground text-xs">{pattern.description}</span>
                     </DropdownMenuItem>
                   ))}
                 </DropdownMenuContent>
               </DropdownMenu>
             </div>
-            <p className="text-xs text-muted-foreground">
-              Press Ctrl+Enter (Cmd+Enter on Mac) to evaluate
-            </p>
+            <p className="text-muted-foreground text-xs">Press Ctrl+Enter (Cmd+Enter on Mac) to evaluate</p>
           </div>
 
           {/* Side-by-side Editor Panels */}
-          <div className="flex-1 grid grid-cols-1 lg:grid-cols-2 gap-4 min-h-0">
+          <div className="grid min-h-0 flex-1 grid-cols-1 gap-4 lg:grid-cols-2">
             {/* Input Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               title="YAML Input"
               value={yamlInput}
               onChange={setYamlInput}
@@ -416,13 +425,9 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
               headerActions={
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="h-8 px-3 text-xs"
-                    >
+                    <Button variant="outline" size="sm" className="h-8 px-3 text-xs">
                       Load Examples
-                      <ChevronDownIcon className="h-3 w-3 ml-1" />
+                      <ChevronDownIcon className="ml-1 h-3 w-3" />
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto">
@@ -433,24 +438,19 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
                         className="flex flex-col items-start gap-1"
                       >
                         <span className="font-medium">{example.name}</span>
-                        <span className="text-xs text-muted-foreground font-mono">
-                          {example.path}
-                        </span>
-                        <span className="text-xs text-muted-foreground">
-                          {example.description}
-                        </span>
+                        <span className="text-muted-foreground font-mono text-xs">{example.path}</span>
+                        <span className="text-muted-foreground text-xs">{example.description}</span>
                       </DropdownMenuItem>
                     ))}
                   </DropdownMenuContent>
                 </DropdownMenu>
               }
-              footerLeftContent={
-                <span>{getCharacterCount(yamlInput)} characters</span>
-              }
+              footerLeftContent={<span>{getCharacterCount(yamlInput)} characters</span>}
             />
 
             {/* Output Panel */}
-            <CodePanel fillHeight={true}
+            <CodePanel
+              fillHeight={true}
               tabs={outputTabs}
               activeTab={selectedOutputTab}
               onTabChange={setActiveTab}
@@ -466,59 +466,64 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
                 selectedOutputTab === 'tree' && result ? (
                   <span
                     className={cn(
-                      'px-2.5 py-1 rounded-full text-xs font-semibold',
+                      'rounded-full px-2.5 py-1 text-xs font-semibold',
                       result.success && result.count > 0
-                        ? 'bg-green-50 dark:bg-green-950/30 text-green-700 dark:text-green-300 border border-green-200 dark:border-green-800'
+                        ? 'border border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-300'
                         : result.success && result.count === 0
-                        ? 'bg-orange-50 dark:bg-orange-950/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800'
-                        : ''
+                          ? 'border border-orange-200 bg-orange-50 text-orange-700 dark:border-orange-800 dark:bg-orange-950/30 dark:text-orange-300'
+                          : ''
                     )}
                   >
                     {result.success && result.count > 0
                       ? `Found ${result.count} match${result.count !== 1 ? 'es' : ''}`
                       : result.success && result.count === 0
-                      ? 'No matches found'
-                      : ''}
+                        ? 'No matches found'
+                        : ''}
                   </span>
                 ) : null
               }
               footerLeftContent={
-                <div className="flex-1 flex items-center gap-2">
+                <div className="flex flex-1 items-center gap-2">
                   {selectedOutputTab === 'tree' && (
                     <>
-                      <div className="flex-1 relative min-w-0">
-                        <MagnifyingGlassIcon className="absolute left-2 top-1/2 -translate-y-1/2 h-4 w-4 text-neutral-400 pointer-events-none" aria-hidden="true" />
+                      <div className="relative min-w-0 flex-1">
+                        <MagnifyingGlassIcon
+                          className="pointer-events-none absolute top-1/2 left-2 h-4 w-4 -translate-y-1/2 text-neutral-400"
+                          aria-hidden="true"
+                        />
                         <Input
                           type="text"
                           placeholder="Search keys, values, or paths..."
                           value={treeSearchTerm}
                           onChange={(e) => setTreeSearchTerm(e.target.value)}
-                          className="pl-8 h-8 text-sm w-full"
+                          className="h-8 w-full pl-8 text-sm"
                         />
                       </div>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleTreeExpandAll}
-                        className="h-8 px-2 text-xs shrink-0"
+                        className="h-8 shrink-0 px-2 text-xs"
                       >
-                        <ArrowsPointingOutIcon className="h-3 w-3 mr-1" />
+                        <ArrowsPointingOutIcon className="mr-1 h-3 w-3" />
                         Expand All
                       </Button>
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleTreeCollapseAll}
-                        className="h-8 px-2 text-xs shrink-0"
+                        className="h-8 shrink-0 px-2 text-xs"
                       >
-                        <ArrowsPointingInIcon className="h-3 w-3 mr-1" />
+                        <ArrowsPointingInIcon className="mr-1 h-3 w-3" />
                         Collapse All
                       </Button>
                     </>
                   )}
                   {selectedOutputTab === 'results' && output && result && (
                     <>
-                      <span>{result.count} match{result.count !== 1 ? 'es' : ''}</span>
+                      <span>
+                        {result.count} match{result.count !== 1 ? 'es' : ''}
+                      </span>
                       <span>{getCharacterCount(output)} characters</span>
                       <span>{getLineCount(output)} lines</span>
                     </>
@@ -530,16 +535,12 @@ export function YamlPathFinder({ className, instanceId }: YamlPathFinderProps) {
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+            <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+              <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           )}
-
         </div>
       </div>
     </div>
-  );
+  )
 }
-

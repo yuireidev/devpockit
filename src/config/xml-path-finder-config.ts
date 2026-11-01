@@ -1,16 +1,16 @@
 export interface XmlPathFinderOptions {
-  returnPaths: boolean;
-  returnValues: boolean;
-  returnXml: boolean;
-  formatOutput: boolean;
+  returnPaths: boolean
+  returnValues: boolean
+  returnXml: boolean
+  formatOutput: boolean
 }
 
 export const DEFAULT_XML_PATH_OPTIONS: XmlPathFinderOptions = {
   returnPaths: true,
   returnValues: true,
   returnXml: true,
-  formatOutput: true
-};
+  formatOutput: true,
+}
 
 export const XML_PATH_EXAMPLES = [
   {
@@ -21,7 +21,7 @@ export const XML_PATH_EXAMPLES = [
   <email>john@example.com</email>
 </root>`,
     path: '/root/name',
-    description: 'Access element by absolute path'
+    description: 'Access element by absolute path',
   },
   {
     name: 'Nested Elements',
@@ -38,7 +38,7 @@ export const XML_PATH_EXAMPLES = [
   </profile>
 </user>`,
     path: '/user/profile/address/city',
-    description: 'Navigate nested elements'
+    description: 'Navigate nested elements',
   },
   {
     name: 'Array Access',
@@ -57,7 +57,7 @@ export const XML_PATH_EXAMPLES = [
   </user>
 </users>`,
     path: '/users/user[1]/name',
-    description: 'Access first element (1-indexed)'
+    description: 'Access first element (1-indexed)',
   },
   {
     name: 'Descendant Selector',
@@ -72,7 +72,7 @@ export const XML_PATH_EXAMPLES = [
   </book>
 </catalog>`,
     path: '//title',
-    description: 'Find all titles anywhere in document'
+    description: 'Find all titles anywhere in document',
   },
   {
     name: 'Attribute Filter',
@@ -82,7 +82,7 @@ export const XML_PATH_EXAMPLES = [
   <user id="3" active="true">Charlie</user>
 </users>`,
     path: '//user[@active="true"]',
-    description: 'Find elements with specific attribute value'
+    description: 'Find elements with specific attribute value',
   },
   {
     name: 'Text Content',
@@ -91,7 +91,7 @@ export const XML_PATH_EXAMPLES = [
   <item>Another Value</item>
 </root>`,
     path: '/root/item/text()',
-    description: 'Get text content of elements'
+    description: 'Get text content of elements',
   },
   {
     name: 'Attribute Access',
@@ -100,7 +100,7 @@ export const XML_PATH_EXAMPLES = [
   <product id="102" price="39.99">Product B</product>
 </products>`,
     path: '//product/@price',
-    description: 'Get attribute values'
+    description: 'Get attribute values',
   },
   {
     name: 'Wildcard',
@@ -115,7 +115,7 @@ export const XML_PATH_EXAMPLES = [
   </magazine>
 </catalog>`,
     path: '//*/title',
-    description: 'Find title in any element type'
+    description: 'Find title in any element type',
   },
   {
     name: 'Position Predicate',
@@ -126,7 +126,7 @@ export const XML_PATH_EXAMPLES = [
   <item>Fourth</item>
 </items>`,
     path: '/items/item[last()]',
-    description: 'Get last element'
+    description: 'Get last element',
   },
   {
     name: 'Multiple Conditions',
@@ -136,7 +136,7 @@ export const XML_PATH_EXAMPLES = [
   <product category="books" price="19.99">Novel</product>
 </store>`,
     path: '//product[@category="electronics"][@price>50]',
-    description: 'Filter by multiple attributes'
+    description: 'Filter by multiple attributes',
   },
   {
     name: 'Complex Structure',
@@ -155,7 +155,7 @@ export const XML_PATH_EXAMPLES = [
   </data>
 </response>`,
     path: '//user[@role]',
-    description: 'Find all users with role attribute'
+    description: 'Find all users with role attribute',
   },
   {
     name: 'Namespaces',
@@ -164,115 +164,115 @@ export const XML_PATH_EXAMPLES = [
   <ns:item>Value</ns:item>
 </ns:root>`,
     path: '/ns:root/ns:item',
-    description: 'Access namespaced elements'
-  }
-];
+    description: 'Access namespaced elements',
+  },
+]
 
 export const XML_PATH_COMMON_PATTERNS = [
   {
     pattern: '/root/child',
     description: 'Absolute path to element',
-    example: '/catalog/book'
+    example: '/catalog/book',
   },
   {
     pattern: '//element',
     description: 'Descendant selector - find anywhere',
-    example: '//title'
+    example: '//title',
   },
   {
     pattern: 'element[@attr]',
     description: 'Element with attribute exists',
-    example: 'book[@id]'
+    example: 'book[@id]',
   },
   {
     pattern: 'element[@attr="value"]',
     description: 'Element with attribute equals value',
-    example: 'user[@active="true"]'
+    example: 'user[@active="true"]',
   },
   {
     pattern: 'element[1]',
     description: 'First element (1-indexed)',
-    example: 'book[1]'
+    example: 'book[1]',
   },
   {
     pattern: 'element[last()]',
     description: 'Last element',
-    example: 'item[last()]'
+    example: 'item[last()]',
   },
   {
     pattern: 'element/text()',
     description: 'Text content of element',
-    example: 'title/text()'
+    example: 'title/text()',
   },
   {
     pattern: 'element/@attr',
     description: 'Attribute value',
-    example: 'product/@price'
+    example: 'product/@price',
   },
   {
     pattern: '//*[@id]',
     description: 'Any element with id attribute',
-    example: '//*[@id="123"]'
+    example: '//*[@id="123"]',
   },
   {
     pattern: '//element[@attr>value]',
     description: 'Numeric comparison',
-    example: '//product[@price>50]'
+    example: '//product[@price>50]',
   },
   {
     pattern: '/root/*',
     description: 'All direct children',
-    example: '/catalog/*'
+    example: '/catalog/*',
   },
   {
     pattern: '//element[position()>1]',
     description: 'Position-based filtering',
-    example: '//item[position()>1]'
-  }
-];
+    example: '//item[position()>1]',
+  },
+]
 
 export const XML_PATH_TIPS = [
   {
     tip: 'Absolute Path',
     description: 'Start with / to reference from document root',
-    example: '/root/child'
+    example: '/root/child',
   },
   {
     tip: 'Descendant Selector',
     description: 'Use // to search recursively through all levels',
-    example: '//title (finds all title elements)'
+    example: '//title (finds all title elements)',
   },
   {
     tip: 'Attribute Access',
     description: 'Use @ to access attributes',
-    example: 'element/@attr or element[@attr="value"]'
+    example: 'element/@attr or element[@attr="value"]',
   },
   {
     tip: 'Text Nodes',
     description: 'Use text() to get text content of elements',
-    example: '/root/item/text()'
+    example: '/root/item/text()',
   },
   {
     tip: 'Position Indexing',
     description: 'XPath uses 1-based indexing (not 0-based)',
-    example: 'element[1] (first element)'
+    example: 'element[1] (first element)',
   },
   {
     tip: 'Wildcard',
     description: 'Use * to match any element name',
-    example: '//*[@id] (any element with id attribute)'
+    example: '//*[@id] (any element with id attribute)',
   },
   {
     tip: 'Predicates',
     description: 'Use [] for filtering and position selection',
-    example: 'element[@attr="value"] or element[1]'
+    example: 'element[@attr="value"] or element[1]',
   },
   {
     tip: 'Last Element',
     description: 'Use last() function to get the last element',
-    example: 'items/item[last()]'
-  }
-];
+    example: 'items/item[last()]',
+  },
+]
 
 export const XML_PATH_FINDER_DESCRIPTIONS = {
   title: 'XML Path Finder',
@@ -283,7 +283,7 @@ export const XML_PATH_FINDER_DESCRIPTIONS = {
     'Display XPath paths to matched nodes',
     'Support for common XPath syntax',
     'Real-time query validation',
-    'Visual XML tree structure'
+    'Visual XML tree structure',
   ],
   useCases: [
     'Extract specific data from XML documents',
@@ -291,7 +291,6 @@ export const XML_PATH_FINDER_DESCRIPTIONS = {
     'Find all occurrences of elements or attributes',
     'Query nested elements with filters',
     'Data transformation and extraction',
-    'XML document analysis'
-  ]
-};
-
+    'XML document analysis',
+  ],
+}

@@ -11,10 +11,10 @@ DevPockit is a static web app that runs entirely in the browser. You can self-ho
 
 Before building, set these environment variables for self-hosting:
 
-| Variable | Description | Example |
-|----------|-------------|---------|
-| `NEXT_PUBLIC_BASE_URL` | Full base URL for metadata, sitemap, canonical URLs | `https://mytools.example.com` |
-| `BASE_PATH` | Base path when serving from a subpath (e.g. GitHub Pages project site) | `/devpockit` or empty for root |
+| Variable               | Description                                                            | Example                        |
+| ---------------------- | ---------------------------------------------------------------------- | ------------------------------ |
+| `NEXT_PUBLIC_BASE_URL` | Full base URL for metadata, sitemap, canonical URLs                    | `https://mytools.example.com`  |
+| `BASE_PATH`            | Base path when serving from a subpath (e.g. GitHub Pages project site) | `/devpockit` or empty for root |
 
 ## Option 1: GitHub Pages (Fork)
 
@@ -29,6 +29,7 @@ Before building, set these environment variables for self-hosting:
 3. **Deploy** by going to **Actions → Deploy to GitHub Pages → Run workflow**.
 
 Your site will be available at:
+
 - **Project site:** `https://<username>.github.io/<repo-name>/`
 - **User/org site:** `https://<username>.github.io/` (when repo name is `username.github.io`)
 
@@ -47,16 +48,18 @@ For **custom domains** or to override the default URL, set repository variables:
 3. Click **New repository variable**
 4. Add:
 
-| Variable | Value | When to use |
-|----------|-------|-------------|
-| `NEXT_PUBLIC_BASE_URL` | `https://mytools.example.com` | Custom domain (e.g. `mytools.example.com`) |
-| `BASE_PATH` | `` (empty) or `/subpath` | Usually empty for custom domain; use `/repo-name` if serving from subpath |
+| Variable               | Value                         | When to use                                                               |
+| ---------------------- | ----------------------------- | ------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_BASE_URL` | `https://mytools.example.com` | Custom domain (e.g. `mytools.example.com`)                                |
+| `BASE_PATH`            | ``(empty) or`/subpath`        | Usually empty for custom domain; use `/repo-name` if serving from subpath |
 
 **Example (custom domain):** If your site is at `https://devtools.mycompany.com`:
+
 - `NEXT_PUBLIC_BASE_URL` = `https://devtools.mycompany.com`
 - `BASE_PATH` = (leave empty)
 
 **Example (override default):** To force a specific GitHub Pages URL:
+
 - `NEXT_PUBLIC_BASE_URL` = `https://username.github.io/devpockit`
 - `BASE_PATH` = `/devpockit`
 
@@ -159,12 +162,12 @@ Or with a Caddyfile:
 
 ### Build settings
 
-| Setting | Value |
-|---------|-------|
-| Build command | `pnpm install && pnpm build` |
-| Output directory | `out` |
-| Node version | 20 |
-| Package manager | pnpm |
+| Setting          | Value                        |
+| ---------------- | ---------------------------- |
+| Build command    | `pnpm install && pnpm build` |
+| Output directory | `out`                        |
+| Node version     | 20                           |
+| Package manager  | pnpm                         |
 
 Enable pnpm: set `NPM_FLAGS=--package-manager=pnpm` or use `corepack enable` in the build.
 
@@ -202,6 +205,7 @@ Create `vercel.json`:
 ### Cloudflare Pages
 
 In the dashboard, set:
+
 - Build command: `pnpm install && pnpm build`
 - Build output directory: `out`
 - Environment variable: `NODE_VERSION=20`

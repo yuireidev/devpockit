@@ -1,26 +1,20 @@
-'use client';
+'use client'
 
-import { useToolState } from '@/components/providers/ToolStateProvider';
-import { Button } from '@/components/ui/button';
-import { CodePanel } from '@/components/ui/code-panel';
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Switch } from '@/components/ui/switch';
-import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme';
-import {
-  analyzeNetwork,
-  calculateSubnets,
-  getNetworkStats,
-  parseCidr,
-  validateCidr
-} from '@/libs/ip-cidr';
-import { cn } from '@/libs/utils';
-import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline';
-import { useEffect, useState } from 'react';
+import { useToolState } from '@/components/providers/ToolStateProvider'
+import { Button } from '@/components/ui/button'
+import { CodePanel } from '@/components/ui/code-panel'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
+import { Switch } from '@/components/ui/switch'
+import { useCodeEditorTheme } from '@/hooks/useCodeEditorTheme'
+import { analyzeNetwork, calculateSubnets, getNetworkStats, parseCidr, validateCidr } from '@/libs/ip-cidr'
+import { cn } from '@/libs/utils'
+import { ArrowPathIcon, ChevronDownIcon } from '@heroicons/react/24/outline'
+import { useEffect, useState } from 'react'
 
 interface CidrAnalyzerProps {
-  className?: string;
-  instanceId: string;
+  className?: string
+  instanceId: string
 }
 
 const CIDR_EXAMPLES = [
@@ -35,148 +29,149 @@ const CIDR_EXAMPLES = [
   { label: 'Class C Private', value: '192.168.0.0/16' },
   { label: 'Loopback', value: '127.0.0.1/32' },
   { label: 'Link Local', value: '169.254.0.0/16' },
-];
+]
 
 export function CidrAnalyzer({ className, instanceId }: CidrAnalyzerProps) {
-  const { toolState, updateToolState } = useToolState('cidr-analyzer', instanceId);
-  const savedOptions = toolState?.options as Record<string, unknown> | undefined;
+  const { toolState, updateToolState } = useToolState('cidr-analyzer', instanceId)
+  const savedOptions = toolState?.options as Record<string, unknown> | undefined
 
   // Initialize with defaults
-  const [input, setInput] = useState((toolState?.input as string) ?? (''));
-  const [output, setOutput] = useState((toolState?.output as string) ?? (''));
-  const [error, setError] = useState((toolState?.error as string) ?? (''));
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
-  const [showNetworkInfo, setShowNetworkInfo] = useState(() => (savedOptions?.showNetworkInfo as boolean | undefined) ?? true);
-  const [showStatistics, setShowStatistics] = useState(() => (savedOptions?.showStatistics as boolean | undefined) ?? false);
-  const [maxSubnets, setMaxSubnets] = useState(() => (savedOptions?.maxSubnets as number | undefined) ?? 0); // 0 means None
-
+  const [input, setInput] = useState((toolState?.input as string) ?? '')
+  const [output, setOutput] = useState((toolState?.output as string) ?? '')
+  const [error, setError] = useState((toolState?.error as string) ?? '')
+  const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [showNetworkInfo, setShowNetworkInfo] = useState(
+    () => (savedOptions?.showNetworkInfo as boolean | undefined) ?? true
+  )
+  const [showStatistics, setShowStatistics] = useState(
+    () => (savedOptions?.showStatistics as boolean | undefined) ?? false
+  )
+  const [maxSubnets, setMaxSubnets] = useState(() => (savedOptions?.maxSubnets as number | undefined) ?? 0) // 0 means None
 
   // Editor settings
-  const [theme] = useCodeEditorTheme('basicDark');
-  const [wrapText, setWrapText] = useState(true);
+  const [theme] = useCodeEditorTheme('basicDark')
+  const [wrapText, setWrapText] = useState(true)
 
   // Hydrate state from toolState after mount
-
 
   // Update persistent state
   useEffect(() => {
     updateToolState({
-        input,
-        output,
-        error,
-        options: { showNetworkInfo, showStatistics, maxSubnets }
-      });
+      input,
+      output,
+      error,
+      options: { showNetworkInfo, showStatistics, maxSubnets },
+    })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [input, output, error, showNetworkInfo, showStatistics, maxSubnets]);
+  }, [input, output, error, showNetworkInfo, showStatistics, maxSubnets])
 
   // Reset state when tool is cleared
 
-
   const handleAnalyze = async () => {
     if (!input.trim()) {
-      setError('Please enter a CIDR notation');
-      setOutput('');
-      return;
+      setError('Please enter a CIDR notation')
+      setOutput('')
+      return
     }
 
-    setIsAnalyzing(true);
-    setError('');
+    setIsAnalyzing(true)
+    setError('')
 
     try {
-      await new Promise(resolve => setTimeout(resolve, 300));
+      await new Promise((resolve) => setTimeout(resolve, 300))
 
-      const cidrValidation = validateCidr(input);
+      const cidrValidation = validateCidr(input)
       if (!cidrValidation.isValid) {
-        throw new Error(cidrValidation.error || 'Invalid CIDR notation');
+        throw new Error(cidrValidation.error || 'Invalid CIDR notation')
       }
 
-      const parseResult = parseCidr(input);
+      const parseResult = parseCidr(input)
       if (!parseResult.isValid) {
-        throw new Error(parseResult.error || 'Failed to parse CIDR');
+        throw new Error(parseResult.error || 'Failed to parse CIDR')
       }
 
-      let result = `CIDR: ${input}\nNetwork: ${parseResult.networkAddress}\nBroadcast: ${parseResult.broadcastAddress}\nSubnet Mask: ${parseResult.subnetMask}\nTotal Hosts: ${parseResult.totalHosts.toLocaleString()}\nUsable Hosts: ${parseResult.usableHosts.toLocaleString()}`;
+      let result = `CIDR: ${input}\nNetwork: ${parseResult.networkAddress}\nBroadcast: ${parseResult.broadcastAddress}\nSubnet Mask: ${parseResult.subnetMask}\nTotal Hosts: ${parseResult.totalHosts.toLocaleString()}\nUsable Hosts: ${parseResult.usableHosts.toLocaleString()}`
 
       if (parseResult.firstUsable && parseResult.lastUsable) {
-        result += `\nFirst Usable: ${parseResult.firstUsable}\nLast Usable: ${parseResult.lastUsable}`;
+        result += `\nFirst Usable: ${parseResult.firstUsable}\nLast Usable: ${parseResult.lastUsable}`
       }
 
-      const analysisResult = analyzeNetwork(input);
+      const analysisResult = analyzeNetwork(input)
 
       // Add network analysis if enabled
       if (showNetworkInfo && analysisResult?.isValid) {
-        result += `\n\n=== Network Analysis ===\n`;
-        result += `Network Class: ${analysisResult.networkClass}\n`;
-        result += `Wildcard Mask: ${analysisResult.wildcardMask}\n`;
-        result += `Host Bits: ${analysisResult.hostBits}\n`;
-        result += `Network Bits: ${analysisResult.networkBits}\n`;
-        result += `Is Private: ${analysisResult.isPrivate ? 'Yes' : 'No'}\n`;
-        result += `Is Loopback: ${analysisResult.isLoopback ? 'Yes' : 'No'}`;
-        if (analysisResult.isMulticast) result += `\nIs Multicast: Yes`;
-        if (analysisResult.isLinkLocal) result += `\nIs Link Local: Yes`;
+        result += `\n\n=== Network Analysis ===\n`
+        result += `Network Class: ${analysisResult.networkClass}\n`
+        result += `Wildcard Mask: ${analysisResult.wildcardMask}\n`
+        result += `Host Bits: ${analysisResult.hostBits}\n`
+        result += `Network Bits: ${analysisResult.networkBits}\n`
+        result += `Is Private: ${analysisResult.isPrivate ? 'Yes' : 'No'}\n`
+        result += `Is Loopback: ${analysisResult.isLoopback ? 'Yes' : 'No'}`
+        if (analysisResult.isMulticast) result += `\nIs Multicast: Yes`
+        if (analysisResult.isLinkLocal) result += `\nIs Link Local: Yes`
       }
 
       // Add subnet information if enabled
       if (maxSubnets > 0 && analysisResult?.isValid && analysisResult.totalHosts > 2) {
-        const subnetCount = Math.min(maxSubnets, Math.floor(Math.log2(analysisResult.totalHosts)));
+        const subnetCount = Math.min(maxSubnets, Math.floor(Math.log2(analysisResult.totalHosts)))
         if (subnetCount > 1) {
-          const subnetResult = calculateSubnets(input, subnetCount);
+          const subnetResult = calculateSubnets(input, subnetCount)
           if (subnetResult.isValid) {
-            result += `\n\n=== Subnet Information ===\n`;
-            result += `Total Subnets: ${subnetResult.totalSubnets}\n`;
-            result += `Hosts per Subnet: ${subnetResult.hostsPerSubnet}\n\n`;
-            result += `Subnets:\n`;
+            result += `\n\n=== Subnet Information ===\n`
+            result += `Total Subnets: ${subnetResult.totalSubnets}\n`
+            result += `Hosts per Subnet: ${subnetResult.hostsPerSubnet}\n\n`
+            result += `Subnets:\n`
             subnetResult.subnets.forEach((subnet, index) => {
-              result += `  Subnet ${index + 1}: ${subnet.network} - ${subnet.broadcast}\n`;
+              result += `  Subnet ${index + 1}: ${subnet.network} - ${subnet.broadcast}\n`
               if (subnet.firstUsable && subnet.lastUsable) {
-                result += `    Usable: ${subnet.firstUsable} - ${subnet.lastUsable}\n`;
+                result += `    Usable: ${subnet.firstUsable} - ${subnet.lastUsable}\n`
               }
-            });
+            })
           }
         }
       }
 
       // Add statistics if enabled
       if (showStatistics && analysisResult?.isValid) {
-        const statsResult = getNetworkStats(input);
+        const statsResult = getNetworkStats(input)
         if (statsResult.isValid) {
-          result += `\n\n=== Network Statistics ===\n`;
-          result += `Network Size: ${statsResult.networkSize}\n`;
-          result += `Host Density: ${statsResult.hostDensity}\n`;
-          result += `Common Uses: ${statsResult.commonUses.join(', ')}`;
+          result += `\n\n=== Network Statistics ===\n`
+          result += `Network Size: ${statsResult.networkSize}\n`
+          result += `Host Density: ${statsResult.hostDensity}\n`
+          result += `Common Uses: ${statsResult.commonUses.join(', ')}`
           if (statsResult.subnetRecommendations.length > 0) {
-            result += `\n\nSubnet Recommendations:\n`;
-            statsResult.subnetRecommendations.forEach(rec => {
-              result += `  ${rec}\n`;
-            });
+            result += `\n\nSubnet Recommendations:\n`
+            statsResult.subnetRecommendations.forEach((rec) => {
+              result += `  ${rec}\n`
+            })
           }
         }
       }
 
-      setOutput(result);
+      setOutput(result)
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'An error occurred during analysis');
-      setOutput('');
+      setError(err instanceof Error ? err.message : 'An error occurred during analysis')
+      setOutput('')
     } finally {
-      setIsAnalyzing(false);
+      setIsAnalyzing(false)
     }
-  };
+  }
 
   const handleLoadExample = (value: string) => {
-    setInput(value);
-    setError('');
-  };
+    setInput(value)
+    setError('')
+  }
 
   const getLineCount = (text: string): number => {
-    if (!text) return 0;
-    return text.split('\n').length;
-  };
+    if (!text) return 0
+    return text.split('\n').length
+  }
 
   return (
-    <div className={cn('flex flex-col h-full', className)}>
+    <div className={cn('flex h-full flex-col', className)}>
       {/* Header Section */}
       <div className="bg-background px-[28px] pt-[36px] pb-[20px]">
-        <h1 className="text-[32px] font-normal leading-6 tracking-normal text-neutral-900 dark:text-neutral-100 mb-3">
+        <h1 className="mb-3 text-[32px] leading-6 font-normal tracking-normal text-neutral-900 dark:text-neutral-100">
           CIDR Analyzer
         </h1>
         <p className="text-sm leading-5 tracking-normal text-neutral-900 dark:text-neutral-100">
@@ -185,20 +180,20 @@ export function CidrAnalyzer({ className, instanceId }: CidrAnalyzerProps) {
       </div>
 
       {/* Body Section */}
-      <div className="flex-1 flex flex-col bg-background px-[24px] pt-6 pb-10 min-h-0 overflow-y-auto">
-        <div className="flex-1 flex flex-col gap-4 min-h-0">
+      <div className="bg-background flex min-h-0 flex-1 flex-col overflow-y-auto px-[24px] pt-6 pb-10">
+        <div className="flex min-h-0 flex-1 flex-col gap-4">
           {/* Controls */}
           <div className="flex flex-col gap-4">
             {/* Input Row */}
             <div className="flex items-center gap-3">
-              <div className="inline-flex h-10 items-center rounded-lg border border-neutral-200 bg-background pl-3 pr-2 py-[9.5px] text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 dark:border-neutral-700 flex-1">
-                <div className="flex items-center gap-3 text-sm leading-normal tracking-[0.07px] flex-1 min-w-0">
-                  <span className="text-neutral-500 whitespace-nowrap dark:text-neutral-400">CIDR:</span>
+              <div className="bg-background ring-offset-background focus-within:ring-ring inline-flex h-10 flex-1 items-center rounded-lg border border-neutral-200 py-[9.5px] pr-2 pl-3 text-sm focus-within:ring-2 focus-within:ring-offset-2 dark:border-neutral-700">
+                <div className="flex min-w-0 flex-1 items-center gap-3 text-sm leading-normal tracking-[0.07px]">
+                  <span className="whitespace-nowrap text-neutral-500 dark:text-neutral-400">CIDR:</span>
                   <input
                     placeholder="e.g., 192.168.1.0/24"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    className="font-mono bg-transparent text-neutral-900 dark:text-neutral-100 outline-hidden flex-1 min-w-0 placeholder:text-muted-foreground"
+                    className="placeholder:text-muted-foreground min-w-0 flex-1 bg-transparent font-mono text-neutral-900 outline-hidden dark:text-neutral-100"
                   />
                 </div>
               </div>
@@ -206,7 +201,7 @@ export function CidrAnalyzer({ className, instanceId }: CidrAnalyzerProps) {
                 <DropdownMenuTrigger asChild>
                   <Button variant="outline" size="sm" className="h-10 px-3 text-xs">
                     Load Examples
-                    <ChevronDownIcon className="h-3 w-3 ml-1" />
+                    <ChevronDownIcon className="ml-1 h-3 w-3" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="max-h-[300px] overflow-y-auto">
@@ -214,7 +209,7 @@ export function CidrAnalyzer({ className, instanceId }: CidrAnalyzerProps) {
                     <DropdownMenuItem key={example.value} onClick={() => handleLoadExample(example.value)}>
                       <div className="flex flex-col">
                         <span>{example.label}</span>
-                        <span className="text-xs text-muted-foreground font-mono">{example.value}</span>
+                        <span className="text-muted-foreground font-mono text-xs">{example.value}</span>
                       </div>
                     </DropdownMenuItem>
                   ))}
@@ -223,29 +218,18 @@ export function CidrAnalyzer({ className, instanceId }: CidrAnalyzerProps) {
             </div>
 
             {/* Options Row */}
-            <div className="flex items-center gap-3 flex-wrap min-h-[40px]">
+            <div className="flex min-h-[40px] flex-wrap items-center gap-3">
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={showNetworkInfo}
-                  onCheckedChange={setShowNetworkInfo}
-                  size="sm"
-                />
+                <Switch checked={showNetworkInfo} onCheckedChange={setShowNetworkInfo} size="sm" />
                 <span className="text-sm text-neutral-600 dark:text-neutral-400">Network Info</span>
               </div>
 
               <div className="flex items-center gap-2">
-                <Switch
-                  checked={showStatistics}
-                  onCheckedChange={setShowStatistics}
-                  size="sm"
-                />
+                <Switch checked={showStatistics} onCheckedChange={setShowStatistics} size="sm" />
                 <span className="text-sm text-neutral-600 dark:text-neutral-400">Statistics</span>
               </div>
 
-              <Select
-                value={maxSubnets.toString()}
-                onValueChange={(value) => setMaxSubnets(parseInt(value))}
-              >
+              <Select value={maxSubnets.toString()} onValueChange={(value) => setMaxSubnets(parseInt(value))}>
                 <SelectTrigger label="Max Subnets:" className="min-w-[190px]">
                   <SelectValue />
                 </SelectTrigger>
@@ -258,15 +242,10 @@ export function CidrAnalyzer({ className, instanceId }: CidrAnalyzerProps) {
                 </SelectContent>
               </Select>
 
-              <Button
-                onClick={handleAnalyze}
-                disabled={isAnalyzing || !input.trim()}
-                variant="default"
-                size="default"
-              >
+              <Button onClick={handleAnalyze} disabled={isAnalyzing || !input.trim()} variant="default" size="default">
                 {isAnalyzing ? (
                   <>
-                    <ArrowPathIcon className="h-4 w-4 animate-spin mr-2" />
+                    <ArrowPathIcon className="mr-2 h-4 w-4 animate-spin" />
                     Analyzing...
                   </>
                 ) : (
@@ -277,7 +256,8 @@ export function CidrAnalyzer({ className, instanceId }: CidrAnalyzerProps) {
           </div>
 
           {/* Output Panel */}
-          <CodePanel fillHeight={true}
+          <CodePanel
+            fillHeight={true}
             title="Analysis Result"
             value={output}
             language="plaintext"
@@ -286,22 +266,17 @@ export function CidrAnalyzer({ className, instanceId }: CidrAnalyzerProps) {
             theme={theme}
             wrapText={wrapText}
             onWrapTextChange={setWrapText}
-            footerLeftContent={
-              output && <span>{getLineCount(output)} lines</span>
-            }
+            footerLeftContent={output && <span>{getLineCount(output)} lines</span>}
           />
 
           {/* Error Display */}
           {error && (
-            <div className="flex items-center space-x-2 p-4 bg-red-50 dark:bg-red-950/20 border border-red-200 dark:border-red-800 rounded-lg">
-              <div className="text-sm text-red-700 dark:text-red-300">
-                {error}
-              </div>
+            <div className="flex items-center space-x-2 rounded-lg border border-red-200 bg-red-50 p-4 dark:border-red-800 dark:bg-red-950/20">
+              <div className="text-sm text-red-700 dark:text-red-300">{error}</div>
             </div>
           )}
         </div>
       </div>
     </div>
-  );
+  )
 }
-

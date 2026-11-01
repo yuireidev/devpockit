@@ -3,14 +3,23 @@
  * Options and settings for list comparison tool
  */
 
-export type InputFormat = 'line-by-line' | 'comma-separated' | 'space-separated' | 'pipe-separated' | 'tab-separated' | 'json-array' | 'python-list' | 'javascript-array' | 'yaml-array';
-export type ComparisonOperation = 'union' | 'intersection' | 'a-minus-b' | 'b-minus-a' | 'symmetric';
+export type InputFormat =
+  | 'line-by-line'
+  | 'comma-separated'
+  | 'space-separated'
+  | 'pipe-separated'
+  | 'tab-separated'
+  | 'json-array'
+  | 'python-list'
+  | 'javascript-array'
+  | 'yaml-array'
+export type ComparisonOperation = 'union' | 'intersection' | 'a-minus-b' | 'b-minus-a' | 'symmetric'
 
 export interface ListComparisonOptions {
-  inputFormat: InputFormat;
-  caseSensitive: boolean;
-  sortOrder: 'none' | 'asc' | 'desc';
-  operation: ComparisonOperation;
+  inputFormat: InputFormat
+  caseSensitive: boolean
+  sortOrder: 'none' | 'asc' | 'desc'
+  operation: ComparisonOperation
 }
 
 export const LIST_COMPARISON_OPTIONS = {
@@ -32,14 +41,14 @@ export const LIST_COMPARISON_OPTIONS = {
     { value: 'b-minus-a', label: 'B - A', description: 'Items in List B but not in List A' },
     { value: 'symmetric', label: 'Symmetric Difference', description: 'Items in either list but not both' },
   ] as const,
-} as const;
+} as const
 
 export const DEFAULT_LIST_COMPARISON_OPTIONS: ListComparisonOptions = {
   inputFormat: 'line-by-line',
   caseSensitive: false,
   sortOrder: 'none',
   operation: 'union',
-};
+}
 
 export const LIST_COMPARISON_EXAMPLES = {
   'list-a': {
@@ -73,5 +82,4 @@ date
     'javascript-array': `['Apple', 'banana', 'cherry', 'date', 123, 789]`,
     'yaml-array': `- Apple\n- banana\n- cherry\n- date\n- 123\n- 789`,
   },
-} as const;
-
+} as const

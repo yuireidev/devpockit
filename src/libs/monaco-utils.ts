@@ -6,11 +6,28 @@
 /**
  * Monaco Editor language IDs supported by Monaco
  */
-export type MonacoLanguageId = 'json' | 'xml' | 'javascript' | 'typescript' | 'plaintext' | 'html' | 'css' | 'yaml' | 'python' | 'java' | 'csharp' | 'cpp' | 'go' | 'rust' | 'sql' | 'markdown' | 'shell';
+export type MonacoLanguageId =
+  | 'json'
+  | 'xml'
+  | 'javascript'
+  | 'typescript'
+  | 'plaintext'
+  | 'html'
+  | 'css'
+  | 'yaml'
+  | 'python'
+  | 'java'
+  | 'csharp'
+  | 'cpp'
+  | 'go'
+  | 'rust'
+  | 'sql'
+  | 'markdown'
+  | 'shell'
 
 declare global {
   interface Window {
-    monaco?: typeof import('monaco-editor');
+    monaco?: typeof import('monaco-editor')
   }
 }
 
@@ -21,64 +38,64 @@ declare global {
  */
 export function getMonacoLanguageId(language?: string): MonacoLanguageId {
   if (!language) {
-    return 'plaintext';
+    return 'plaintext'
   }
 
-  const normalized = language.toLowerCase().trim();
+  const normalized = language.toLowerCase().trim()
 
   // Direct mappings
   switch (normalized) {
     case 'json':
-      return 'json';
+      return 'json'
     case 'xml':
-      return 'xml';
+      return 'xml'
     case 'javascript':
     case 'js':
-      return 'javascript';
+      return 'javascript'
     case 'typescript':
     case 'ts':
-      return 'typescript';
+      return 'typescript'
     case 'plaintext':
     case 'text':
     case 'txt':
-      return 'plaintext';
+      return 'plaintext'
     case 'html':
-      return 'html';
+      return 'html'
     case 'css':
-      return 'css';
+      return 'css'
     case 'yaml':
     case 'yml':
-      return 'yaml';
+      return 'yaml'
     case 'python':
     case 'py':
-      return 'python';
+      return 'python'
     case 'java':
-      return 'java';
+      return 'java'
     case 'csharp':
     case 'cs':
     case 'c#':
-      return 'csharp';
+      return 'csharp'
     case 'cpp':
     case 'c++':
-      return 'cpp';
+      return 'cpp'
     case 'go':
     case 'golang':
-      return 'go';
+      return 'go'
     case 'rust':
     case 'rs':
-      return 'rust';
+      return 'rust'
     case 'sql':
-      return 'sql';
+      return 'sql'
     case 'markdown':
     case 'md':
-      return 'markdown';
+      return 'markdown'
     case 'shell':
     case 'bash':
     case 'sh':
-      return 'shell';
+      return 'shell'
     default:
       // Default to plaintext for unknown languages
-      return 'plaintext';
+      return 'plaintext'
   }
 }
 
@@ -88,14 +105,14 @@ export function getMonacoLanguageId(language?: string): MonacoLanguageId {
  */
 export function isMonacoLoaded(): boolean {
   if (typeof window === 'undefined') {
-    return false;
+    return false
   }
 
   try {
     // Check if Monaco is available in global scope
-    return typeof window.monaco !== 'undefined';
+    return typeof window.monaco !== 'undefined'
   } catch {
-    return false;
+    return false
   }
 }
 
@@ -105,18 +122,18 @@ export function isMonacoLoaded(): boolean {
  */
 export function getMonacoInstance(): typeof import('monaco-editor') | null {
   if (typeof window === 'undefined') {
-    return null;
+    return null
   }
 
   try {
     // Try to get Monaco from window (loaded via @monaco-editor/react)
     if (typeof window.monaco !== 'undefined') {
-      return window.monaco;
+      return window.monaco
     }
 
-    return null;
+    return null
   } catch {
-    return null;
+    return null
   }
 }
 
@@ -126,8 +143,8 @@ export function getMonacoInstance(): typeof import('monaco-editor') | null {
  * @returns true if language is supported, false otherwise
  */
 export function isLanguageSupported(language: string): boolean {
-  const monacoLanguageId = getMonacoLanguageId(language);
-  return monacoLanguageId !== 'plaintext' || language.toLowerCase() === 'plaintext';
+  const monacoLanguageId = getMonacoLanguageId(language)
+  return monacoLanguageId !== 'plaintext' || language.toLowerCase() === 'plaintext'
 }
 
 /**
@@ -137,10 +154,10 @@ export function isLanguageSupported(language: string): boolean {
  */
 export function getLanguageDisplayName(language?: string): string {
   if (!language) {
-    return 'Plain text';
+    return 'Plain text'
   }
 
-  const normalized = language.toLowerCase().trim();
+  const normalized = language.toLowerCase().trim()
 
   const displayNames: Record<string, string> = {
     json: 'JSON',
@@ -156,9 +173,9 @@ export function getLanguageDisplayName(language?: string): string {
     css: 'CSS',
     yaml: 'YAML',
     yml: 'YAML',
-  };
+  }
 
-  return displayNames[normalized] || language.toUpperCase();
+  return displayNames[normalized] || language.toUpperCase()
 }
 
 /**
@@ -166,28 +183,28 @@ export function getLanguageDisplayName(language?: string): string {
  * Common options used across the application
  */
 export interface MonacoEditorOptions {
-  language?: string;
-  theme?: string;
-  readOnly?: boolean;
-  lineNumbers?: 'on' | 'off' | 'relative' | 'interval';
-  lineNumbersMinChars?: number;
-  wordWrap?: 'on' | 'off' | 'wordWrapColumn' | 'bounded';
-  minimap?: { enabled: boolean };
-  fontSize?: number;
-  fontFamily?: string;
-  tabSize?: number;
-  insertSpaces?: boolean;
-  automaticLayout?: boolean;
-  scrollBeyondLastLine?: boolean;
-  formatOnPaste?: boolean;
-  formatOnType?: boolean;
-  quickSuggestions?: boolean | { other: boolean; comments: boolean; strings: boolean };
-  suggestOnTriggerCharacters?: boolean;
-  acceptSuggestionOnCommitCharacter?: boolean;
-  tabCompletion?: 'on' | 'off' | 'onlySnippets';
+  language?: string
+  theme?: string
+  readOnly?: boolean
+  lineNumbers?: 'on' | 'off' | 'relative' | 'interval'
+  lineNumbersMinChars?: number
+  wordWrap?: 'on' | 'off' | 'wordWrapColumn' | 'bounded'
+  minimap?: { enabled: boolean }
+  fontSize?: number
+  fontFamily?: string
+  tabSize?: number
+  insertSpaces?: boolean
+  automaticLayout?: boolean
+  scrollBeyondLastLine?: boolean
+  formatOnPaste?: boolean
+  formatOnType?: boolean
+  quickSuggestions?: boolean | { other: boolean; comments: boolean; strings: boolean }
+  suggestOnTriggerCharacters?: boolean
+  acceptSuggestionOnCommitCharacter?: boolean
+  tabCompletion?: 'on' | 'off' | 'onlySnippets'
   scrollbar?: {
-    alwaysConsumeMouseWheel?: boolean;
-  };
+    alwaysConsumeMouseWheel?: boolean
+  }
 }
 
 /**
@@ -228,6 +245,5 @@ export function createMonacoOptions(
     scrollbar: {
       alwaysConsumeMouseWheel: false, // Allow page scrolling when editor reaches end
     },
-  };
+  }
 }
-

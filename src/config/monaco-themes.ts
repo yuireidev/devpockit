@@ -4,8 +4,8 @@
  * Monaco themes match Shiki theme names via @shikijs/monaco integration
  */
 
-import type * as Monaco from 'monaco-editor';
-import type { CodeEditorTheme } from './code-editor-themes';
+import type * as Monaco from 'monaco-editor'
+import type { CodeEditorTheme } from './code-editor-themes'
 
 /**
  * Map CodeEditorTheme to Monaco theme name
@@ -28,9 +28,9 @@ export function getMonacoTheme(theme: CodeEditorTheme): string {
     solarizedDark: 'solarized-dark',
     catppuccin: 'catppuccin-mocha', // Catppuccin dark variant
     nord: 'nord',
-  };
+  }
 
-  return themeMap[theme] || 'github-dark';
+  return themeMap[theme] || 'github-dark'
 }
 
 /**
@@ -40,14 +40,15 @@ export function getMonacoTheme(theme: CodeEditorTheme): string {
  */
 export function getMonacoThemeFallback(theme: CodeEditorTheme): string {
   // Determine if theme is light or dark
-  const isLight = theme.includes('Light') || theme === 'basicLight' || theme === 'vscodeLight' || theme === 'githubLight';
+  const isLight =
+    theme.includes('Light') || theme === 'basicLight' || theme === 'vscodeLight' || theme === 'githubLight'
 
   if (isLight) {
     // Fallback to VS Code light or GitHub light
-    return 'light-plus';
+    return 'light-plus'
   } else {
     // Fallback to VS Code dark or GitHub dark
-    return 'dark-plus';
+    return 'dark-plus'
   }
 }
 
@@ -64,12 +65,12 @@ export function isMonacoThemeAvailable(monaco: typeof Monaco, themeName: string)
     // Monaco doesn't have a direct API to check theme availability
     // We'll try to get the theme definition
     // If it throws, the theme doesn't exist
-    monaco.editor.defineTheme(themeName, {} as Monaco.editor.IStandaloneThemeData);
-    return true;
+    monaco.editor.defineTheme(themeName, {} as Monaco.editor.IStandaloneThemeData)
+    return true
   } catch {
     // Theme might already be defined, which is fine
     // We'll assume it's available if no error
-    return true;
+    return true
   }
 }
 
@@ -86,10 +87,10 @@ export function registerCustomMonacoTheme(
   themeDefinition: Monaco.editor.IStandaloneThemeData
 ): void {
   try {
-    monaco.editor.defineTheme(themeName, themeDefinition);
+    monaco.editor.defineTheme(themeName, themeDefinition)
   } catch (error) {
-    console.error(`Failed to register custom Monaco theme: ${themeName}`, error);
-    throw error;
+    console.error(`Failed to register custom Monaco theme: ${themeName}`, error)
+    throw error
   }
 }
 
@@ -99,7 +100,7 @@ export function registerCustomMonacoTheme(
  * @returns Array of built-in theme names
  */
 export function getMonacoBuiltInThemes(): string[] {
-  return ['vs', 'vs-dark', 'hc-black'];
+  return ['vs', 'vs-dark', 'hc-black']
 }
 
 /**
@@ -108,7 +109,7 @@ export function getMonacoBuiltInThemes(): string[] {
  * @returns true if built-in, false otherwise
  */
 export function isMonacoBuiltInTheme(themeName: string): boolean {
-  return getMonacoBuiltInThemes().includes(themeName);
+  return getMonacoBuiltInThemes().includes(themeName)
 }
 
 /**
@@ -120,7 +121,7 @@ export function isMonacoBuiltInTheme(themeName: string): boolean {
  */
 export function getAvailableMonacoThemes(): string[] {
   // Built-in themes are always available
-  const builtInThemes = getMonacoBuiltInThemes();
+  const builtInThemes = getMonacoBuiltInThemes()
 
   // Shiki themes (registered via @shikijs/monaco)
   // These match the CodeEditorTheme mappings
@@ -136,9 +137,9 @@ export function getAvailableMonacoThemes(): string[] {
     'nord',
     'material-theme-lighter',
     'material-theme-darker',
-  ];
+  ]
 
-  return [...builtInThemes, ...shikiThemes];
+  return [...builtInThemes, ...shikiThemes]
 }
 
 /**
@@ -148,7 +149,6 @@ export function getAvailableMonacoThemes(): string[] {
  * @returns true if valid, false otherwise
  */
 export function isValidMonacoTheme(themeName: string): boolean {
-  const availableThemes = getAvailableMonacoThemes();
-  return availableThemes.includes(themeName);
+  const availableThemes = getAvailableMonacoThemes()
+  return availableThemes.includes(themeName)
 }
-

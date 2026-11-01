@@ -1,6 +1,6 @@
 # Manual Pages deploy. Run from the Actions tab and pick a tag.
 # Release flow never deploys automatically; use this when ready to ship.
-name: Deploy to Pages
+name: 'Deploy: Pages'
 on:
   workflow_dispatch:
     inputs:

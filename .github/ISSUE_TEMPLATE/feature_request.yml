@@ -1,7 +1,7 @@
 name: Feature Request
 description: Suggest a new feature or enhancement for DevPockit
-title: "[Feature]: "
-labels: ["enhancement"]
+title: '[Feature]: '
+labels: ['enhancement']
 body:
   - type: markdown
     attributes:
@@ -14,13 +14,13 @@ body:
       label: Feature Type
       description: What type of feature are you requesting?
       options:
-        - "New Tool"
-        - "Enhancement to Existing Tool"
-        - "UI/UX Improvement"
-        - "Performance Improvement"
-        - "Accessibility Feature"
-        - "Documentation"
-        - "Other"
+        - 'New Tool'
+        - 'Enhancement to Existing Tool'
+        - 'UI/UX Improvement'
+        - 'Performance Improvement'
+        - 'Accessibility Feature'
+        - 'Documentation'
+        - 'Other'
     validations:
       required: true
 
@@ -30,37 +30,37 @@ body:
       label: Which tool (if applicable)?
       description: Select the tool this feature relates to (or "N/A" if not tool-specific)
       options:
-        - "N/A - General Feature"
-        - "Lorem Ipsum Generator"
-        - "Regex Tester"
-        - "Diff Checker"
-        - "JSON Formatter"
-        - "XML Formatter"
-        - "UUID Generator"
-        - "JWT Decoder"
-        - "JWT Encoder"
-        - "Hash Generator"
-        - "QR Code Generator"
-        - "QR Code Decoder"
-        - "QR Code Scanner"
-        - "URL Encoder"
-        - "URL Decoder"
-        - "Base Encoder/Decoder"
-        - "Cron Expression Parser"
-        - "Data Format Converter"
-        - "Timestamp Converter"
-        - "List Format Converter"
-        - "Schema Converter"
-        - "Number Base Converter"
-        - "CIDR Analyzer"
-        - "IP to CIDR Converter"
-        - "IP Address Lookup"
-        - "System Information"
-        - "List Comparison"
-        - "JSON Path Finder"
-        - "XML Path Finder"
-        - "YAML Path Finder"
-        - "JSON/YAML Schema Generator"
+        - 'N/A - General Feature'
+        - 'Lorem Ipsum Generator'
+        - 'Regex Tester'
+        - 'Diff Checker'
+        - 'JSON Formatter'
+        - 'XML Formatter'
+        - 'UUID Generator'
+        - 'JWT Decoder'
+        - 'JWT Encoder'
+        - 'Hash Generator'
+        - 'QR Code Generator'
+        - 'QR Code Decoder'
+        - 'QR Code Scanner'
+        - 'URL Encoder'
+        - 'URL Decoder'
+        - 'Base Encoder/Decoder'
+        - 'Cron Expression Parser'
+        - 'Data Format Converter'
+        - 'Timestamp Converter'
+        - 'List Format Converter'
+        - 'Schema Converter'
+        - 'Number Base Converter'
+        - 'CIDR Analyzer'
+        - 'IP to CIDR Converter'
+        - 'IP Address Lookup'
+        - 'System Information'
+        - 'List Comparison'
+        - 'JSON Path Finder'
+        - 'XML Path Finder'
+        - 'YAML Path Finder'
+        - 'JSON/YAML Schema Generator'
     validations:
       required: false
 
@@ -115,10 +115,10 @@ body:
       label: Priority
       description: How important is this feature to you?
       options:
-        - "Nice to have"
-        - "Would be helpful"
-        - "Important"
-        - "Critical"
+        - 'Nice to have'
+        - 'Would be helpful'
+        - 'Important'
+        - 'Critical'
     validations:
       required: false
 
@@ -131,4 +131,3 @@ body:
           required: true
         - label: I have provided all the information requested above
           required: true
-

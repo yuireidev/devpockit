@@ -1,7 +1,7 @@
-import { formatSql, getSqlDialectValidationHint, getSqlStats } from '../sql-formatter';
+import { formatSql, getSqlDialectValidationHint, getSqlStats } from '../sql-formatter'
 
 describe('SQL Formatter', () => {
-  const sample = 'select a,b from t where id=1';
+  const sample = 'select a,b from t where id=1'
 
   describe('formatSql', () => {
     it('beautifies valid SQL', () => {
@@ -10,11 +10,11 @@ describe('SQL Formatter', () => {
         indentSize: 2,
         dialect: 'postgresql',
         keywordCase: 'preserve',
-      });
-      expect(result.isValid).toBe(true);
-      expect(result.formatted).toContain('\n');
-      expect(result.formatted.toLowerCase()).toContain('select');
-    });
+      })
+      expect(result.isValid).toBe(true)
+      expect(result.formatted).toContain('\n')
+      expect(result.formatted.toLowerCase()).toContain('select')
+    })
 
     it('minifies SQL to a single line', () => {
       const result = formatSql('SELECT 1\nFROM dual', {
@@ -22,10 +22,10 @@ describe('SQL Formatter', () => {
         indentSize: 2,
         dialect: 'mysql',
         keywordCase: 'preserve',
-      });
-      expect(result.isValid).toBe(true);
-      expect(result.formatted.split('\n').length).toBe(1);
-    });
+      })
+      expect(result.isValid).toBe(true)
+      expect(result.formatted.split('\n').length).toBe(1)
+    })
 
     it('returns error for invalid SQL', () => {
       const result = formatSql('SELEC 1 FORM x;', {
@@ -33,10 +33,10 @@ describe('SQL Formatter', () => {
         indentSize: 2,
         dialect: 'mysql',
         keywordCase: 'preserve',
-      });
-      expect(result.isValid).toBe(false);
-      expect(result.error).toBeDefined();
-    });
+      })
+      expect(result.isValid).toBe(false)
+      expect(result.error).toBeDefined()
+    })
 
     it('rejects empty input', () => {
       const result = formatSql('   ', {
@@ -44,10 +44,10 @@ describe('SQL Formatter', () => {
         indentSize: 2,
         dialect: 'sql',
         keywordCase: 'preserve',
-      });
-      expect(result.isValid).toBe(false);
-      expect(result.error).toMatch(/enter SQL/i);
-    });
+      })
+      expect(result.isValid).toBe(false)
+      expect(result.error).toMatch(/enter SQL/i)
+    })
 
     it('does not validate PL/SQL dialect but still formats', () => {
       const result = formatSql('SELECT 1 FROM dual', {
@@ -55,31 +55,31 @@ describe('SQL Formatter', () => {
         indentSize: 2,
         dialect: 'plsql',
         keywordCase: 'preserve',
-      });
-      expect(result.isValid).toBe(true);
-      expect(result.formatted.length).toBeGreaterThan(0);
-    });
-  });
+      })
+      expect(result.isValid).toBe(true)
+      expect(result.formatted.length).toBeGreaterThan(0)
+    })
+  })
 
   describe('getSqlDialectValidationHint', () => {
     it('returns null for exact dialects', () => {
-      expect(getSqlDialectValidationHint('mysql')).toBeNull();
-    });
+      expect(getSqlDialectValidationHint('mysql')).toBeNull()
+    })
 
     it('returns hint for proxy dialects', () => {
-      expect(getSqlDialectValidationHint('spark')).toContain('Hive');
-    });
+      expect(getSqlDialectValidationHint('spark')).toContain('Hive')
+    })
 
     it('returns hint for format-only PL/SQL', () => {
-      expect(getSqlDialectValidationHint('plsql')).toMatch(/not validated/i);
-    });
-  });
+      expect(getSqlDialectValidationHint('plsql')).toMatch(/not validated/i)
+    })
+  })
 
   describe('getSqlStats', () => {
     it('counts lines and statements', () => {
-      const stats = getSqlStats('SELECT 1;\nSELECT 2;');
-      expect(stats.lines).toBe(2);
-      expect(stats.statements).toBe(2);
-    });
-  });
-});
+      const stats = getSqlStats('SELECT 1;\nSELECT 2;')
+      expect(stats.lines).toBe(2)
+      expect(stats.statements).toBe(2)
+    })
+  })
+})

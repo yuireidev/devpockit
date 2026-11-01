@@ -1,27 +1,27 @@
-'use client';
+'use client'
 
-import { Tool } from '@/types/tools';
+import { Tool } from '@/types/tools'
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.yuirei.com';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.yuirei.com'
 
 interface WebsiteJsonLdProps {
-  type: 'website';
+  type: 'website'
 }
 
 interface ToolJsonLdProps {
-  type: 'tool';
-  tool: Tool;
+  type: 'tool'
+  tool: Tool
 }
 
 interface BreadcrumbJsonLdProps {
-  type: 'breadcrumb';
-  items: { name: string; url: string }[];
+  type: 'breadcrumb'
+  items: { name: string; url: string }[]
 }
 
-type JsonLdProps = WebsiteJsonLdProps | ToolJsonLdProps | BreadcrumbJsonLdProps;
+type JsonLdProps = WebsiteJsonLdProps | ToolJsonLdProps | BreadcrumbJsonLdProps
 
 export function JsonLd(props: JsonLdProps) {
-  let structuredData: object;
+  let structuredData: object
 
   switch (props.type) {
     case 'website':
@@ -40,8 +40,8 @@ export function JsonLd(props: JsonLdProps) {
           },
           'query-input': 'required name=search_term_string',
         },
-      };
-      break;
+      }
+      break
 
     case 'tool':
       structuredData = {
@@ -62,8 +62,8 @@ export function JsonLd(props: JsonLdProps) {
           ratingValue: '4.8',
           ratingCount: '100',
         },
-      };
-      break;
+      }
+      break
 
     case 'breadcrumb':
       structuredData = {
@@ -75,15 +75,9 @@ export function JsonLd(props: JsonLdProps) {
           name: item.name,
           item: item.url,
         })),
-      };
-      break;
+      }
+      break
   }
 
-  return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }}
-    />
-  );
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(structuredData) }} />
 }
-

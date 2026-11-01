@@ -1,12 +1,12 @@
-import { JWT_ALGORITHMS } from './jwt-decoder-config';
+import { JWT_ALGORITHMS } from './jwt-decoder-config'
 
 export interface JwtEncoderOptions {
-  algorithm: string;
-  header: string;
-  payload: string;
-  secret: string;
-  autoGenerateIat: boolean;
-  expirationMinutes: number | null; // null means no expiration
+  algorithm: string
+  header: string
+  payload: string
+  secret: string
+  autoGenerateIat: boolean
+  expirationMinutes: number | null // null means no expiration
 }
 
 export const DEFAULT_JWT_ENCODER_OPTIONS: JwtEncoderOptions = {
@@ -15,12 +15,10 @@ export const DEFAULT_JWT_ENCODER_OPTIONS: JwtEncoderOptions = {
   payload: JSON.stringify({ sub: '1234567890', name: 'John Doe' }, null, 2),
   secret: '',
   autoGenerateIat: true,
-  expirationMinutes: null // No expiration by default
-};
+  expirationMinutes: null, // No expiration by default
+}
 
-export const JWT_ENCODER_ALGORITHMS = JWT_ALGORITHMS.filter(alg =>
-  ['HS256', 'HS384', 'HS512'].includes(alg.value)
-);
+export const JWT_ENCODER_ALGORITHMS = JWT_ALGORITHMS.filter((alg) => ['HS256', 'HS384', 'HS512'].includes(alg.value))
 
 export const JWT_TEMPLATES = [
   {
@@ -30,8 +28,8 @@ export const JWT_TEMPLATES = [
     payload: {
       sub: '1234567890',
       name: 'John Doe',
-      iat: Math.floor(Date.now() / 1000)
-    }
+      iat: Math.floor(Date.now() / 1000),
+    },
   },
   {
     name: 'Authentication Token',
@@ -43,8 +41,8 @@ export const JWT_TEMPLATES = [
       email: 'john@example.com',
       role: 'user',
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 3600
-    }
+      exp: Math.floor(Date.now() / 1000) + 3600,
+    },
   },
   {
     name: 'API Token',
@@ -55,8 +53,8 @@ export const JWT_TEMPLATES = [
       aud: 'api.example.com',
       scope: ['read', 'write'],
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 86400
-    }
+      exp: Math.floor(Date.now() / 1000) + 86400,
+    },
   },
   {
     name: 'Refresh Token',
@@ -66,10 +64,10 @@ export const JWT_TEMPLATES = [
       sub: 'user123',
       type: 'refresh',
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 2592000
-    }
-  }
-];
+      exp: Math.floor(Date.now() / 1000) + 2592000,
+    },
+  },
+]
 
 export const JWT_EXPIRATION_OPTIONS = [
   { value: null, label: 'No expiration' },
@@ -81,26 +79,26 @@ export const JWT_EXPIRATION_OPTIONS = [
   { value: 480, label: '8 hours' },
   { value: 1440, label: '24 hours' },
   { value: 10080, label: '7 days' },
-  { value: 43200, label: '30 days' }
-];
+  { value: 43200, label: '30 days' },
+]
 
 export const JWT_ENCODER_TOOL_DESCRIPTIONS = {
   title: 'JWT Encoder',
-  description: 'Create and encode JWT tokens with custom headers and payloads. Support for standard claims and custom data.',
+  description:
+    'Create and encode JWT tokens with custom headers and payloads. Support for standard claims and custom data.',
   features: [
     'Create JWT tokens with custom headers and payloads',
     'Support for HS256, HS384, HS512 algorithms',
     'Auto-generate standard claims (iat, exp)',
     'Token templates for common use cases',
     'Real-time token preview',
-    'Copy generated tokens'
+    'Copy generated tokens',
   ],
   useCases: [
     'Generate test tokens',
     'Create API authentication tokens',
     'Prototype JWT implementations',
     'Testing and development',
-    'Learning JWT structure'
-  ]
-};
-
+    'Learning JWT structure',
+  ],
+}

@@ -1,9 +1,9 @@
-import { MetadataRoute } from 'next';
+import { MetadataRoute } from 'next'
 
 // Required for static export (GitHub Pages)
-export const dynamic = 'force-static';
+export const dynamic = 'force-static'
 
-const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.yuirei.com';
+const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://devpockit.yuirei.com'
 
 export default function robots(): MetadataRoute.Robots {
   return {
@@ -24,5 +24,5 @@ export default function robots(): MetadataRoute.Robots {
     ],
     sitemap: `${baseUrl}/sitemap.xml`,
     host: baseUrl,
-  };
+  }
 }

@@ -1,42 +1,42 @@
-'use client';
+'use client'
 
-import { Button } from '@/components/ui/button';
-import { Monitor } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Button } from '@/components/ui/button'
+import { Monitor } from 'lucide-react'
+import { useEffect, useState } from 'react'
 
-const storageKey = (toolId: string) => `devpockit:dismiss-desktop-hint:${toolId}`;
+const storageKey = (toolId: string) => `devpockit:dismiss-desktop-hint:${toolId}`
 
 interface DesktopRecommendedBannerProps {
-  toolId: string;
-  toolName: string;
+  toolId: string
+  toolName: string
 }
 
 export function DesktopRecommendedBanner({ toolId, toolName }: DesktopRecommendedBannerProps) {
   /** null = not yet read from sessionStorage */
-  const [storedDismissed, setStoredDismissed] = useState<boolean | null>(null);
+  const [storedDismissed, setStoredDismissed] = useState<boolean | null>(null)
 
   useEffect(() => {
     const id = requestAnimationFrame(() => {
       try {
-        setStoredDismissed(sessionStorage.getItem(storageKey(toolId)) === '1');
+        setStoredDismissed(sessionStorage.getItem(storageKey(toolId)) === '1')
       } catch {
-        setStoredDismissed(false);
+        setStoredDismissed(false)
       }
-    });
-    return () => cancelAnimationFrame(id);
-  }, [toolId]);
+    })
+    return () => cancelAnimationFrame(id)
+  }, [toolId])
 
   const handleDismiss = () => {
     try {
-      sessionStorage.setItem(storageKey(toolId), '1');
+      sessionStorage.setItem(storageKey(toolId), '1')
     } catch {
       /* ignore quota / private mode */
     }
-    setStoredDismissed(true);
-  };
+    setStoredDismissed(true)
+  }
 
   if (storedDismissed !== false) {
-    return null;
+    return null
   }
 
   return (
@@ -48,8 +48,8 @@ export function DesktopRecommendedBanner({ toolId, toolName }: DesktopRecommende
         <div className="flex gap-2">
           <Monitor className="mt-0.5 h-4 w-4 shrink-0 text-amber-700 dark:text-amber-400" aria-hidden />
           <p>
-            <span className="font-medium">{toolName}</span> is easiest to use on a larger screen. You can
-            still use it here—layout may be tight on small viewports.
+            <span className="font-medium">{toolName}</span> is easiest to use on a larger screen. You can still use it
+            here—layout may be tight on small viewports.
           </p>
         </div>
         <Button
@@ -63,5 +63,5 @@ export function DesktopRecommendedBanner({ toolId, toolName }: DesktopRecommende
         </Button>
       </div>
     </div>
-  );
+  )
 }

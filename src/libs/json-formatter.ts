@@ -4,68 +4,67 @@
  */
 
 export interface JsonFormatOptions {
-  format: 'beautify' | 'minify';
-  indentSize: number;
-  sortKeys: 'none' | 'asc' | 'desc';
+  format: 'beautify' | 'minify'
+  indentSize: number
+  sortKeys: 'none' | 'asc' | 'desc'
 }
 
 export interface JsonFormatResult {
-  formatted: string;
-  isValid: boolean;
-  error?: string;
-  originalSize: number;
-  formattedSize: number;
-  compressionRatio?: number;
+  formatted: string
+  isValid: boolean
+  error?: string
+  originalSize: number
+  formattedSize: number
+  compressionRatio?: number
 }
 
-type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue };
+type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string]: JsonValue }
 
 /**
  * Format JSON based on options
  */
 export function formatJson(jsonString: string, options: JsonFormatOptions): JsonFormatResult {
-  const originalSize = jsonString.length;
+  const originalSize = jsonString.length
 
   try {
     // Parse JSON to validate
-    const parsed = JSON.parse(jsonString) as JsonValue;
+    const parsed = JSON.parse(jsonString) as JsonValue
 
-    let formatted: string;
+    let formatted: string
 
     if (options.format === 'minify') {
-      formatted = JSON.stringify(parsed);
+      formatted = JSON.stringify(parsed)
     } else {
       // Beautify with custom indentation
-      const indent = ' '.repeat(options.indentSize);
-      formatted = JSON.stringify(parsed, null, indent);
+      const indent = ' '.repeat(options.indentSize)
+      formatted = JSON.stringify(parsed, null, indent)
     }
 
     // Sort keys if requested
     if (options.sortKeys !== 'none' && options.format === 'beautify') {
-      const sortedParsed = sortObjectKeys(parsed, options.sortKeys);
-      const indent = ' '.repeat(options.indentSize);
-      formatted = JSON.stringify(sortedParsed, null, indent);
+      const sortedParsed = sortObjectKeys(parsed, options.sortKeys)
+      const indent = ' '.repeat(options.indentSize)
+      formatted = JSON.stringify(sortedParsed, null, indent)
     }
 
-    const formattedSize = formatted.length;
-    const compressionRatio = originalSize > 0 ? ((originalSize - formattedSize) / originalSize) * 100 : 0;
+    const formattedSize = formatted.length
+    const compressionRatio = originalSize > 0 ? ((originalSize - formattedSize) / originalSize) * 100 : 0
 
     return {
       formatted,
       isValid: true,
       originalSize,
       formattedSize,
-      compressionRatio: options.format === 'minify' ? compressionRatio : undefined
-    };
-
+      compressionRatio: options.format === 'minify' ? compressionRatio : undefined,
+    }
   } catch (error) {
     return {
       formatted: jsonString,
       isValid: false,
       error: error instanceof Error ? error.message : 'Invalid JSON',
       originalSize,
-      formattedSize: originalSize
-    };
+      formattedSize: originalSize,
+    }
   }
 }
 
@@ -74,13 +73,13 @@ export function formatJson(jsonString: string, options: JsonFormatOptions): Json
  */
 export function validateJson(jsonString: string): { isValid: boolean; error?: string } {
   try {
-    JSON.parse(jsonString);
-    return { isValid: true };
+    JSON.parse(jsonString)
+    return { isValid: true }
   } catch (error) {
     return {
       isValid: false,
-      error: error instanceof Error ? error.message : 'Invalid JSON'
-    };
+      error: error instanceof Error ? error.message : 'Invalid JSON',
+    }
   }
 }
 
@@ -89,48 +88,48 @@ export function validateJson(jsonString: string): { isValid: boolean; error?: st
  */
 export function sortObjectKeys(obj: JsonValue, sortOrder: 'asc' | 'desc'): JsonValue {
   if (obj === null || typeof obj !== 'object') {
-    return obj;
+    return obj
   }
 
   if (Array.isArray(obj)) {
-    return obj.map(item => sortObjectKeys(item, sortOrder));
+    return obj.map((item) => sortObjectKeys(item, sortOrder))
   }
 
-  const sorted: Record<string, JsonValue> = {};
-  const keys = Object.keys(obj);
+  const sorted: Record<string, JsonValue> = {}
+  const keys = Object.keys(obj)
 
   if (sortOrder === 'asc') {
-    keys.sort();
+    keys.sort()
   } else {
-    keys.sort().reverse();
+    keys.sort().reverse()
   }
 
   for (const key of keys) {
-    sorted[key] = sortObjectKeys(obj[key], sortOrder);
+    sorted[key] = sortObjectKeys(obj[key], sortOrder)
   }
 
-  return sorted;
+  return sorted
 }
 
 /**
  * Get JSON statistics
  */
 export function getJsonStats(jsonString: string): {
-  size: number;
-  lines: number;
-  depth: number;
-  keys: number;
+  size: number
+  lines: number
+  depth: number
+  keys: number
 } {
-  const size = jsonString.length;
-  const lines = jsonString.split('\n').length;
+  const size = jsonString.length
+  const lines = jsonString.split('\n').length
 
   try {
-    const parsed = JSON.parse(jsonString) as JsonValue;
-    const { depth, keys } = analyzeJsonStructure(parsed);
+    const parsed = JSON.parse(jsonString) as JsonValue
+    const { depth, keys } = analyzeJsonStructure(parsed)
 
-    return { size, lines, depth, keys };
+    return { size, lines, depth, keys }
   } catch {
-    return { size, lines, depth: 0, keys: 0 };
+    return { size, lines, depth: 0, keys: 0 }
   }
 }
 
@@ -139,32 +138,32 @@ export function getJsonStats(jsonString: string): {
  */
 function analyzeJsonStructure(obj: JsonValue, currentDepth = 0): { depth: number; keys: number } {
   if (obj === null || typeof obj !== 'object') {
-    return { depth: currentDepth, keys: 0 };
+    return { depth: currentDepth, keys: 0 }
   }
 
   if (Array.isArray(obj)) {
-    let maxDepth = currentDepth;
-    let totalKeys = 0;
+    let maxDepth = currentDepth
+    let totalKeys = 0
 
     for (const item of obj) {
-      const { depth, keys } = analyzeJsonStructure(item, currentDepth + 1);
-      maxDepth = Math.max(maxDepth, depth);
-      totalKeys += keys;
+      const { depth, keys } = analyzeJsonStructure(item, currentDepth + 1)
+      maxDepth = Math.max(maxDepth, depth)
+      totalKeys += keys
     }
 
-    return { depth: maxDepth, keys: totalKeys };
+    return { depth: maxDepth, keys: totalKeys }
   }
 
-  let maxDepth = currentDepth;
-  let totalKeys = Object.keys(obj).length;
+  let maxDepth = currentDepth
+  let totalKeys = Object.keys(obj).length
 
   for (const value of Object.values(obj)) {
-    const { depth, keys } = analyzeJsonStructure(value, currentDepth + 1);
-    maxDepth = Math.max(maxDepth, depth);
-    totalKeys += keys;
+    const { depth, keys } = analyzeJsonStructure(value, currentDepth + 1)
+    maxDepth = Math.max(maxDepth, depth)
+    totalKeys += keys
   }
 
-  return { depth: maxDepth, keys: totalKeys };
+  return { depth: maxDepth, keys: totalKeys }
 }
 
 /**
@@ -172,8 +171,8 @@ function analyzeJsonStructure(obj: JsonValue, currentDepth = 0): { depth: number
  */
 export function formatJsonWithHighlighting(jsonString: string): string {
   try {
-    const parsed = JSON.parse(jsonString);
-    const formatted = JSON.stringify(parsed, null, 2);
+    const parsed = JSON.parse(jsonString)
+    const formatted = JSON.stringify(parsed, null, 2)
 
     // Basic syntax highlighting using simple replacements
     return formatted
@@ -181,8 +180,8 @@ export function formatJsonWithHighlighting(jsonString: string): string {
       .replace(/:\s*(".*?")/g, ': "$1"') // String values
       .replace(/:\s*(true|false)/g, ': $1') // Boolean values
       .replace(/:\s*(null)/g, ': $1') // Null values
-      .replace(/:\s*(\d+)/g, ': $1'); // Numbers
+      .replace(/:\s*(\d+)/g, ': $1') // Numbers
   } catch {
-    return jsonString;
+    return jsonString
   }
 }

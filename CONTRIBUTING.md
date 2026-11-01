@@ -103,6 +103,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) specifica
 ```
 
 **Types:**
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -114,6 +115,7 @@ We follow [Conventional Commits](https://www.conventionalcommits.org/) specifica
 - `ci`: CI/CD changes
 
 **Examples:**
+
 ```bash
 feat(json-formatter): add syntax highlighting support
 
@@ -130,9 +132,9 @@ This project uses a single long-lived integration branch. Feature work merges in
 `main`; each release is marked by a version tag. Release branches are short-lived
 and carry only the version bump and changelog update.
 
-| Branch | Purpose |
-|--------|---------|
-| `main` | Active development and release ledger. May contain unreleased changes between releases. |
+| Branch          | Purpose                                                                                     |
+| --------------- | ------------------------------------------------------------------------------------------- |
+| `main`          | Active development and release ledger. May contain unreleased changes between releases.     |
 | `release/X.Y.Z` | Version bump and changelog curation for a release; cut from `main` and deleted after merge. |
 
 Use the matching version tag (for example, `v0.4.0`) when you need a released,
@@ -141,6 +143,7 @@ stable version.
 ### Pull Request Process
 
 1. **Update your fork from upstream `main`:**
+
    ```bash
    git checkout main
    git pull upstream main
@@ -148,6 +151,7 @@ stable version.
    ```
 
 2. **Create a feature branch from `main`:**
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -162,6 +166,7 @@ stable version.
 
 5. **Commit your changes:**
    Stage only the intended files, inspect `git status`, then commit with a Conventional Commit message. For example:
+
    ```bash
    git add src/libs/your-tool.ts src/libs/__tests__/your-tool.test.ts
    git status --short
@@ -169,6 +174,7 @@ stable version.
    ```
 
 6. **Push to your fork:**
+
    ```bash
    git push origin feature/your-feature-name
    ```
@@ -198,11 +204,12 @@ stable version.
 - **Types**: Use types for unions, intersections, and complex types
 
 **Preferred:**
+
 ```typescript
 interface ToolResult {
-  success: boolean;
-  data?: string;
-  error?: string;
+  success: boolean
+  data?: string
+  error?: string
 }
 
 function formatJson(input: string): ToolResult {
@@ -211,6 +218,7 @@ function formatJson(input: string): ToolResult {
 ```
 
 **Acceptable (when needed):**
+
 ```typescript
 function formatJson(input: any): any {
   // Implementation - use when type is truly unknown or dynamic
@@ -227,6 +235,7 @@ function formatJson(input: any): any {
   4. Exports
 
 **Example:**
+
 ```typescript
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
@@ -276,11 +285,12 @@ export function JsonFormatter({ onResult, onError }: JsonFormatterProps) {
   4. Type imports (use `import type`)
 
 **Example:**
+
 ```typescript
-import { useState, useEffect } from 'react';
-import { Button } from '@/components/ui/button';
-import { formatJson } from '@/libs/json-formatter';
-import type { ToolResult } from '@/types/tools';
+import { useState, useEffect } from 'react'
+import { Button } from '@/components/ui/button'
+import { formatJson } from '@/libs/json-formatter'
+import type { ToolResult } from '@/types/tools'
 ```
 
 ### Comments and Documentation
@@ -290,6 +300,7 @@ import type { ToolResult } from '@/types/tools';
 - **TODO Comments**: Use `// TODO: description` for future improvements
 
 **Example:**
+
 ```typescript
 /**
  * Formats JSON string with optional minification.
@@ -343,6 +354,7 @@ devpockit/
 To add a new developer tool to DevPockit:
 
 1. **Create tool logic** in `src/libs/`:
+
    ```typescript
    // src/libs/your-tool.ts
    export function processYourTool(input: string): string {
@@ -351,6 +363,7 @@ To add a new developer tool to DevPockit:
    ```
 
 2. **Create tool configuration** in `src/config/`:
+
    ```typescript
    // src/config/your-tool-config.ts
    export const yourToolConfig = {
@@ -358,10 +371,11 @@ To add a new developer tool to DevPockit:
      name: 'Your Tool',
      category: 'utilities',
      // ... other config
-   };
+   }
    ```
 
 3. **Create tool component** in `src/components/tools/`:
+
    ```typescript
    // src/components/tools/YourTool.tsx
    export function YourTool() {
@@ -392,20 +406,20 @@ To add a new developer tool to DevPockit:
 
 ```typescript
 // __tests__/libs/json-formatter.test.ts
-import { formatJson } from '@/libs/json-formatter';
+import { formatJson } from '@/libs/json-formatter'
 
 describe('formatJson', () => {
   it('should format valid JSON', () => {
-    const input = '{"name":"test"}';
-    const result = formatJson(input, false);
-    expect(result).toBe('{\n  "name": "test"\n}');
-  });
+    const input = '{"name":"test"}'
+    const result = formatJson(input, false)
+    expect(result).toBe('{\n  "name": "test"\n}')
+  })
 
   it('should handle invalid JSON', () => {
-    const input = 'invalid json';
-    expect(() => formatJson(input, false)).toThrow();
-  });
-});
+    const input = 'invalid json'
+    expect(() => formatJson(input, false)).toThrow()
+  })
+})
 ```
 
 ### Test Requirements
@@ -448,6 +462,7 @@ pnpm test json-formatter.test.ts
 ### Documentation Updates
 
 When adding features:
+
 - Update README.md if adding new tools or features
 - Update CHANGELOG.md with your changes
 - Add JSDoc comments to new functions
@@ -518,4 +533,3 @@ Contributors will be:
 - Appreciated by the community!
 
 Thank you for contributing to DevPockit! 🚀
-

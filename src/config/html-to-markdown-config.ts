@@ -2,7 +2,7 @@
  * HTML to Markdown tool configuration
  */
 
-import type { HtmlToMarkdownOptions } from '@/libs/html-to-markdown';
+import type { HtmlToMarkdownOptions } from '@/libs/html-to-markdown'
 
 export const HTML_TO_MARKDOWN_OPTIONS = {
   headingStyles: [
@@ -30,7 +30,7 @@ export const HTML_TO_MARKDOWN_OPTIONS = {
     { value: '_', label: '_italic_' },
     { value: '*', label: '*italic*' },
   ],
-} as const;
+} as const
 
 export const DEFAULT_HTML_TO_MARKDOWN_OPTIONS: HtmlToMarkdownOptions = {
   headingStyle: 'atx',
@@ -39,7 +39,7 @@ export const DEFAULT_HTML_TO_MARKDOWN_OPTIONS: HtmlToMarkdownOptions = {
   fence: '```',
   strongDelimiter: '**',
   emDelimiter: '_',
-};
+}
 
 export const HTML_TO_MARKDOWN_EXAMPLES = {
   article: `<h1>Project notes</h1>
@@ -58,4 +58,4 @@ export const HTML_TO_MARKDOWN_EXAMPLES = {
   </tbody>
 </table>`,
   strike: `<p>Price: <del>99</del> <strong>79</strong></p>`,
-};
+}

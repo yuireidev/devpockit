@@ -62,17 +62,14 @@ export const DEFAULT_QR_OPTIONS: QrCodeOptions = {
   margin: 4,
   color: {
     dark: '#000000',
-    light: '#FFFFFF'
-  }
+    light: '#FFFFFF',
+  },
 }
 
 /**
  * Generate QR code data URL from input
  */
-export async function generateQrCode(
-  input: QrCodeInput,
-  options: QrCodeOptions
-): Promise<QrCodeResult> {
+export async function generateQrCode(input: QrCodeInput, options: QrCodeOptions): Promise<QrCodeResult> {
   const { type, size, errorCorrection, format, margin, color } = options
 
   // Validate input based on type
@@ -87,9 +84,9 @@ export async function generateQrCode(
     margin: margin,
     color: {
       dark: color.dark,
-      light: color.light
+      light: color.light,
     },
-    width: size
+    width: size,
   }
 
   try {
@@ -102,7 +99,7 @@ export async function generateQrCode(
       input,
       size,
       errorCorrection,
-      format
+      format,
     }
   } catch (error) {
     throw new Error(`Failed to generate QR code: ${error instanceof Error ? error.message : 'Unknown error'}`)
@@ -316,7 +313,7 @@ export function getQrCodeStats(result: QrCodeResult): {
     errorCorrection: result.errorCorrection,
     format: result.format,
     dataUrlLength: result.dataUrl.length,
-    estimatedCapacity
+    estimatedCapacity,
   }
 }
 
@@ -328,7 +325,7 @@ export function getEstimatedCapacity(type: QrCodeType, errorCorrection: QrCodeEr
     L: 2953,
     M: 2331,
     Q: 1663,
-    H: 1273
+    H: 1273,
   }
 
   const typeMultiplier = {
@@ -337,7 +334,7 @@ export function getEstimatedCapacity(type: QrCodeType, errorCorrection: QrCodeEr
     contact: 0.6,
     wifi: 0.4,
     sms: 0.5,
-    email: 0.7
+    email: 0.7,
   }
 
   return Math.floor(baseCapacity[errorCorrection] * typeMultiplier[type])

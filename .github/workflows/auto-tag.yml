@@ -1,7 +1,7 @@
 # Auto-tag: on push to main, tag the merge commit when package.json
 # is newer than the latest v* tag, then run the release (build + GitHub Release).
 # Pages deploy is manual via deploy.yml. No action when version is unchanged.
-name: Auto Tag Release
+name: 'Release: Auto Tag'
 on:
   push:
     branches:

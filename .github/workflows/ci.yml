@@ -1,10 +1,13 @@
-name: CI
+name: 'CI: Checks'
 
 on:
   push:
     branches: [main]
   pull_request:
     branches: [main]
+
+permissions:
+  contents: read
 
 jobs:
   lint:
@@ -101,3 +104,14 @@ jobs:
 
       - name: Build application
         run: pnpm build
+        env:
+          NEXT_PUBLIC_APP_VERSION: ${{ github.event_name == 'pull_request' && format('pr-{0}', github.event.pull_request.number) || 'dev' }}
+          NEXT_PUBLIC_BASE_URL: https://devpockit.yuirei.com
+
+      - name: Upload preview artifact
+        if: github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v4
+        with:
+          name: preview-pr-${{ github.event.pull_request.number }}
+          path: ./out
+          retention-days: 7
